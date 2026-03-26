@@ -12,6 +12,7 @@ Hệ thống đảm bảo:
 * 📊 Cung cấp báo cáo doanh thu và thống kê giúp hỗ trợ ra quyết định kinh doanh
 
 Dự án là sản phẩm của môn **Đồ án Công nghệ phần mềm**, được thực hiện bởi **Nhóm 1**.
+
 Quy trình phát triển bao gồm:
 **Phân tích → Thiết kế hệ thống → Lập trình → Kiểm thử**
 
