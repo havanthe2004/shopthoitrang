@@ -3,6 +3,7 @@ import express from "express";
 import path from 'path';
 import { AppDataSource } from "./config/data-source";
 import authRoute from './routes/auth.route';
+import userRoute from './routes/user.route';
 
 
 import cors from 'cors';
@@ -11,6 +12,7 @@ app.use(express.json());
 
 app.use(cors());
 app.use('/api/auth', authRoute);
+app.use('/api/user', userRoute);
 
 
 
