@@ -10,6 +10,7 @@ import { sendOtpEmail } from '../utils/mailer';
 
 export class AuthController {
 
+    // ================= REGISTER =================
     static async register(req: Request, res: Response) {
         try {
             const { email, password, phone, name } = req.body;
@@ -51,7 +52,7 @@ export class AuthController {
         }
     }
 
-
+    // ================= LOGIN =================
     static async login(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
@@ -73,14 +74,14 @@ export class AuthController {
                 return res.status(401).json({ message: 'Invalid credentials' });
             }
 
-
+            // access token
             const accessToken = jwt.sign(
                 { id: user.userId, email: user.email },
                 process.env.JWT_ACCESS_SECRET as string,
                 { expiresIn: '1m' }
             );
 
-
+            // refresh token
             const refreshToken = jwt.sign(
                 { id: user.userId },
                 process.env.JWT_REFRESH_SECRET as string,
@@ -121,7 +122,7 @@ export class AuthController {
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
             const userRepo = AppDataSource.getRepository(User);
 
-
+            // 1. Tìm token trong DB
             const savedToken = await refreshRepo.findOne({
                 where: { token: refreshToken },
                 relations: ['user']
@@ -131,10 +132,10 @@ export class AuthController {
                 return res.status(403).json({ message: "Refresh Token invalid or expired" });
             }
 
-
+            // 2. Xác thực JWT Refresh Token
             const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET as string) as any;
 
-
+            // 3. Tạo Access Token mới
             const newAccessToken = jwt.sign(
                 { id: decoded.id, email: savedToken.user.email },
                 process.env.JWT_ACCESS_SECRET as string,
@@ -147,7 +148,7 @@ export class AuthController {
         }
     }
 
-
+    // ================= LOGOUT =================
     static async logout(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;
@@ -175,14 +176,28 @@ export class AuthController {
             const user = await userRepo.findOne({ where: { email } });
             if (!user) return res.status(404).json({ message: 'Email không tồn tại' });
 
-            // Tạo mã OTP 6 số và lưu (Hết hạn sau 5 phút)
             const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
-            await otpRepo.save(otpRepo.create({ email, code: otpCode, expiredAt: new Date(Date.now() + 5 * 60 * 1000) }));
 
-            await sendOtpEmail(email, otpCode);
+            await otpRepo.save(
+                otpRepo.create({
+                    email,
+                    code: otpCode,
+                    expiredAt: new Date(Date.now() + 5 * 60 * 1000)
+                })
+            );
+
+            try {
+                await sendOtpEmail(email, otpCode);
+            } catch (mailErr) {
+                console.error("MAIL ERROR:", mailErr);
+                return res.status(500).json({ message: "Gửi email thất bại", error: mailErr });
+            }
+
             return res.json({ message: 'Mã OTP đã được gửi' });
+
         } catch (err) {
-            return res.status(500).json({ message: 'Lỗi yêu cầu OTP' });
+            console.error("FORGOT PASSWORD ERROR:", err);
+            return res.status(500).json({ message: 'Lỗi yêu cầu OTP', error: err });
         }
     }
 

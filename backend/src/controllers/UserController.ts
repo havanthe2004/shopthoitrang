@@ -7,6 +7,7 @@ import { User } from '../models/User';
 import { Address } from '../models/Address';
 
 export class UserController {
+    // 1. LẤY THÔNG TIN CÁ NHÂN (Data thật từ DB)
     static async getProfile(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
@@ -14,18 +15,19 @@ export class UserController {
 
             const user = await userRepo.findOne({
                 where: { userId: userId },
-                relations: ['addresses']
+                relations: ['addresses'] // Lấy kèm danh sách địa chỉ
             });
 
             if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
 
-            const { password, ...userData } = user;
+            const { password, ...userData } = user; // Loại bỏ password trước khi gửi về FE
             return res.json(userData);
         } catch (err) {
             return res.status(500).json({ message: "Lỗi hệ thống", error: err });
         }
     }
 
+    // 2. CẬP NHẬT HỒ SƠ (Tên, SDT, Avatar)
     static async updateProfile(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
@@ -35,11 +37,13 @@ export class UserController {
             const user = await userRepo.findOneBy({ userId: userId });
             if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
 
-
+            // Xử lý cập nhật thông tin cơ bản
             if (name) user.name = name;
             if (phone) user.phone = phone;
 
+            // Xử lý Avatar mới (Nếu có upload file)
             if (req.file) {
+                // Xóa ảnh cũ nếu không phải ảnh mặc định
                 if (user.avatar && fs.existsSync(path.join(__dirname, '../../', user.avatar))) {
                     fs.unlinkSync(path.join(__dirname, '../../', user.avatar));
                 }
@@ -54,6 +58,7 @@ export class UserController {
         }
     }
 
+    // 3. ĐỔI MẬT KHẨU (Yêu cầu mật khẩu cũ & xác nhận mật khẩu mới)
     static async changePassword(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
@@ -82,13 +87,14 @@ export class UserController {
         }
     }
 
+    // 4. LẤY DANH SÁCH ĐỊA CHỈ
     static async getAddresses(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
             const addressRepo = AppDataSource.getRepository(Address);
             const addresses = await addressRepo.find({
                 where: { user: { userId: userId } },
-                order: { isDefault: 'DESC', addressId: 'ASC' }
+                order: { isDefault: 'DESC', addressId: 'ASC' } // Ưu tiên địa chỉ mặc định lên đầu
             });
             return res.json(addresses);
         } catch (err) {
@@ -96,21 +102,23 @@ export class UserController {
         }
     }
 
-
+    // 5. THÊM ĐỊA CHỈ MỚI
     static async addAddress(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
             const addressData = req.body;
             const addressRepo = AppDataSource.getRepository(Address);
 
+            // Kiểm tra xem đây có phải địa chỉ đầu tiên không
             const count = await addressRepo.count({ where: { user: { userId: userId } } });
             if (count === 0) addressData.isDefault = true;
 
+            // Nếu đặt làm mặc định, hủy tất cả mặc định cũ của user này
             if (addressData.isDefault) {
                 await addressRepo.update({ user: { userId: userId } }, { isDefault: false });
             }
 
-            const newAddress = addressRepo.create({ ...addressData, user: { id: userId } });
+            const newAddress = addressRepo.create({ ...addressData, user: { userId: userId } });
             await addressRepo.save(newAddress);
 
             return res.status(201).json(newAddress);
@@ -119,6 +127,7 @@ export class UserController {
         }
     }
 
+    // 6. CẬP NHẬT ĐỊA CHỈ
     static async updateAddress(req: Request, res: Response) {
         try {
             const { id } = req.params;
@@ -142,6 +151,7 @@ export class UserController {
         }
     }
 
+    // 7. XÓA ĐỊA CHỈ
     static async deleteAddress(req: Request, res: Response) {
         try {
             const { id } = req.params;
@@ -161,10 +171,11 @@ export class UserController {
 
     static async setDefaultAddress(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const { id } = req.params; // ID của địa chỉ muốn đặt làm mặc định
             const userId = (req as any).user.id;
             const addressRepo = AppDataSource.getRepository(Address);
 
+            // 1. Kiểm tra địa chỉ đó có tồn tại và thuộc về user này không
             const targetAddress = await addressRepo.findOne({
                 where: { addressId: Number(id), user: { userId: userId } }
             });
@@ -173,12 +184,13 @@ export class UserController {
                 return res.status(404).json({ message: "Không tìm thấy địa chỉ để thiết lập mặc định" });
             }
 
-
+            // 2. Hủy mặc định tất cả các địa chỉ hiện tại của user này
             await addressRepo.update(
                 { user: { userId: userId } },
                 { isDefault: false }
             );
 
+            // 3. Thiết lập địa chỉ mục tiêu làm mặc định
             targetAddress.isDefault = true;
             await addressRepo.save(targetAddress);
 
