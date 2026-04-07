@@ -4,6 +4,7 @@ import {
 } from "typeorm";
 import { Category } from "./Category";
 import { ProductVariant } from "./ProductVariant";
+import { ProductColor } from "./ProductColor";
 
 @Entity("products")
 export class Product {
@@ -27,6 +28,10 @@ export class Product {
 
     @OneToMany(() => ProductVariant, v => v.product)
     variants!: ProductVariant[];
+
+
+    @OneToMany(() => ProductColor, c => c.product)
+    colors!: ProductColor[];
 
     @Column({ default: true })
     isActive!: boolean;

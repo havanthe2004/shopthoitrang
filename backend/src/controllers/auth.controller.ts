@@ -9,8 +9,6 @@ import { Otp } from '../models/Otp';
 import { sendOtpEmail } from '../utils/mailer';
 
 export class AuthController {
-
-    // ================= REGISTER =================
     static async register(req: Request, res: Response) {
         try {
             const { email, password, phone, name } = req.body;
@@ -52,7 +50,6 @@ export class AuthController {
         }
     }
 
-    // ================= LOGIN =================
     static async login(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
@@ -78,14 +75,14 @@ export class AuthController {
             const accessToken = jwt.sign(
                 { id: user.userId, email: user.email },
                 process.env.JWT_ACCESS_SECRET as string,
-                { expiresIn: '1m' }
+                { expiresIn: process.env.JWT_ACCESS_EXPIRE as any }
             );
 
             // refresh token
             const refreshToken = jwt.sign(
                 { id: user.userId },
                 process.env.JWT_REFRESH_SECRET as string,
-                { expiresIn: '7d' }
+                { expiresIn: process.env.JWT_REFRESH_EXPIRE as any }
             );
 
             const refreshEntity = refreshRepo.create({
@@ -148,7 +145,6 @@ export class AuthController {
         }
     }
 
-    // ================= LOGOUT =================
     static async logout(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;

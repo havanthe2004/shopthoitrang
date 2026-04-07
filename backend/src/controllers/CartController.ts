@@ -5,40 +5,31 @@ import { CartItem } from "../models/CartItem";
 import { ProductVariant } from "../models/ProductVariant";
 
 export class CartController {
-    /**
-     * 1. THÊM SẢN PHẨM VÀO GIỎ HÀNG
-     * Logic: Tìm Cart -> Tìm Variant -> Cập nhật hoặc Thêm mới CartItem
-     */
     static async addToCart(req: Request, res: Response) {
         try {
-            const { variantId, quantity } = req.body;
+            const { productVariantId, quantity } = req.body;
             const userId = (req as any).user.id;
 
             const cartRepo = AppDataSource.getRepository(Cart);
             const cartItemRepo = AppDataSource.getRepository(CartItem);
             const variantRepo = AppDataSource.getRepository(ProductVariant);
 
-            // Bước A: Tìm Cart của User, nếu chưa có thì tạo mới
             let cart = await cartRepo.findOne({ where: { user: { userId: userId } } });
             if (!cart) {
                 cart = cartRepo.create({ user: { userId: userId } });
                 await cartRepo.save(cart);
             }
 
-            // Bước B: Kiểm tra biến thể có tồn tại không
-            const variant = await variantRepo.findOneBy({ productVariantId: variantId });
+            const variant = await variantRepo.findOneBy({ productVariantId: productVariantId });
             if (!variant) return res.status(404).json({ message: "Sản phẩm không tồn tại" });
 
-            // Bước C: Kiểm tra sản phẩm đã có trong giỏ (CartItem) chưa
             let item = await cartItemRepo.findOne({
-                where: { cart: { cartId: cart.cartId }, variant: { productVariantId: variantId } }
+                where: { cart: { cartId: cart.cartId }, variant: { productVariantId: productVariantId } }
             });
 
             if (item) {
-                // Nếu có rồi thì cộng dồn số lượng
                 item.quantity += quantity;
             } else {
-                // Nếu chưa có thì tạo mới dòng CartItem
                 item = cartItemRepo.create({
                     cart: cart,
                     variant: variant,
@@ -54,50 +45,65 @@ export class CartController {
         }
     }
 
-    /**
-     * 2. LẤY DANH SÁCH GIỎ HÀNG
-     * Trả về dữ liệu format đúng chuẩn Frontend (CartItem interface)
-     */
     static async getCart(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
-            const cartRepo = AppDataSource.getRepository(Cart);
 
-            // Lấy Cart kèm theo mảng Items và các thông tin liên quan (Variant, Product)
-            const cart = await cartRepo.findOne({
-                where: { user: { userId: userId } },
+            const page = Number(req.query.page) || 1;
+            const limit = Number(req.query.limit) || 10;
+            const skip = (page - 1) * limit;
+
+            const cartItemRepo = AppDataSource.getRepository(CartItem);
+
+            const [items, total] = await cartItemRepo.findAndCount({
+                where: {
+                    cart: { user: { userId } }
+                },
                 relations: [
-                    "items",
-                    "items.variant",
-                    "items.variant.product"
-                ]
+                    "cart",
+                    "variant",
+                    "variant.product",
+                    "variant.color",
+                    "variant.color.images"
+                ],
+                skip,
+                take: limit
             });
 
-            if (!cart || !cart.items) return res.json([]);
+            const formatted = items.map(item => {
+                const color = item.variant.color;
+                const images = color?.images || [];
 
-            // Chuyển đổi (Format) dữ liệu để khớp với Frontend
-            const formattedItems = cart.items.map(item => ({
-                // id: item.variant.product.id,
-                productVariantId: item.variant.productVariantId,
-                name: item.variant.product.name,
-                price: item.variant.price,
-                image: item.variant.images,
-                color: item.variant.color,
-                size: item.variant.size,
-                quantity: item.quantity
-            }));
+                return {
+                    productVariantId: item.variant.productVariantId,
+                    name: item.variant.product.name,
+                    price: item.variant.price,
 
-            return res.json(formattedItems);
+                    image: images[0]?.url || "",
+
+                    color: color?.color || "",
+
+                    size: item.variant.size,
+                    quantity: item.quantity
+                };
+            });
+
+            return res.json({
+                data: formatted,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.ceil(total / limit)
+                }
+            });
+
         } catch (error) {
-            console.error("Error in getCart:", error);
-            return res.status(500).json({ message: "Lỗi khi lấy dữ liệu giỏ hàng" });
+            console.error(error);
+            return res.status(500).json({ message: "Lỗi lấy giỏ hàng" });
         }
     }
 
-    /**
-     * 3. CẬP NHẬT SỐ LƯỢNG TRỰC TIẾP
-     * Dùng khi khách nhấn +/- trong trang Giỏ hàng
-     */
     static async updateQuantity(req: Request, res: Response) {
         try {
             const { variantId, quantity } = req.body;
@@ -107,7 +113,6 @@ export class CartController {
 
             const cartItemRepo = AppDataSource.getRepository(CartItem);
 
-            // Tìm Item dựa trên userId (thông qua Cart) và variantId
             const item = await cartItemRepo.findOne({
                 where: {
                     cart: { user: { userId: userId } },
@@ -126,9 +131,6 @@ export class CartController {
         }
     }
 
-    /**
-     * 4. XÓA SẢN PHẨM KHỎI GIỎ
-     */
     static async removeFromCart(req: Request, res: Response) {
         try {
             const variantId = parseInt(req.params.variantId as string);
