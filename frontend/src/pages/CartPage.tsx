@@ -6,6 +6,7 @@ import { FaTrash, FaMinus, FaPlus, FaChevronLeft } from 'react-icons/fa';
 
 import { updateQuantityServer, removeFromCartServer, type ICartItem } from '../redux/slices/cartSlice';
 import { toast } from 'react-toastify';
+import { getImageUrl } from "../utils/imageUrl"
 
 const CartPage = () => {
     const { cartItems, loading } = useSelector((state: RootState) => state.cart);
@@ -135,7 +136,8 @@ const CartPage = () => {
                                 {/* Ảnh sản phẩm */}
                                 <div className="w-24 h-32 md:w-32 md:h-44 bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
                                     <img
-                                        src={`http://localhost:3000/${item.image}`}
+                                        // src={`http://localhost:3000/${item.image}`}
+                                        src='getImageUrl(item.image)'
                                         alt={item.name}
                                         className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
                                     />

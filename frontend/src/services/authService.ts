@@ -2,7 +2,7 @@ import api from './api';
 
 export const loginAPI = async (credentials: any) => {
   const response = await api.post('/auth/login', credentials);
-  return response.data; // Trả về { accessToken, user }
+  return response.data; 
 };
 
 export const registerAPI = async (userData: any) => {

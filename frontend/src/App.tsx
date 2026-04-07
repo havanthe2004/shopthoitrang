@@ -4,7 +4,6 @@ import { useDispatch, useSelector } from 'react-redux'; // 2. Thêm hooks của 
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-
 // Import Components & Pages
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer.tsx';
@@ -29,7 +28,6 @@ function App() {
 
   // Lấy thông tin user hiện tại từ Redux Auth
   const { currentUser } = useSelector((state: RootState) => state.auth);
-
   useEffect(() => {
     const loadCart = async () => {
       if (currentUser) {

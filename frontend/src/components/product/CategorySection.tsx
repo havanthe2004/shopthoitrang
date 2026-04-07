@@ -4,6 +4,7 @@ import { Navigation } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import { getProductsAPI } from '../../services/productService';
+import type { Product } from '../../services/productService';
 import ProductCard from './ProductCard';
 
 const CategorySection = ({ parentCategory }: { parentCategory: any }) => {
@@ -64,7 +65,7 @@ const CategorySection = ({ parentCategory }: { parentCategory: any }) => {
                     }}
                     className="product-swiper"
                 >
-                    {products.map((p: any) => (
+                    {products.map((p) => (
                         <SwiperSlide key={p.productId}>
                             <ProductCard product={p} />
                         </SwiperSlide>
