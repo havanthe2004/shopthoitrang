@@ -1,31 +1,89 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import api from '../../services/api';
+import { orderService } from '../../services/orderService';
+
+interface OrderState {
+    orders: any[];
+    loading: boolean;
+    error: string | null;
+    lastCreatedOrder: any | null; 
+    totalPages: number;
+
+}
+
+const initialState: OrderState = {
+    orders: [],
+    loading: false,
+    error: null,
+    lastCreatedOrder: null,
+    totalPages: 1
+};
+
 
 export const createOrderServer = createAsyncThunk(
     'order/createOrderServer',
     async (orderData: any, { rejectWithValue }) => {
         try {
-            const response = await api.post('/orders', orderData);
-            return response.data; // Có thể chứa { url } hoặc { orderId }
+            const data = await orderService.createOrder(orderData);
+            return data; // Thường trả về { success: true, url: ... } hoặc { orderId: ... }
         } catch (err: any) {
-            return rejectWithValue(err.response?.data || "Lỗi đặt hàng");
+            return rejectWithValue(err.response?.data?.message || "Lỗi đặt hàng");
         }
+    }
+);
+
+
+export const fetchOrders = createAsyncThunk(
+    'orders/fetchOrders',
+    async ({ status, page }: { status: string; page: number }) => {
+        const res = await orderService.getMyOrders(status, page, 5);
+        return res;
     }
 );
 
 const orderSlice = createSlice({
     name: 'order',
-    initialState: { loading: false, error: null },
-    reducers: {},
+    initialState,
+    reducers: {
+
+        resetOrderState: (state) => {
+            state.error = null;
+            state.lastCreatedOrder = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
-            .addCase(createOrderServer.pending, (state) => { state.loading = true; })
-            .addCase(createOrderServer.fulfilled, (state) => { state.loading = false; })
-            .addCase(createOrderServer.rejected, (state, action) => { 
-                state.loading = false; 
-                state.error = action.payload as string; 
+       
+            .addCase(createOrderServer.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(createOrderServer.fulfilled, (state, action) => {
+                state.loading = false;
+                state.lastCreatedOrder = action.payload;
+            })
+            .addCase(createOrderServer.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload as string;
+            })
+
+            
+
+            .addCase(fetchOrders.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(fetchOrders.fulfilled, (state, action) => {
+                state.loading = false;
+                state.orders = action.payload.data;
+                state.totalPages = action.payload.totalPages;
+            })
+            .addCase(fetchOrders.rejected, (state) => {
+                state.loading = false;
             });
     }
 });
 
+export const { resetOrderState } = orderSlice.actions;
 export default orderSlice.reducer;
+
+
+

@@ -1,36 +1,65 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import type { RootState } from '../redux/store';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaTrash, FaMinus, FaPlus, FaChevronLeft } from 'react-icons/fa';
 
-import { updateQuantityServer, removeFromCartServer, type ICartItem } from '../redux/slices/cartSlice';
+import {
+    updateQuantityServer,
+    removeFromCartServer,
+    fetchCartServer,
+    type ICartItem
+} from '../redux/slices/cartSlice';
+
 import { toast } from 'react-toastify';
-import { getImageUrl } from "../utils/imageUrl"
 
 const CartPage = () => {
+    const BASE_URL = import.meta.env.VITE_API_KEY;
     const { cartItems, loading } = useSelector((state: RootState) => state.cart);
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // State lưu danh sách variantId của các sản phẩm được chọn
+
+    const [page, setPage] = useState(1);
+    const [limit] = useState(5);
+    const [totalPages, setTotalPages] = useState(1);
+
+
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-    // Logic: Tính toán tổng tiền và số lượng chỉ cho các item được chọn
+
+    useEffect(() => {
+        dispatch(fetchCartServer({ page, limit }) as any)
+            .unwrap()
+            .then((res: any) => {
+                setTotalPages(res.pagination.totalPages);
+            });
+
+        // reset select khi đổi trang
+        setSelectedIds([]);
+    }, [dispatch, page, limit]);
+
+
     const { selectedTotal, selectedCount, selectedItemsData } = useMemo(() => {
-        const selectedItems = cartItems.filter((item: ICartItem) => selectedIds.includes(item.productVariantId));
-        const total = selectedItems.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
+        const selectedItems = cartItems.filter((item: ICartItem) =>
+            selectedIds.includes(item.productVariantId)
+        );
+
+        const total = selectedItems.reduce(
+            (sum, item) => sum + (Number(item.price) * item.quantity),
+            0
+        );
+
         return {
             selectedTotal: total,
             selectedCount: selectedItems.length,
-            selectedItemsData: selectedItems // Trả về mảng sp để truyền sang Checkout
+            selectedItemsData: selectedItems
         };
     }, [cartItems, selectedIds]);
 
-    // Logic: Kiểm tra xem có đang chọn tất cả hay không
-    const isAllSelected = cartItems.length > 0 && selectedIds.length === cartItems.length;
+    const isAllSelected =
+        cartItems.length > 0 && selectedIds.length === cartItems.length;
 
-    // Xử lý chọn/bỏ chọn từng item
     const handleToggleSelect = (variantId: number) => {
         setSelectedIds(prev =>
             prev.includes(variantId)
@@ -39,7 +68,6 @@ const CartPage = () => {
         );
     };
 
-    // Xử lý chọn tất cả/bỏ chọn tất cả
     const handleToggleSelectAll = () => {
         if (isAllSelected) {
             setSelectedIds([]);
@@ -51,6 +79,7 @@ const CartPage = () => {
     const handleUpdateQuantity = (productVariantId: number, currentQty: number, adjustment: number) => {
         const newQty = currentQty + adjustment;
         if (newQty < 1) return;
+
         dispatch(updateQuantityServer({ productVariantId, quantity: newQty }) as any);
     };
 
@@ -60,7 +89,6 @@ const CartPage = () => {
                 .unwrap()
                 .then(() => {
                     toast.success("Đã xóa sản phẩm");
-                    // Bỏ chọn item đó khỏi danh sách selected nếu xóa thành công
                     setSelectedIds(prev => prev.filter(id => id !== productVariantId));
                 })
                 .catch(() => toast.error("Lỗi khi xóa"));
@@ -76,7 +104,7 @@ const CartPage = () => {
                 </Link>
             </div>
         );
-    };
+    }
 
     const handleGoToCheckout = () => {
         if (selectedIds.length === 0) return toast.warning("Vui lòng chọn sản phẩm!");
@@ -85,7 +113,6 @@ const CartPage = () => {
             state: {
                 selectedItems: selectedItemsData,
                 totalAmount: selectedTotal,
-
                 selectedIds: selectedItemsData.map(item => item.productVariantId)
             }
         });
@@ -99,7 +126,8 @@ const CartPage = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                 <div className="lg:col-span-8">
-                    {/* Thanh công cụ Chọn tất cả */}
+
+          
                     <div className="flex items-center justify-between pb-6 border-b-2 border-gray-100 mb-6">
                         <label className="flex items-center gap-3 cursor-pointer group">
                             <input
@@ -112,6 +140,7 @@ const CartPage = () => {
                                 Chọn tất cả ({cartItems.length} sản phẩm)
                             </span>
                         </label>
+
                         {selectedIds.length > 0 && (
                             <button
                                 onClick={() => setSelectedIds([])}
@@ -122,10 +151,11 @@ const CartPage = () => {
                         )}
                     </div>
 
+               
                     <div className="space-y-8">
                         {cartItems.map((item) => (
                             <div key={item.productVariantId} className="flex gap-4 md:gap-6 border-b pb-8 items-center group">
-                                {/* Checkbox riêng cho từng item */}
+
                                 <input
                                     type="checkbox"
                                     checked={selectedIds.includes(item.productVariantId)}
@@ -133,17 +163,14 @@ const CartPage = () => {
                                     className="w-5 h-5 accent-black cursor-pointer flex-shrink-0"
                                 />
 
-                                {/* Ảnh sản phẩm */}
                                 <div className="w-24 h-32 md:w-32 md:h-44 bg-gray-100 overflow-hidden flex-shrink-0 border border-gray-100">
                                     <img
-                                        // src={`http://localhost:3000/${item.image}`}
-                                        src='getImageUrl(item.image)'
+                                        src={`${BASE_URL}/${item.image}`}
                                         alt={item.name}
                                         className="w-full h-full object-cover transition duration-500 group-hover:scale-110"
                                     />
                                 </div>
 
-                                {/* Thông tin chi tiết */}
                                 <div className="flex-1 flex flex-col justify-between h-32 md:h-44">
                                     <div className="flex justify-between items-start">
                                         <div className="pr-4">
@@ -158,19 +185,12 @@ const CartPage = () => {
                                     </div>
 
                                     <div className="flex items-center justify-between mt-auto">
-                                        {/* Bộ tăng giảm số lượng */}
                                         <div className="flex items-center border border-black h-8 md:h-10">
-                                            <button
-                                                onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, -1)}
-                                                className="px-2 md:px-4 h-full hover:bg-gray-100 transition"
-                                            >
+                                            <button onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, -1)} className="px-2 md:px-4">
                                                 <FaMinus size={8} />
                                             </button>
                                             <span className="px-3 md:px-6 font-bold text-xs md:text-sm">{item.quantity}</span>
-                                            <button
-                                                onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, 1)}
-                                                className="px-2 md:px-4 h-full hover:bg-gray-100 transition"
-                                            >
+                                            <button onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, 1)} className="px-2 md:px-4">
                                                 <FaPlus size={8} />
                                             </button>
                                         </div>
@@ -187,14 +207,45 @@ const CartPage = () => {
                         ))}
                     </div>
 
+                
+                    <div className="flex justify-center items-center gap-2 mt-10">
+                        <button
+                            onClick={() => setPage(p => Math.max(1, p - 1))}
+                            disabled={page === 1}
+                            className="px-3 py-2 border text-xs font-bold disabled:opacity-30"
+                        >
+                            Prev
+                        </button>
+
+                        {Array.from({ length: totalPages }, (_, i) => (
+                            <button
+                                key={i}
+                                onClick={() => setPage(i + 1)}
+                                className={`px-3 py-2 border text-xs font-bold ${
+                                    page === i + 1 ? "bg-black text-white" : ""
+                                }`}
+                            >
+                                {i + 1}
+                            </button>
+                        ))}
+
+                        <button
+                            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                            disabled={page === totalPages}
+                            className="px-3 py-2 border text-xs font-bold disabled:opacity-30"
+                        >
+                            Next
+                        </button>
+                    </div>
+
                     <Link to="/" className="inline-flex items-center gap-2 mt-10 font-bold uppercase text-[10px] tracking-[0.2em] hover:text-red-600 transition">
                         <FaChevronLeft size={10} /> Back to shop
                     </Link>
                 </div>
 
-                {/* TÓM TẮT ĐƠN HÀNG (Laptop View) */}
+           
                 <div className="hidden lg:block lg:col-span-4">
-                    <div className=" p-8 border border-gray-100 sticky top-24 shadow-sm">
+                    <div className="p-8 border border-gray-100 sticky top-24 shadow-sm">
                         <h2 className="font-black uppercase tracking-[0.2em] text-sm mb-8 border-b pb-4">Order Summary</h2>
 
                         <div className="space-y-4 mb-8">
@@ -216,8 +267,10 @@ const CartPage = () => {
                         </div>
 
                         <button
-                            onClick={handleGoToCheckout} // 🟢 Liên kết
-                            className={`w-full py-5 font-black uppercase text-[11px] ${selectedIds.length > 0 ? "bg-black text-white hover:bg-red-600" : "bg-gray-200 text-gray-400 cursor-not-allowed"}`}
+                            onClick={handleGoToCheckout}
+                            className={`w-full py-5 font-black uppercase text-[11px] ${
+                                selectedIds.length > 0 ? "bg-black text-white hover:bg-red-600" : "bg-gray-200 text-gray-400"
+                            }`}
                             disabled={selectedIds.length === 0}
                         >
                             Mua hàng ({selectedCount})
@@ -226,24 +279,20 @@ const CartPage = () => {
                 </div>
             </div>
 
-            {/* --- THANH THANH TOÁN CỐ ĐỊNH (Mobile Sticky View) --- */}
+         
             <div className="lg:hidden fixed bottom-0 left-0 w-full border-t border-gray-100 shadow-[0_-8px_20px_rgba(0,0,0,0.1)] p-4 z-50">
                 <div className="flex items-center justify-between gap-4">
-                    <div className="flex flex-col">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none mb-1">
-                            Tổng ({selectedCount} món)
-                        </span>
-                        <span className="text-xl font-black text-red-600 italic">
-                            {new Intl.NumberFormat('vi-VN').format(selectedTotal)}đ
-                        </span>
+                    <div>
+                        <span className="text-xs">({selectedCount} món)</span>
+                        <p className="text-xl font-bold text-red-600">
+                            {selectedTotal.toLocaleString()}đ
+                        </p>
                     </div>
+
                     <button
                         onClick={handleGoToCheckout}
                         disabled={selectedIds.length === 0}
-                        className={`px-8 py-4 font-black uppercase tracking-[0.2em] text-[11px] active:scale-95 shadow-lg transition-all ${selectedIds.length > 0
-                            ? "bg-black text-white"
-                            : "bg-gray-200 text-gray-400"
-                            }`}
+                        className="px-6 py-3 bg-black text-white"
                     >
                         Thanh toán
                     </button>

@@ -7,7 +7,7 @@ import { FaUser, FaLock, FaMapMarkerAlt } from 'react-icons/fa';
 const ProfilePage = () => {
     const [activeTab, setActiveTab] = useState('info');
 
-    // Danh sách các tab điều hướng
+
     const menuItems = [
         { id: 'info', label: 'Thông tin cá nhân', icon: <FaUser /> },
         { id: 'password', label: 'Đổi mật khẩu', icon: <FaLock /> },

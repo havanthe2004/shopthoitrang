@@ -40,7 +40,7 @@ api.interceptors.response.use(
 
       try {
         const res = await axios.post(
-          'http://localhost:3000/api/auth/refresh-token',
+          `${import.meta.env.VITE_API_KEY}/auth/refresh-token`,
           { refreshToken },
           { headers: { Authorization: '' } }
         );

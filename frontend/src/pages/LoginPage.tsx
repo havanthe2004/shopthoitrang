@@ -38,10 +38,10 @@ const LoginPage = () => {
         setShow((prev) => prev = !prev)
     }
     const onSubmit = async (data: LoginInput) => {
-        console.log("Form data:", data);
         setServerError('');
         try {
             const response = await loginAPI(data);
+            // Lưu vào Redux (Response từ BE thường trả về accessToken và user)
             dispatch(loginSuccess({
                 user: response.user,
                 token: response.accessToken,

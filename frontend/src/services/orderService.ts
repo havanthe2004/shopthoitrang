@@ -15,9 +15,14 @@ export const orderService = {
     /**
      * 2. Lấy danh sách đơn hàng của người dùng (Để hiển thị ở trang Profile)
      */
-    getMyOrders: async () => {
-        const response = await api.get('/orders/my-orders');
-        return response.data;
+    // getMyOrders: async (status: string = 'all') => {
+    //     const response = await api.get(`/orders/my-orders?status=${status}`);
+    //     return response.data; // Trả về mảng các đơn hàng
+    // },
+
+    getMyOrders: async (status: string = 'all', page: number = 1,limit:number=10) => {
+        const response = await api.get(`/orders/my-orders?status=${status}&page=${page}&limit=${limit}`);
+        return response.data; // Trả về { success, data, pagination }
     },
 
     /**
@@ -29,11 +34,14 @@ export const orderService = {
         return response.data;
     },
 
-    /**
-     * 4. Hủy đơn hàng (Nếu trạng thái còn là Pending)
-     */
+    // Hủy đơn hàng (Chỉ dùng khi status = pending)
     cancelOrder: async (orderId: number) => {
-        const response = await api.put(`/orders/cancel/${orderId}`);
+        const response = await api.patch(`/orders/${orderId}/cancel`);
+        return response.data;
+    },
+    // Trả hàng (Chỉ dùng khi status = completed)
+    returnOrder: async (orderId: number) => {
+        const response = await api.patch(`/orders/${orderId}/return`);
         return response.data;
     }
 };

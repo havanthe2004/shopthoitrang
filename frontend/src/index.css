@@ -12,6 +12,14 @@
   }
 }
 
+input::placeholder {
+  font-family: sans-serif; 
+  font-style: normal;     
+}
+
+input {
+  font-family: sans-serif !important;
+}
 /* Tùy chỉnh dấu chấm tròn cho Slider */
 .slick-dots {
   bottom: 20px !important;
@@ -35,6 +43,4 @@ html,
 body {
   margin: 0;
   padding: 0;
-  /* background-color: #f0f0f0; */
-  /* Màu nền dự phòng khi ảnh chưa tải xong */
 }

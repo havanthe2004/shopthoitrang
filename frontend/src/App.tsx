@@ -1,10 +1,10 @@
-import { useEffect } from 'react'; // 1. Thêm useEffect
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux'; // 2. Thêm hooks của Redux
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom'; // Thêm Outlet
+import { useDispatch, useSelector } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Import Components & Pages
+// Import Components & Pages (Client)
 import Header from './components/layout/Header';
 import Footer from './components/layout/Footer.tsx';
 import HomePage from './pages/HomePage';
@@ -12,27 +12,50 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage.tsx';
 import ForgotPasswordPage from './pages/ForgotPasswordPage.tsx';
 import ResetPasswordPage from './pages/ResetPasswordPage.tsx';
-import ProductListPage from './pages/ProductListPage.tsx'
+import ProductListPage from './pages/ProductListPage.tsx';
 import ProfilePage from './pages/ProfilePage';
 import ProductDetail from './pages/ProductDetail.tsx';
 import CartPage from './pages/CartPage';
-import CheckoutPage from './pages/CheckoutPage.tsx'
-import OrderSuccessPage from './pages/OrderSuccessPage.tsx'
+import CheckoutPage from './pages/CheckoutPage.tsx';
+import OrderSuccessPage from './pages/OrderSuccessPage.tsx';
+import OrderHistory from './pages/OrderHistory.tsx';
+
+
 
 // Import Actions & Types
 import { fetchCartServer } from './redux/slices/cartSlice';
 import type { RootState } from './redux/store';
 
+// ==========================================
+// 1. TẠO CLIENT LAYOUT (DÀNH CHO KHÁCH HÀNG)
+// ==========================================
+const ClientLayout = () => {
+  return (
+    <>
+      <Header />
+      <div
+        className="min-h-screen"
+        style={{ backgroundImage: "url('/background/background.jpg')" }}
+      >
+  
+        <Outlet />
+      </div>
+      <Footer />
+    </>
+  );
+};
+
+
+
+
 function App() {
   const dispatch = useDispatch();
-
-  // Lấy thông tin user hiện tại từ Redux Auth
   const { currentUser } = useSelector((state: RootState) => state.auth);
+
   useEffect(() => {
     const loadCart = async () => {
       if (currentUser) {
-        const result = await dispatch(fetchCartServer() as any);
-        console.log("Kết quả trả về từ Dispatch:", result); // Dòng này cực kỳ quan trọng
+        await dispatch(fetchCartServer() as any);
       }
     };
     loadCart();
@@ -40,12 +63,9 @@ function App() {
 
   return (
     <Router>
-      {/* Header sẽ luôn hiển thị số lượng giỏ hàng chính xác nhờ fetchCartServer ở trên */}
-      <Header />
+      <Routes>
 
-      <div className=" min-h-screen"
-        style={{ backgroundImage: "url('/background/background.jpg')" }}>
-        <Routes>
+        <Route element={<ClientLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -58,12 +78,15 @@ function App() {
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success" element={<OrderSuccessPage />} />
+          <Route path="/my-order" element={<OrderHistory />} />
+        </Route>
 
-          {/* Bạn có thể thêm trang 404 ở đây nếu cần */}
-        </Routes>
-      </div>
-      <Footer />
-      {/* Cấu hình Toast thông báo */}
+
+        {/* Trang 404 cho toàn bộ hệ thống */}
+        <Route path="*" element={<div className="text-center py-20 text-2xl font-bold">404 - Không tìm thấy trang</div>} />
+      </Routes>
+
+
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -77,7 +100,6 @@ function App() {
         theme="light"
       />
     </Router>
-
   );
 }
 

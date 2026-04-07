@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { FaMapMarkerAlt, FaCreditCard, FaMoneyBillAlt, FaRegStickyNote, FaCheck } from 'react-icons/fa';
+import { FaMapMarkerAlt, FaCreditCard, FaMoneyBillAlt, FaRegStickyNote, FaCheck, FaSpinner } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
 import { getAddressesAPI } from '../services/userService';
 import { createOrderServer } from '../redux/slices/orderSlice';
+import { fetchCartServer } from '../redux/slices/cartSlice';
 import AddressModal from '../components/profile/AddressModal';
 
 const CheckoutPage = () => {
@@ -13,7 +14,7 @@ const CheckoutPage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    // 1. GIỮ DỮ LIỆU: Khởi tạo từ localStorage
+
     const [paymentMethod, setPaymentMethod] = useState<'COD' | 'VNPAY'>(
         (localStorage.getItem('temp_payment') as 'COD' | 'VNPAY') || 'COD'
     );
@@ -22,29 +23,22 @@ const CheckoutPage = () => {
     const [selectedAddress, setSelectedAddress] = useState<any>(null);
     const [isSelecting, setIsSelecting] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
-    const { selectedItems = [], totalAmount = 0, selectedIds = [] } = state || {};
+    const { totalAmount = 0, selectedIds = [] } = state || {};
 
-    useEffect(() => {
-        if (!state) return navigate('/cart');
-        fetchAddresses();
-    }, []);
-
-    // 2. GIỮ DỮ LIỆU: Tự động lưu khi người dùng thay đổi
-    useEffect(() => {
-        localStorage.setItem('temp_payment', paymentMethod);
-        localStorage.setItem('temp_note', note);
-    }, [paymentMethod, note]);
-
-    const fetchAddresses = async () => {
+  
+    const fetchAddresses = useCallback(async () => {
         try {
             const data = await getAddressesAPI();
             setAddresses(data);
             const savedAddrId = localStorage.getItem('temp_address_id');
             const found = data.find((a: any) => a.addressId === Number(savedAddrId));
             setSelectedAddress(found || data.find((a: any) => a.isDefault) || data[0]);
-        } catch (err) { toast.error("Lỗi tải địa chỉ"); }
-    };
+        } catch (err) {
+            toast.error("Lỗi tải địa chỉ");
+        }
+    }, []);
 
     const handleSelectAddress = (addr: any) => {
         setSelectedAddress(addr);
@@ -54,34 +48,69 @@ const CheckoutPage = () => {
 
     const handleConfirmOrder = async () => {
         if (!selectedAddress) return toast.warning("Vui lòng chọn địa chỉ giao hàng");
+        
+        setIsLoading(true);
+        try {
+            const orderData = {
+                selectedIds,
+                totalPrice: totalAmount,
+                receiverName: selectedAddress.receiverName,
+                phone: selectedAddress.phone,
+                address: `${selectedAddress.detailAddress}, ${selectedAddress.ward}, ${selectedAddress.district}, ${selectedAddress.province}`,
+                paymentMethod,
+                note
+            };
 
-        const orderData = {
-            selectedIds,
-            totalPrice: totalAmount,
-            receiverName: selectedAddress.receiverName,
-            phone: selectedAddress.phone,
-            address: `${selectedAddress.detailAddress}, ${selectedAddress.ward}, ${selectedAddress.district}, ${selectedAddress.province}`,
-            paymentMethod,
-            note
-        };
+            const result = await dispatch(createOrderServer(orderData) as any);
 
-        const result = await dispatch(createOrderServer(orderData) as any);
+            if (result.meta.requestStatus === 'fulfilled') {
+              
+                await dispatch(fetchCartServer() as any);
+                
+          
+                localStorage.removeItem('temp_payment');
+                localStorage.removeItem('temp_note');
+                localStorage.removeItem('temp_address_id');
 
-        if (result.meta.requestStatus === 'fulfilled') {
-            // Xóa rác khi đặt hàng thực sự thành công
-            localStorage.removeItem('temp_payment');
-            localStorage.removeItem('temp_note');
-            localStorage.removeItem('temp_address_id');
-
-            if (paymentMethod === 'VNPAY' && result.payload.url) {
-                window.location.href = result.payload.url;
+                if (paymentMethod === 'VNPAY' && result.payload.url) {
+                    window.location.href = result.payload.url;
+                } else {
+                    navigate('/order-success', { 
+                        state: { orderId: result.payload.orderId },
+                        replace: true 
+                    });
+                }
             } else {
-                navigate('/order-success', { state: { orderId: result.payload.orderId } });
+                toast.error(result.payload?.message || "Đặt hàng thất bại");
             }
-        } else {
-            toast.error(result.payload?.message || "Đặt hàng thất bại");
+        } catch (error) {
+            toast.error("Đã có lỗi xảy ra");
+        } finally {
+            setIsLoading(false);
         }
     };
+
+
+    useEffect(() => {
+        if (!state) {
+            navigate('/cart', { replace: true });
+        }
+    }, [state, navigate]);
+
+  
+    useEffect(() => {
+        if (state) {
+            fetchAddresses();
+        }
+    }, [state, fetchAddresses]);
+
+
+    useEffect(() => {
+        localStorage.setItem('temp_payment', paymentMethod);
+        localStorage.setItem('temp_note', note);
+    }, [paymentMethod, note]);
+
+    if (!state) return null;
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-12" style={{ fontFamily: 'Times New Roman' }}>
@@ -89,7 +118,7 @@ const CheckoutPage = () => {
                 <div className="lg:col-span-8 space-y-12">
                     <h1 className="text-4xl font-black italic uppercase underline decoration-red-600 underline-offset-8">Thanh toán</h1>
 
-                    {/* 01. ĐỊA CHỈ - FIX HIỂN THỊ DẠNG DANH SÁCH DỌC */}
+                    {/* 01. ĐỊA CHỈ */}
                     <div className="space-y-6">
                         <div className="flex justify-between items-center border-b-2 pb-4">
                             <span className="font-black uppercase italic text-sm flex items-center gap-2">
@@ -109,18 +138,17 @@ const CheckoutPage = () => {
                                 <button onClick={() => setIsSelecting(true)} className="bg-black text-white text-[10px] px-6 py-2 font-black uppercase hover:bg-red-600 transition shadow-lg">Thay đổi</button>
                             </div>
                         ) : (
-                            <div className="flex flex-col space-y-4 animate-fadeIn">
+                            <div className="flex flex-col space-y-4">
                                 {addresses.map((addr) => (
                                     <div
                                         key={addr.addressId}
                                         onClick={() => handleSelectAddress(addr)}
-                                        className={`w-full p-6 border-2 flex justify-between items-center cursor-pointer transition-all duration-200 ${selectedAddress?.addressId === addr.addressId
-                                                ? 'border-black bg-gray-50 shadow-md'
-                                                : 'border-gray-100 hover:border-gray-300 hover:bg-white'
-                                            }`}
+                                        className={`w-full p-6 border-2 flex justify-between items-center cursor-pointer transition-all ${selectedAddress?.addressId === addr.addressId
+                                            ? 'border-black bg-gray-50 shadow-md'
+                                            : 'border-gray-100 hover:border-gray-300'
+                                        }`}
                                     >
                                         <div className="flex items-center gap-6">
-                                            {/* Radio Button Custom */}
                                             <div className={`w-5 h-5 border-2 rounded-full flex items-center justify-center ${selectedAddress?.addressId === addr.addressId ? 'border-black' : 'border-gray-300'}`}>
                                                 {selectedAddress?.addressId === addr.addressId && <div className="w-2.5 h-2.5 bg-black rounded-full" />}
                                             </div>
@@ -129,17 +157,10 @@ const CheckoutPage = () => {
                                                 <p className="text-[12px] text-gray-500 font-medium">{addr.detailAddress}, {addr.province}</p>
                                             </div>
                                         </div>
-                                        {selectedAddress?.addressId === addr.addressId && (
-                                            <FaCheck className="text-black text-sm" />
-                                        )}
+                                        {selectedAddress?.addressId === addr.addressId && <FaCheck className="text-black text-sm" />}
                                     </div>
                                 ))}
-                                <button
-                                    onClick={() => setIsSelecting(false)}
-                                    className="self-start text-[10px] font-bold uppercase underline text-gray-400 hover:text-black mt-2 ml-2"
-                                >
-                                    Quay lại địa chỉ cũ
-                                </button>
+                                <button onClick={() => setIsSelecting(false)} className="self-start text-[10px] font-bold uppercase underline text-gray-400 hover:text-black mt-2 ml-2">Hủy</button>
                             </div>
                         )}
                     </div>
@@ -184,9 +205,16 @@ const CheckoutPage = () => {
                         </div>
                         <button
                             onClick={handleConfirmOrder}
-                            className="w-full bg-white text-black py-6 font-black uppercase tracking-[0.3em] text-[12px] hover:bg-red-600 hover:text-white transition-all duration-500 shadow-2xl active:scale-95"
+                            disabled={isLoading}
+                            className={`w-full py-6 font-black uppercase tracking-[0.3em] text-[12px] transition-all duration-500 shadow-2xl active:scale-95 flex items-center justify-center gap-3
+                                ${isLoading ? 'bg-gray-700 cursor-not-allowed' : 'bg-white text-black hover:bg-red-600 hover:text-white'}`}
                         >
-                            Xác nhận thanh toán
+                            {isLoading ? (
+                                <>
+                                    <FaSpinner className="animate-spin" />
+                                    Đang xử lý...
+                                </>
+                            ) : "Xác nhận thanh toán"}
                         </button>
                         <p className="text-[9px] text-gray-500 uppercase font-bold mt-6 text-center tracking-widest italic leading-relaxed">
                             Bằng cách đặt hàng, bạn đồng ý với các điều khoản dịch vụ của chúng tôi.

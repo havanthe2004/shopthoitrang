@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  baseURL: process.env.API_KE,
+  baseURL: import.meta.env.VITE_API_KEY,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,5 +20,4 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 export default axiosInstance;
-
 

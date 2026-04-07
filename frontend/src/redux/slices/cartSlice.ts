@@ -2,14 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { cartService } from '../../services/cartService';
 
 export interface ICartItem {
-    cartItemId: number;
     productVariantId: number;
     name: string;
-    price: number | string;
+    price: number;
+    image: string;
     color: string;
     size: string;
     quantity: number;
-    image: string;
 }
 
 interface CartState {
@@ -17,6 +16,9 @@ interface CartState {
     totalQuantity: number;
     totalAmount: number;
     loading: boolean;
+
+    page: number;
+    totalPages: number;
 }
 
 
@@ -24,7 +26,10 @@ const initialState: CartState = {
     cartItems: [],
     totalQuantity: 0,
     totalAmount: 0,
-    loading: false
+    loading: false,
+
+    page: 1,
+    totalPages: 1
 };
 
 const calcTotals = (state: CartState) => {
@@ -39,14 +44,19 @@ const calcTotals = (state: CartState) => {
 
 
 
-export const fetchCartServer = createAsyncThunk('cart/fetchCartServer', async (_, { rejectWithValue }) => {
-    try {
-        const data = await cartService.getCart();
-        return data; 
-    } catch (err: any) {
-        return rejectWithValue(err.response?.data || "Lỗi tải giỏ hàng");
+export const fetchCartServer = createAsyncThunk(
+    'cart/fetchCartServer',
+    async (params: { page?: number, limit?: number } | undefined, { rejectWithValue }) => {
+        try {
+            const page = params?.page || 1;
+            const limit = params?.limit || 10;
+            const data = await cartService.getCart(page, limit);
+            return data; 
+        } catch (err: any) {
+            return rejectWithValue(err.response?.data);
+        }
     }
-});
+);
 
 export const addToCartServer = createAsyncThunk(
     'cart/addToCartServer',
@@ -54,7 +64,7 @@ export const addToCartServer = createAsyncThunk(
         try {
             await cartService.addToCart(productVariantId, quantity);
             const data = await cartService.getCart();
-            return data;
+            return data.data; // 👈 QUAN TRỌNG
         } catch (err: any) {
             return rejectWithValue(err.response?.data || "Lỗi thêm vào giỏ");
         }
@@ -79,11 +89,12 @@ export const removeFromCartServer = createAsyncThunk(
         try {
             await cartService.removeFromCart(productVariantId);
             return productVariantId;
-        } catch (err:any) {
+        } catch (err: any) {
             return rejectWithValue(err.response?.data || "Lỗi xóa sản phẩm");
         }
     }
 );
+
 
 const cartSlice = createSlice({
     name: 'cart',
@@ -98,24 +109,34 @@ const cartSlice = createSlice({
     extraReducers: (builder) => {
         builder
             .addCase(fetchCartServer.fulfilled, (state, action) => {
-                state.cartItems = action.payload;
+                state.cartItems = action.payload.data;
+                state.page = action.payload.pagination.page;
+                state.totalPages = action.payload.pagination.totalPages;
+
                 calcTotals(state);
             })
+
             .addCase(addToCartServer.fulfilled, (state, action) => {
-                state.cartItems = action.payload;
+                state.cartItems = action.payload; // ✅ FIX
                 calcTotals(state);
             })
+
             .addCase(updateQuantityServer.fulfilled, (state, action) => {
                 const { productVariantId, quantity } = action.payload;
-                const item = state.cartItems.find((i) => i.productVariantId === productVariantId);
+                const item = state.cartItems.find(
+                    (i) => i.productVariantId === productVariantId
+                );
                 if (item) {
                     item.quantity = quantity;
                     calcTotals(state);
                 }
             })
+
             .addCase(removeFromCartServer.fulfilled, (state, action) => {
-                const productVariantId = action.payload; // 
-                state.cartItems = state.cartItems.filter((i) => i.productVariantId !== productVariantId);
+                const productVariantId = action.payload;
+                state.cartItems = state.cartItems.filter(
+                    (i) => i.productVariantId !== productVariantId
+                );
                 calcTotals(state);
             });
     }

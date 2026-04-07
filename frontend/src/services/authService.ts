@@ -15,7 +15,7 @@ export const forgotPasswordAPI = async (email: string) => {
     return response.data;
 };
 
-// Xác nhận OTP và đặt mật khẩu mới
+
 export const resetPasswordAPI = async (data: any) => {
     const response = await api.post('/auth/reset-password', data);
     return response.data;

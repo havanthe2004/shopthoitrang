@@ -7,10 +7,10 @@ import { getProfileAPI, updateProfileAPI } from '../../services/userService';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../redux/slices/authSlice';
 
-// 1. Schema xác thực Zod
+
 const profileSchema = z.object({
     name: z.string().min(1, "Họ tên không được để trống"),
-    phone: z.string().regex(/^(03|05|07|08|09)[0-9]{8}$/, "Số điện thoại không đúng định dạng Việt Nam"),
+    phone: z.string().min(1, "Số điện thoại không được để trống").regex(/^(03|05|07|08|09)[0-9]{8}$/, "Số điện thoại không đúng định dạng Việt Nam"),
 });
 
 type ProfileInput = z.infer<typeof profileSchema>;
@@ -29,13 +29,13 @@ const AccountInfo = () => {
     });
 
     console.log(user);
-    // 2. Lấy dữ liệu người dùng
+
     const fetchUser = async () => {
         try {
             const res = await getProfileAPI();
             const data = res.data || res;
             setUser(data);
-            reset({ name: data.name, phone: data.phone }); // Đưa dữ liệu vào form
+            reset({ name: data.name, phone: data.phone });
 
             dispatch(loginSuccess({
                 user: data,
@@ -51,7 +51,6 @@ const AccountInfo = () => {
         fetchUser();
     }, []);
 
-    // 3. Xử lý đổi ảnh (Preview)
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -60,7 +59,7 @@ const AccountInfo = () => {
         }
     };
 
-    // 4. Lưu thông tin cập nhật
+
     const onSubmit = async (data: ProfileInput) => {
         const formData = new FormData();
         formData.append('name', data.name);
@@ -74,7 +73,7 @@ const AccountInfo = () => {
 
             setIsEditing(false);
             setAvatarPreview(null);
-            fetchUser(); // Tải lại dữ liệu mới nhất
+            fetchUser(); 
             dispatch(loginSuccess({
                 user: updatedData,
                 token: localStorage.getItem('token') || '',
@@ -115,7 +114,7 @@ const AccountInfo = () => {
                     <div className="relative group">
                         <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-gray-200 shadow-sm">
                             <img
-                                src={avatarPreview || (user.avatar ? `http://localhost:3000/${user.avatar}` : 'https://via.placeholder.com/150')}
+                                src={avatarPreview || (user.avatar ? `http://localhost:3000/${user.avatar}` : "/avt_default/download.jpg")}
                                 alt="Avatar"
                                 className="w-full h-full object-cover"
                             />
