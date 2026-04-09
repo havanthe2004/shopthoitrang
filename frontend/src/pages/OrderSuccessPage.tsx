@@ -7,13 +7,13 @@ import { clearCart } from '../redux/slices/cartSlice';
 const OrderSuccessPage = () => {
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
-    
 
+    // Kết quả từ VNPAY (nếu có)
     const status = searchParams.get('status');
     const orderId = searchParams.get('orderId');
 
     useEffect(() => {
-
+        // Nếu thanh toán thành công, xóa giỏ hàng ở Client (Redux)
         if (status === 'success') {
             dispatch(clearCart());
         }
@@ -38,7 +38,7 @@ const OrderSuccessPage = () => {
 
             <div className="mt-12 flex justify-center gap-6">
                 <Link to="/" className="border-2 border-black px-8 py-3 font-bold uppercase text-[10px] hover:bg-black hover:text-white transition">Về trang chủ</Link>
-                <Link to="/profile" className="bg-black text-white px-8 py-3 font-bold uppercase text-[10px] hover:bg-red-600 transition">Đơn hàng của tôi</Link>
+                <Link to="/my-order" className="bg-black text-white px-8 py-3 font-bold uppercase text-[10px] hover:bg-red-600 transition">Đơn hàng của tôi</Link>
             </div>
         </div>
     );

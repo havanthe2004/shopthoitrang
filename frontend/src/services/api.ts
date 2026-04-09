@@ -7,7 +7,7 @@ declare module 'axios' {
 }
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_KEY,
+  baseURL: 'http://localhost:3000/api',
 });
 
 // Request: gắn access token
@@ -40,7 +40,7 @@ api.interceptors.response.use(
 
       try {
         const res = await axios.post(
-          `${import.meta.env.VITE_API_KEY}/auth/refresh-token`,
+          'http://localhost:3000/api/auth/refresh-token',
           { refreshToken },
           { headers: { Authorization: '' } }
         );

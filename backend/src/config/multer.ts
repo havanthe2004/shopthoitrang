@@ -30,7 +30,7 @@ export function createUploader(subFolder: string) {
 
   return multer({
     storage,
-    limits: { fileSize: 2 * 1024 * 1024 }, 
+    limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
     fileFilter: (req, file, cb) => {
       if (!file.mimetype.startsWith("image/")) {
         cb(new Error("Chỉ cho phép upload ảnh"));

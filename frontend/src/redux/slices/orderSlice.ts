@@ -5,7 +5,7 @@ interface OrderState {
     orders: any[];
     loading: boolean;
     error: string | null;
-    lastCreatedOrder: any | null; 
+    lastCreatedOrder: any | null; // Để lưu thông tin đơn vừa tạo (nếu cần url VNPAY)
     totalPages: number;
 
 }
@@ -18,7 +18,7 @@ const initialState: OrderState = {
     totalPages: 1
 };
 
-
+// 1. Thunk đặt hàng mới
 export const createOrderServer = createAsyncThunk(
     'order/createOrderServer',
     async (orderData: any, { rejectWithValue }) => {
@@ -31,6 +31,18 @@ export const createOrderServer = createAsyncThunk(
     }
 );
 
+// 2. Thunk lấy danh sách đơn hàng
+// export const fetchOrders = createAsyncThunk(
+//     'order/fetchOrders',
+//     async (status: string, { rejectWithValue }) => {
+//         try {
+//             const response = await orderService.getMyOrders(status);
+//             return response; 
+//         } catch (error: any) {
+//             return rejectWithValue(error.response?.data?.message || 'Không thể lấy đơn hàng');
+//         }
+//     }
+// );
 
 export const fetchOrders = createAsyncThunk(
     'orders/fetchOrders',
@@ -44,7 +56,7 @@ const orderSlice = createSlice({
     name: 'order',
     initialState,
     reducers: {
-
+        // Action để reset lỗi hoặc thông tin đơn hàng cũ
         resetOrderState: (state) => {
             state.error = null;
             state.lastCreatedOrder = null;
@@ -52,7 +64,7 @@ const orderSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-       
+            // Xử lý tạo đơn hàng
             .addCase(createOrderServer.pending, (state) => {
                 state.loading = true;
                 state.error = null;
@@ -66,7 +78,20 @@ const orderSlice = createSlice({
                 state.error = action.payload as string;
             })
 
-            
+            // Xử lý lấy danh sách đơn hàng (QUAN TRỌNG)
+            // .addCase(fetchOrders.pending, (state) => {
+            //     state.loading = true;
+            //     state.error = null;
+            // })
+            // .addCase(fetchOrders.fulfilled, (state, action) => {
+            //     state.loading = false;
+            //     state.orders = action.payload; // Lưu mảng đơn hàng vào store
+            // })
+            // .addCase(fetchOrders.rejected, (state, action) => {
+            //     state.loading = false;
+            //     state.error = action.payload as string;
+            //     state.orders = []; // Reset mảng đơn hàng nếu lỗi
+            // });
 
             .addCase(fetchOrders.pending, (state) => {
                 state.loading = true;

@@ -11,6 +11,9 @@ import { format } from "date-fns";
 
 export class OrderController {
 
+    // ================================
+    // HELPER: SORT PARAMS VNPAY
+    // ================================
     private static sortObject(obj: any) {
         const sorted: any = {};
         const keys = Object.keys(obj).sort();
@@ -22,6 +25,9 @@ export class OrderController {
         return sorted;
     }
 
+    // ================================
+    // CREATE ORDER
+    // ================================
     static createOrder = async (req: Request, res: Response) => {
         const queryRunner = AppDataSource.createQueryRunner();
 
@@ -42,16 +48,20 @@ export class OrderController {
                 return res.status(400).json({ message: "Không có sản phẩm nào được chọn" });
             }
 
+            // ============================
+            // COD
+            // ============================
             if (paymentMethod === "COD") {
                 await queryRunner.connect();
                 await queryRunner.startTransaction();
 
                 try {
+                    // 1. Lấy cart items + lock
                     const cartItems = await queryRunner.manager
                         .createQueryBuilder(CartItem, "item")
                         .leftJoinAndSelect("item.variant", "variant")
                         .leftJoinAndSelect("variant.product", "product")
-                        .setLock("pessimistic_write")
+                        .setLock("pessimistic_write") // 🔥 chống race condition
                         .where("variant.productVariantId IN (:...ids)", { ids: selectedIds })
                         .getMany();
 
@@ -59,13 +69,14 @@ export class OrderController {
                         throw new Error("Không tìm thấy sản phẩm trong giỏ");
                     }
 
+                    // 2. Check stock
                     for (const item of cartItems) {
                         if (item.variant.stock < item.quantity) {
                             throw new Error(`Sản phẩm "${item.variant.product.name}" không đủ hàng`);
                         }
                     }
 
-              
+                    // 3. Tạo order
                     const order = queryRunner.manager.create(Order, {
                         user: { userId },
                         receiverName,
@@ -80,18 +91,20 @@ export class OrderController {
 
                     const savedOrder = await queryRunner.manager.save(order);
 
+                    // 4. Xử lý từng item
                     for (const item of cartItems) {
 
-                      
+
+                        // Trừ kho
                         item.variant.stock -= item.quantity;
                         await queryRunner.manager.save(item.variant);
 
-                    
+                        // 🔥 TĂNG SOLD
                         const product = item.variant.product;
                         product.sold += item.quantity;
                         await queryRunner.manager.save(Product, product);
 
-                 
+                        // Tạo order item
                         const orderItem = queryRunner.manager.create(OrderItem, {
                             order: savedOrder,
                             variant: item.variant,
@@ -102,7 +115,7 @@ export class OrderController {
                         await queryRunner.manager.save(orderItem);
                     }
 
-                
+                    // 5. Xóa cart
                     await queryRunner.manager.delete(
                         CartItem,
                         cartItems.map(i => i.cartItemId)
@@ -123,7 +136,9 @@ export class OrderController {
                 }
             }
 
-
+            // ============================
+            // VNPAY
+            // ============================
             if (paymentMethod === "VNPAY") {
 
                 const orderData = {
@@ -174,7 +189,9 @@ export class OrderController {
         }
     };
 
-
+    // ================================
+    // VNPAY RETURN
+    // ================================
     static vnpayReturn = async (req: Request, res: Response) => {
         const queryRunner = AppDataSource.createQueryRunner();
 
@@ -192,15 +209,19 @@ export class OrderController {
             const hmac = crypto.createHmac("sha512", vnpayConfig.vnp_HashSecret);
             const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
+            // ❌ Nếu hash sai => reject
             if (secureHash !== signed) {
                 return res.redirect(`http://localhost:5173/order-success?status=error`);
             }
 
-
+            // ❌ Nếu thanh toán fail
             if (req.query.vnp_ResponseCode !== "00") {
                 return res.redirect(`http://localhost:5173/order-success?status=cancel`);
             }
 
+            // ============================
+            // THANH TOÁN THÀNH CÔNG
+            // ============================
             await queryRunner.connect();
             await queryRunner.startTransaction();
 
@@ -209,7 +230,7 @@ export class OrderController {
                     Buffer.from(req.query.vnp_OrderInfo as string, "base64").toString()
                 );
 
-          
+                // Lấy cart items + lock
                 const cartItems = await queryRunner.manager
                     .createQueryBuilder(CartItem, "item")
                     .leftJoinAndSelect("item.variant", "variant")
@@ -218,14 +239,17 @@ export class OrderController {
                     .where("variant.productVariantId IN (:...ids)", { ids: orderData.selectedIds })
                     .getMany();
 
-             
+                // Check stock
                 for (const item of cartItems) {
+                    if (!item.variant.isActive) {
+                        throw new Error(`Sản phẩm "${item.variant.product.name}" đã ngừng bán`);
+                    }
                     if (item.variant.stock < item.quantity) {
                         throw new Error("Không đủ hàng");
                     }
                 }
 
-            
+                // Tạo order
                 const order = queryRunner.manager.create(Order, {
                     user: { userId: orderData.userId },
                     receiverName: orderData.receiverName,
@@ -239,12 +263,13 @@ export class OrderController {
 
                 const savedOrder = await queryRunner.manager.save(order);
 
+                // Xử lý item
                 for (const item of cartItems) {
 
                     item.variant.stock -= item.quantity;
                     await queryRunner.manager.save(item.variant);
 
-          
+                    // 🔥 tăng sold
                     const product = item.variant.product;
                     product.sold += item.quantity;
                     await queryRunner.manager.save(Product, product);
@@ -259,7 +284,7 @@ export class OrderController {
                     await queryRunner.manager.save(orderItem);
                 }
 
-         
+                // Xóa cart
                 await queryRunner.manager.delete(
                     CartItem,
                     cartItems.map(i => i.cartItemId)
@@ -280,7 +305,29 @@ export class OrderController {
             return res.redirect(`http://localhost:5173/order-success?status=error`);
         }
     };
-    
+    // static async getMyOrders(req: any, res: Response) {
+    //     try {
+    //         const userId = req.user.userId;
+    //         const { status } = req.query; // Filter: pending, approved, v.v..
+
+    //         const orderRepo = AppDataSource.getRepository(Order);
+
+    //         const query: any = {
+    //             where: { user: { userId: userId } },
+    //             relations: ["items", "items.variant", "items.variant.product", "items.variant.color", "items.variant.color.images"],
+    //             order: { createdAt: "DESC" }
+    //         };
+
+    //         if (status && status !== "all") {
+    //             query.where.status = status;
+    //         }
+
+    //         const orders = await orderRepo.find(query);
+    //         return res.json(orders);
+    //     } catch (error) {
+    //         return res.status(500).json({ message: "Lỗi server", error });
+    //     }
+    // }
 
     static async getMyOrders(req: any, res: Response) {
         try {
@@ -324,7 +371,7 @@ export class OrderController {
         }
     }
 
-
+    // Hủy đơn hàng (Chỉ khi status là pending)
     static async cancelOrder(req: any, res: Response) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
@@ -334,7 +381,7 @@ export class OrderController {
             const userId = req.user.userId;
             const { orderId } = req.params;
 
-  
+            // 1. Tìm đơn hàng kèm theo danh sách sản phẩm (items)
             const order = await queryRunner.manager.findOne(Order, {
                 where: { orderId: Number(orderId), user: { userId } },
                 relations: ["items", "items.variant", "items.variant.product"]
@@ -344,29 +391,31 @@ export class OrderController {
                 return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
             }
 
-        
+            // 2. Kiểm tra điều kiện hủy (Chỉ cho phép khi đang 'pending')
             if (order.status !== "pending") {
                 return res.status(400).json({ message: "Chỉ có thể hủy đơn hàng đang chờ xác thực" });
             }
 
+            // 3. HOÀN LẠI KHO VÀ GIẢM LƯỢT BÁN
             for (const item of order.items) {
                 const variant = item.variant;
                 const product = variant.product;
 
-      
+                // A. Cộng lại số lượng vào kho (Stock)
                 variant.stock += item.quantity;
                 await queryRunner.manager.save(variant);
 
-     
+                // B. Trừ đi số lượng đã bán (Sold)
+                // Đảm bảo sold không bị âm (đề phòng lỗi logic)
                 product.sold = Math.max(0, product.sold - item.quantity);
                 await queryRunner.manager.save(product);
             }
 
-  
+            // 4. Cập nhật trạng thái đơn hàng thành 'cancelled'
             order.status = "cancelled";
             await queryRunner.manager.save(order);
 
-
+            // 5. Xác nhận hoàn tất các thay đổi
             await queryRunner.commitTransaction();
 
             return res.json({
@@ -375,16 +424,17 @@ export class OrderController {
             });
 
         } catch (error) {
-
+            // Nếu có bất kỳ lỗi nào, hủy bỏ toàn bộ thay đổi để tránh sai lệch dữ liệu
             await queryRunner.rollbackTransaction();
             console.error("Cancel Order Error:", error);
             return res.status(500).json({ message: "Lỗi hệ thống khi hủy đơn hàng" });
         } finally {
-
+            // Giải phóng kết nối
             await queryRunner.release();
         }
     }
 
+    // Yêu cầu trả hàng (Chỉ khi status là completed)
     static async returnOrder(req: any, res: Response) {
         try {
             const userId = req.user.userId;

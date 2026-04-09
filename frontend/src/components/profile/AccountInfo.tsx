@@ -7,7 +7,7 @@ import { getProfileAPI, updateProfileAPI } from '../../services/userService';
 import { useDispatch } from 'react-redux';
 import { loginSuccess } from '../../redux/slices/authSlice';
 
-
+// 1. Schema xác thực Zod
 const profileSchema = z.object({
     name: z.string().min(1, "Họ tên không được để trống"),
     phone: z.string().min(1, "Số điện thoại không được để trống").regex(/^(03|05|07|08|09)[0-9]{8}$/, "Số điện thoại không đúng định dạng Việt Nam"),
@@ -29,13 +29,13 @@ const AccountInfo = () => {
     });
 
     console.log(user);
-
+    // 2. Lấy dữ liệu người dùng
     const fetchUser = async () => {
         try {
             const res = await getProfileAPI();
             const data = res.data || res;
             setUser(data);
-            reset({ name: data.name, phone: data.phone });
+            reset({ name: data.name, phone: data.phone }); // Đưa dữ liệu vào form
 
             dispatch(loginSuccess({
                 user: data,
@@ -51,6 +51,7 @@ const AccountInfo = () => {
         fetchUser();
     }, []);
 
+    // 3. Xử lý đổi ảnh (Preview)
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
@@ -59,7 +60,7 @@ const AccountInfo = () => {
         }
     };
 
-
+    // 4. Lưu thông tin cập nhật
     const onSubmit = async (data: ProfileInput) => {
         const formData = new FormData();
         formData.append('name', data.name);
@@ -73,7 +74,7 @@ const AccountInfo = () => {
 
             setIsEditing(false);
             setAvatarPreview(null);
-            fetchUser(); 
+            fetchUser(); // Tải lại dữ liệu mới nhất
             dispatch(loginSuccess({
                 user: updatedData,
                 token: localStorage.getItem('token') || '',

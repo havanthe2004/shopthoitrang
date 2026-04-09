@@ -7,9 +7,15 @@ const ProductCard = ({ product }: { product: any }) => {
     const variants = product.variants || [];
     const colors = product.colors || [];
 
+    // =========================
+    // PRICE
+    // =========================
     const prices = variants.map((v: any) => parseFloat(v.price));
     const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
 
+    // =========================
+    // IMAGE (FIX CHUẨN)
+    // =========================
     const allImages = colors.flatMap((c: any) =>
         c.images?.map((img: any) => img.url) || []
     );
@@ -59,6 +65,7 @@ const ProductCard = ({ product }: { product: any }) => {
                         : "Liên hệ"}
                 </p>
 
+                {/* COLOR DOT */}
                 <div className="flex gap-1 mt-1">
                     {uniqueColors.slice(0, 3).map((color: string, idx) => (
                         <div
