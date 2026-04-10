@@ -196,17 +196,14 @@ export class ProductController {
     static async search(req: Request, res: Response) {
         try {
             const productRepo = AppDataSource.getRepository(Product);
-
-            // 1. Lấy từ khóa từ query string (ví dụ: /search?keyword=ao)
             const keyword = req.query.keyword;
 
-            // 2. Khởi tạo QueryBuilder
             const query = productRepo.createQueryBuilder("product")
                 .leftJoinAndSelect("product.category", "category")
                 .leftJoinAndSelect("category.parent", "parentCategory")
                 .leftJoinAndSelect("product.variants", "variant")
                 .leftJoinAndSelect("product.colors", "color")
-                .leftJoinAndSelect("color.images", "image") // Lấy thêm ảnh để hiển thị ở gợi ý
+                .leftJoinAndSelect("color.images", "image") 
                 .where("product.isActive = :isActive", { isActive: true })
                 .andWhere("category.isActive = :categoryActive", { categoryActive: true })
                 .andWhere(`(parentCategory.categoryId IS NULL OR parentCategory.isActive = true)`)
