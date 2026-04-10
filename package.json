@@ -1,0 +1,23 @@
+{
+  "name": "shopthoitrang",
+  "version": "1.0.0",
+  "description": "Dự án xây dựng hệ thống **website quản lý cửa hàng thời trang** với mục tiêu hoạt động ổn định, dễ sử dụng và có khả năng mở rộng trong tương lai.",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/havanthe2004/shopthoitrang.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/havanthe2004/shopthoitrang/issues"
+  },
+  "homepage": "https://github.com/havanthe2004/shopthoitrang#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^25.5.0"
+  }
+}

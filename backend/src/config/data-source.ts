@@ -13,6 +13,7 @@ import { Banner } from "../models/Banner";
 import { OrderItem } from "../models/OrderItem";
 import { Post } from "../models/Post";
 import { ProductImage } from "../models/ProductImage";
+import { ProductColor } from "../models/ProductColor";
 import { ProductVariant } from "../models/ProductVariant";
 import { RefreshToken } from "../models/RefreshToken";
 import { User } from "../models/User";
@@ -34,6 +35,6 @@ export const AppDataSource = new DataSource({
     synchronize: true,
     logging: false,
     entities: [Product, Address, Cart, CartItem, Category, Order, Admin, AdminLog, Banner, OrderItem,
-        Post, ProductImage, ProductVariant, RefreshToken, User, Voucher, WebsiteConfig, AdminRefreshToken,Otp
+        Post, ProductImage, ProductVariant, ProductColor, RefreshToken, User, Voucher, WebsiteConfig, AdminRefreshToken, Otp
     ],
 });

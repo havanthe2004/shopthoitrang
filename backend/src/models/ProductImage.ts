@@ -1,5 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from "typeorm";
-import { ProductVariant } from "./ProductVariant";
+import {
+    Entity, PrimaryGeneratedColumn, Column,
+    ManyToOne
+} from "typeorm";
+import { ProductColor } from "./ProductColor";
 
 @Entity("product_images")
 export class ProductImage {
@@ -9,6 +12,11 @@ export class ProductImage {
     @Column()
     url!: string;
 
-    @ManyToOne(() => ProductVariant, v => v.images, { onDelete: 'CASCADE' })
-    variant!: ProductVariant;
+    // ✅ ảnh thuộc về màu
+    @ManyToOne(() => ProductColor, c => c.images, { onDelete: "CASCADE" })
+    color!: ProductColor;
+
+    // optional
+    @Column({ default: false })
+    isThumbnail!: boolean;
 }
