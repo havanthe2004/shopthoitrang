@@ -70,7 +70,7 @@ const ProductList = () => {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Quản lý kho hàng</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">Quản lý sản phẩm</h1>
             <p className="text-slate-500 text-sm mt-1">Danh sách sản phẩm {viewMode === 'active' ? 'đang kinh doanh' : 'đã ẩn khỏi hệ thống'}.</p>
           </div>
           <Link to="/admin/products/add"
