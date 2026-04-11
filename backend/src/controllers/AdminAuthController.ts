@@ -7,7 +7,6 @@ import { AdminRefreshToken } from '../models/AdminRefreshToken';
 
 export class AdminAuthController {
 
-    // ================= LOGIN =================
     static async adminLogin(req: Request, res: Response) {
         try {
             const { username, password } = req.body;
@@ -29,29 +28,24 @@ export class AdminAuthController {
                 return res.status(401).json({ message: 'Invalid credentials' });
             }
 
-            // ===========================================
-            // TẠO ACCESS TOKEN (Dùng SECRET riêng của Admin)
-            // ===========================================
+
             const accessToken = jwt.sign(
-                { adminId: admin.adminId, role: admin.role }, // Lưu adminId và role
+                { adminId: admin.adminId, role: admin.role },
                 process.env.JWT_ADMIN_ACCESS_SECRET as string,
-                { expiresIn: process.env.JWT_ACCESS_EXPIRE as any } // Thời gian sống tùy bạn cấu hình (VD: 15 phút)
+                { expiresIn: process.env.JWT_ACCESS_EXPIRE as any }
             );
 
-            // ===========================================
-            // TẠO REFRESH TOKEN (Dùng SECRET riêng của Admin)
-            // ===========================================
+
             const refreshToken = jwt.sign(
                 { adminId: admin.adminId },
                 process.env.JWT_ADMIN_REFRESH_SECRET as string,
                 { expiresIn: process.env.JWT_REFRESH_EXPIRE as any }
             );
 
-            // Lưu Refresh Token vào Database (Bảng admin_refresh_tokens)
             const refreshEntity = refreshRepo.create({
                 token: refreshToken,
-                expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // Sống 7 ngày
-                admin, // Khác với Client là user, ở đây map vào quan hệ admin
+                expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
+                admin, 
             });
 
             await refreshRepo.save(refreshEntity);
@@ -63,7 +57,6 @@ export class AdminAuthController {
                 adminInfo: {
                     adminId: admin.adminId,
                     username: admin.username,
-                    email: admin.email,
                     role: admin.role,
                     avatar: admin.avatar,
                 }
@@ -74,7 +67,7 @@ export class AdminAuthController {
         }
     }
 
-    // ================= REFRESH TOKEN =================
+
     static async refreshAdminToken(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;
@@ -82,22 +75,22 @@ export class AdminAuthController {
 
             const refreshRepo = AppDataSource.getRepository(AdminRefreshToken);
 
-            // 1. Tìm token trong DB
+         
             const savedToken = await refreshRepo.findOne({
                 where: { token: refreshToken },
-                relations: ['admin'] // Lấy kèm thông tin admin để lấy role
+                relations: ['admin'] 
             });
 
             if (!savedToken || savedToken.expiredAt < new Date()) {
                 return res.status(403).json({ message: "Refresh Token invalid or expired" });
             }
 
-            // 2. Xác thực JWT Refresh Token
+        
             const decoded = jwt.verify(refreshToken, process.env.JWT_ADMIN_REFRESH_SECRET as string) as any;
 
-            // 3. Tạo Access Token mới
+       
             const newAccessToken = jwt.sign(
-                { adminId: decoded.adminId, role: savedToken.admin.role }, // Cấp lại kèm role
+                { adminId: decoded.adminId, role: savedToken.admin.role },
                 process.env.JWT_ADMIN_ACCESS_SECRET as string,
                 { expiresIn: '15m' }
             );
@@ -108,7 +101,7 @@ export class AdminAuthController {
         }
     }
 
-    // ================= LOGOUT =================
+   
     static async adminLogout(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;
@@ -118,7 +111,6 @@ export class AdminAuthController {
 
             const refreshRepo = AppDataSource.getRepository(AdminRefreshToken);
 
-            // Xóa Refresh Token của Admin khỏi DB
             await refreshRepo.delete({ token: refreshToken });
 
             return res.json({ message: 'Logout successfully' });

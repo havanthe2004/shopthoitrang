@@ -14,14 +14,13 @@ export class CartController {
             const cartItemRepo = AppDataSource.getRepository(CartItem);
             const variantRepo = AppDataSource.getRepository(ProductVariant);
 
-            // Bước A: Tìm Cart của User, nếu chưa có thì tạo mới
+            
             let cart = await cartRepo.findOne({ where: { user: { userId: userId } } });
             if (!cart) {
                 cart = cartRepo.create({ user: { userId: userId } });
                 await cartRepo.save(cart);
             }
 
-            // Bước B: Kiểm tra biến thể có tồn tại không
             const variant = await variantRepo.findOne({
                 where: {
                     productVariantId,
@@ -30,16 +29,16 @@ export class CartController {
             });
             if (!variant) return res.status(404).json({ message: "Sản phẩm không tồn tại" });
 
-            // Bước C: Kiểm tra sản phẩm đã có trong giỏ (CartItem) chưa
+           
             let item = await cartItemRepo.findOne({
                 where: { cart: { cartId: cart.cartId }, variant: { productVariantId: productVariantId } }
             });
 
             if (item) {
-                // Nếu có rồi thì cộng dồn số lượng
+             
                 item.quantity += quantity;
             } else {
-                // Nếu chưa có thì tạo mới dòng CartItem
+             
                 item = cartItemRepo.create({
                     cart: cart,
                     variant: variant,
@@ -55,10 +54,7 @@ export class CartController {
         }
     }
 
-    /**
-     * 2. LẤY DANH SÁCH GIỎ HÀNG
-     * Trả về dữ liệu format đúng chuẩn Frontend (CartItem interface)
-     */
+   
     static async getCart(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
@@ -93,10 +89,10 @@ export class CartController {
                     name: item.variant.product.name,
                     price: item.variant.price,
 
-                    // ✅ ẢNH CHUẨN
+                   
                     image: images[0]?.url || "",
 
-                    // ✅ MÀU CHUẨN
+                  
                     color: color?.color || "",
 
                     size: item.variant.size,
@@ -120,10 +116,7 @@ export class CartController {
         }
     }
 
-    /**
-     * 3. CẬP NHẬT SỐ LƯỢNG TRỰC TIẾP
-     * Dùng khi khách nhấn +/- trong trang Giỏ hàng
-     */
+  
     static async updateQuantity(req: Request, res: Response) {
         try {
             const { variantId, quantity } = req.body;
@@ -133,7 +126,7 @@ export class CartController {
 
             const cartItemRepo = AppDataSource.getRepository(CartItem);
 
-            // Tìm Item dựa trên userId (thông qua Cart) và variantId
+          
             const item = await cartItemRepo.findOne({
                 where: {
                     cart: { user: { userId: userId } },
@@ -152,9 +145,7 @@ export class CartController {
         }
     }
 
-    /**
-     * 4. XÓA SẢN PHẨM KHỎI GIỎ
-     */
+  
     static async removeFromCart(req: Request, res: Response) {
         try {
             const variantId = parseInt(req.params.variantId as string);

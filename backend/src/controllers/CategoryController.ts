@@ -9,7 +9,7 @@ export class CategoryController {
             const categoryRepo = AppDataSource.getRepository(Category);
             const tree = await categoryRepo.find({
                 where: { parent: IsNull(), isActive: true },
-                relations: ['children'], // Lấy 1 cấp con
+                relations: ['children'], 
                 order: {
                     sortOrder: 'ASC', 
                     children: {

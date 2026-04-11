@@ -7,32 +7,30 @@ import { Like, IsNull } from "typeorm";
 
 export class AdminCategoryController {
 
-    // ================= HELPER: GHI LOG =================
+
     private static async logAction(adminId: number, action: string) {
         const logRepo = AppDataSource.getRepository(AdminLog);
         await logRepo.save(logRepo.create({ admin: { adminId }, action }));
     }
 
-    // ================= LẤY DANH SÁCH (CÓ PHÂN TRANG & BỘ LỌC) =================
     static getAllCategories = async (req: Request, res: Response) => {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const search = req.query.search as string || "";
-            const isTrash = req.query.isTrash === 'true'; // true = Thùng rác, false = Đang hoạt động
+            const isTrash = req.query.isTrash === 'true'; 
 
             const categoryRepo = AppDataSource.getRepository(Category);
 
-            // Xây dựng Query
             const queryBuilder = categoryRepo.createQueryBuilder("category")
-                .leftJoinAndSelect("category.parent", "parent") // Lấy thông tin danh mục cha
+                .leftJoinAndSelect("category.parent", "parent")
                 .where("category.isActive = :isActive", { isActive: !isTrash });
 
             if (search) {
                 queryBuilder.andWhere("category.name LIKE :search", { search: `%${search}%` });
             }
 
-            // Sắp xếp và phân trang
+          
             queryBuilder.orderBy("category.sortOrder", "ASC")
                 .addOrderBy("category.categoryId", "DESC")
                 .skip((page - 1) * limit)
@@ -56,11 +54,11 @@ export class AdminCategoryController {
         }
     };
 
-    // ================= LẤY DANH MỤC CẤP 1 (Để làm menu chọn Cha) =================
+    
     static getLevel1Categories = async (req: Request, res: Response) => {
         try {
             const categoryRepo = AppDataSource.getRepository(Category);
-            // Danh mục cấp 1 là danh mục có parent IS NULL
+           
             const categories = await categoryRepo.find({
                 where: { parent: IsNull(), isActive: true },
                 order: { sortOrder: "ASC", name: "ASC" }
@@ -75,7 +73,6 @@ export class AdminCategoryController {
         try {
             const categoryRepo = AppDataSource.getRepository(Category);
 
-            // Danh mục cấp 2 là danh mục có parent NOT NULL
             const categories = await categoryRepo.createQueryBuilder("category")
                 .leftJoinAndSelect("category.parent", "parent")
                 .where("category.parentId IS NOT NULL")
@@ -92,34 +89,34 @@ export class AdminCategoryController {
         }
     };
 
-    // ================= THÊM MỚI DANH MỤC =================
+  
     static createCategory = async (req: Request, res: Response) => {
         try {
             const { name, description, image, parentId, sortOrder } = req.body;
-            // Lấy ID admin đang đăng nhập từ middleware (Ép kiểu as any để tránh lỗi TS)
+
             const adminId = (req as any).admin.adminId;
 
             if (!name) return res.status(400).json({ message: "Tên danh mục là bắt buộc" });
 
             const categoryRepo = AppDataSource.getRepository(Category);
 
-            // 1. Kiểm tra Trùng Slug
+       
             let slug = createSlug(name);
             let slugExists = await categoryRepo.findOne({ where: { slug } });
             if (slugExists) {
-                slug = `${slug}-${Date.now().toString().slice(-4)}`; // Thêm random để tránh trùng
+                slug = `${slug}-${Date.now().toString().slice(-4)}`; 
             }
 
             const newCategory = categoryRepo.create({
                 name, slug, description, image, sortOrder: sortOrder || 0
             });
 
-            // 2. Xử lý Ràng buộc Cấp độ (Level)
+           
             if (parentId) {
                 const parentCat = await categoryRepo.findOne({ where: { categoryId: parentId }, relations: ["parent"] });
                 if (!parentCat) return res.status(404).json({ message: "Danh mục cha không tồn tại" });
 
-                // Ràng buộc: Danh mục cấp 2 không thể làm cha (tức là parentCat KHÔNG ĐƯỢC có parent)
+              
                 if (parentCat.parent) {
                     return res.status(400).json({ message: "Không thể chọn danh mục cấp 2 làm danh mục cha (Chỉ hỗ trợ tối đa 2 cấp)" });
                 }
@@ -128,7 +125,7 @@ export class AdminCategoryController {
 
             await categoryRepo.save(newCategory);
 
-            // 3. Ghi Log
+           
             await this.logAction(adminId, `Thêm mới danh mục: ${name}`);
 
             return res.status(201).json({ success: true, message: "Thêm danh mục thành công" });
@@ -138,7 +135,7 @@ export class AdminCategoryController {
         }
     };
 
-    // ================= CẬP NHẬT DANH MỤC =================
+  
     static updateCategory = async (req: Request, res: Response) => {
         try {
             const categoryId = parseInt(req.params.id as string);
@@ -149,11 +146,11 @@ export class AdminCategoryController {
             const category = await categoryRepo.findOne({ where: { categoryId } });
             if (!category) return res.status(404).json({ message: "Không tìm thấy danh mục" });
 
-            // Nếu đổi tên -> Đổi slug
+           
             if (name && name !== category.name) {
                 category.name = name;
                 category.slug = createSlug(name);
-                // Xử lý trùng slug
+               
                 let slugExists = await categoryRepo.findOne({ where: { slug: category.slug } });
                 if (slugExists && slugExists.categoryId !== categoryId) {
                     category.slug = `${category.slug}-${Date.now().toString().slice(-4)}`;
@@ -164,10 +161,10 @@ export class AdminCategoryController {
             category.image = image !== undefined ? image : category.image;
             category.sortOrder = sortOrder !== undefined ? sortOrder : category.sortOrder;
 
-            // Xử lý Ràng buộc Cấp độ
+          
             if (parentId !== undefined) {
                 if (parentId === null || parentId === "") {
-                    category.parent = null; // Chuyển thành cấp 1
+                    category.parent = null; 
                 } else {
                     if (Number(parentId) === categoryId) return res.status(400).json({ message: "Không thể chọn chính nó làm cha" });
 
@@ -188,7 +185,7 @@ export class AdminCategoryController {
         }
     };
 
-    // ================= XÓA MỀM DANH MỤC (Vào thùng rác) =================
+    
     static softDeleteCategory = async (req: Request, res: Response) => {
         try {
             const categoryId = parseInt(req.params.id as string);
@@ -199,7 +196,7 @@ export class AdminCategoryController {
 
             if (!category) return res.status(404).json({ message: "Không tìm thấy danh mục" });
 
-            category.isActive = false; // Xóa mềm
+            category.isActive = false;
             await categoryRepo.save(category);
 
             await this.logAction(adminId, `Dừng bán danh mục ID: ${categoryId}`);
@@ -210,7 +207,7 @@ export class AdminCategoryController {
         }
     };
 
-    // ================= KHÔI PHỤC DANH MỤC (Từ thùng rác) =================
+   
     static restoreCategory = async (req: Request, res: Response) => {
         try {
             const categoryId = parseInt(req.params.id as string);
@@ -221,7 +218,7 @@ export class AdminCategoryController {
 
             if (!category) return res.status(404).json({ message: "Không tìm thấy danh mục" });
 
-            category.isActive = true; // Khôi phục
+            category.isActive = true; 
             await categoryRepo.save(category);
 
             await this.logAction(adminId, `Khôi phục danh mục ID: ${categoryId}`);

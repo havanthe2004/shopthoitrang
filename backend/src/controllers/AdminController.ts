@@ -5,36 +5,36 @@ import { AdminLog } from "../models/AdminLog";
 import bcrypt from "bcryptjs";
 
 export class AdminManagementController {
-    // Ghi log helper
+  
     private static async saveLog(adminId: number, action: string) {
         const logRepo = AppDataSource.getRepository(AdminLog);
         await logRepo.save(logRepo.create({ admin: { adminId }, action }));
     }
 
-    // 1. Lấy danh sách nhân viên (Phân trang + Lọc + Tìm kiếm)
+    
     static async getAdmins(req: Request, res: Response) {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const search = (req.query.search as string) || "";
             const roleFilter = req.query.role as string;
-            const statusFilter = req.query.status as string; // 'active' hoặc 'hidden'
+            const statusFilter = req.query.status as string; 
 
             const adminRepo = AppDataSource.getRepository(Admin);
             const query = adminRepo.createQueryBuilder("admin")
                 .select(["admin.adminId", "admin.username", "admin.role", "admin.phone", "admin.isActive", "admin.avatar"]);
 
-            // Tìm kiếm theo username hoặc phone
+          
             if (search) {
                 query.andWhere("(admin.username LIKE :search OR admin.phone LIKE :search)", { search: `%${search}%` });
             }
 
-            // Lọc theo role
+          
             if (roleFilter) {
                 query.andWhere("admin.role = :role", { role: roleFilter });
             }
 
-            // Lọc theo trạng thái
+            
             if (statusFilter) {
                 const isActive = statusFilter === 'active';
                 query.andWhere("admin.isActive = :isActive", { isActive });
@@ -59,7 +59,7 @@ export class AdminManagementController {
         }
     }
 
-    // 2. Thêm mới nhân viên
+   
     static async createAdmin(req: Request, res: Response) {
         try {
             const { username, password, role, phone } = req.body;
@@ -87,7 +87,7 @@ export class AdminManagementController {
         }
     }
 
-    // 3. Cập nhật thông tin / Phân quyền
+   
     static async updateAdmin(req: Request, res: Response) {
         try {
             const { id } = req.params;
@@ -98,7 +98,7 @@ export class AdminManagementController {
             const admin = await adminRepo.findOneBy({ adminId: Number(id) });
             if (!admin) return res.status(404).json({ message: "Không tìm thấy nhân viên" });
 
-            // Ghi nhận thay đổi để log
+           
             let changes = [];
             if (role && role !== admin.role) {
                 changes.push(`Role: ${admin.role} -> ${role}`);
@@ -118,17 +118,16 @@ export class AdminManagementController {
         }
     }
 
-    // 4. Toggle trạng thái (Xoá mềm / Kích hoạt lại)
     static async toggleStatus(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const performer = (req as any).admin; // Admin đang thực hiện
+            const performer = (req as any).admin; 
             const adminRepo = AppDataSource.getRepository(Admin);
 
             const targetAdmin = await adminRepo.findOneBy({ adminId: Number(id) });
             if (!targetAdmin) return res.status(404).json({ message: "Không tìm thấy" });
 
-            // Ràng buộc bảo mật
+            
             if (targetAdmin.adminId === performer.adminId) {
                 return res.status(403).json({ message: "Bạn không thể tự vô hiệu hoá chính mình" });
             }
