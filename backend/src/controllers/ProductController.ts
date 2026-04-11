@@ -5,9 +5,6 @@ import { Category } from '../models/Category';
 
 export class ProductController {
 
-    // ================================
-    // GET ALL PRODUCTS (CÓ PHÂN TRANG)
-    // ================================
     static async getAll(req: Request, res: Response) {
         try {
             const {
@@ -16,11 +13,7 @@ export class ProductController {
                 minPrice,
                 maxPrice,
                 keyword
-            } = req.query;
-
-            // =========================
-            // Pagination
-            // =========================
+            } = req.query;           
             const page = Number(req.query.page) || 1;
             const limit = Number(req.query.limit) || 10;
             const skip = (page - 1) * limit;
@@ -35,11 +28,7 @@ export class ProductController {
                 .leftJoinAndSelect("product.colors", "color")
                 .leftJoinAndSelect("color.images", "image")
                 .where("product.isActive = :isActive", { isActive: true })
-                .andWhere("variant.isActive = :variantActive", { variantActive: true });;
-
-            // =========================
-            // 1. SEARCH 🔥
-            // =========================
+                .andWhere("variant.isActive = :variantActive", { variantActive: true });;        
             if (keyword) {
                 query.andWhere(
                     `(LOWER(product.name) LIKE LOWER(:keyword)
@@ -47,11 +36,7 @@ export class ProductController {
                     OR LOWER(color.color) LIKE LOWER(:keyword))`,
                     { keyword: `%${keyword}%` }
                 );
-            }
-
-            // =========================
-            // 2. FILTER CATEGORY
-            // =========================
+            }      
             if (slug) {
                 const foundCat = await categoryRepo.findOne({
                     where: { slug: slug as string },
@@ -70,7 +55,6 @@ export class ProductController {
                 }
             }
 
-            // 3. FILTER PRICE
             if (minPrice) {
                 query.andWhere("variant.price >= :min", { min: Number(minPrice) });
             }
@@ -79,9 +63,7 @@ export class ProductController {
                 query.andWhere("variant.price <= :max", { max: Number(maxPrice) });
             }
 
-            // =========================
-            // 4. SORT
-            // =========================
+          
             if (sort === 'price-asc') {
                 query.orderBy("variant.price", "ASC");
             } else if (sort === 'price-desc') {
@@ -91,14 +73,10 @@ export class ProductController {
             }
 
             query.addOrderBy("image.productImageId", "ASC");
-            // =========================
-            // 5. FIX DUPLICATE
-            // =========================
+         
             query.distinct(true);
 
-            // =========================
-            // 6. PAGINATION
-            // =========================
+       
             query.skip(skip).take(limit);
 
             const [products, total] = await query.getManyAndCount();
@@ -119,43 +97,6 @@ export class ProductController {
         }
     }
 
-    // ================================
-    // GET PRODUCT DETAIL
-    // ================================
-    // static async getBySlug(req: Request, res: Response) {
-    //     try {
-    //         const productRepo = AppDataSource.getRepository(Product);
-    //         const slugParam = req.params.slug;
-
-    //         if (Array.isArray(slugParam)) {
-    //             return res.status(400).json({ message: "Slug không hợp lệ" });
-    //         }
-
-    //         const product = await productRepo.findOne({
-    //             where: {
-    //                 slug: slugParam,
-    //                 isActive: true
-    //             },
-    //             relations: [
-    //                 'category',
-    //                 'variants',
-    //                 'variants.color',
-    //                 'colors',
-    //                 'colors.images'
-    //             ]
-    //         });
-
-    //         if (!product) {
-    //             return res.status(404).json({ message: "Sản phẩm không tồn tại" });
-    //         }
-
-    //         return res.json(product);
-
-    //     } catch (err) {
-    //         console.error(err);
-    //         return res.status(500).json({ message: "Lỗi hệ thống" });
-    //     }
-    // }
 
     static async getBySlug(req: Request, res: Response) {
         try {
@@ -169,7 +110,7 @@ export class ProductController {
             const product = await productRepo
                 .createQueryBuilder("product")
                 .leftJoinAndSelect("product.category", "category")
-                .leftJoinAndSelect("category.parent", "parentCategory") // 👈 thêm
+                .leftJoinAndSelect("category.parent", "parentCategory") 
                 .leftJoinAndSelect("product.variants", "variant")
                 .leftJoinAndSelect("variant.color", "variantColor")
                 .leftJoinAndSelect("product.colors", "color")
@@ -209,7 +150,6 @@ export class ProductController {
                 .andWhere(`(parentCategory.categoryId IS NULL OR parentCategory.isActive = true)`)
                 .andWhere("variant.isActive = :variantActive", { variantActive: true });
 
-            // 3. Kiểm tra và thêm điều kiện tìm kiếm
             if (keyword) {
                 query.andWhere(
                     `(LOWER(product.name) LIKE LOWER(:keyword) 
@@ -218,17 +158,13 @@ export class ProductController {
                     { keyword: `%${keyword}%` }
                 );
             }
-            // 4. Giới hạn số lượng trả về (thường gợi ý chỉ cần 5-10 kết quả)
             const limit = Number(req.query.limit) || 10;
             query.take(limit);
 
-            // 5. Tránh lặp sản phẩm nếu một sản phẩm có nhiều màu/ảnh
             query.distinct(true);
 
-            // 6. Thực thi truy vấn
             const products = await query.getMany();
 
-            // 7. Trả dữ liệu về Frontend
             return res.status(200).json({
                 success: true,
                 data: products

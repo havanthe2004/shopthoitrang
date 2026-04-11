@@ -3,13 +3,12 @@ import express from "express";
 import path from 'path';
 import productRoutes from "./routes/product.route";
 import { AppDataSource } from "./config/data-source";
-import { seedAdmin } from "./seeds/admin.seed";
 import authRoute from './routes/auth.route';
 import categoryRoute from "./routes/category.routes";
 import userRoutes from "./routes/user.routes";
 import cartRoutes from "./routes/cart.routes"
 import orderRoutes from "./routes/order.routes"
-
+import { seedAdmin } from "./seeds/admin.seed";
 
 // import của admin
 import adminAuthRoutes from './routes/adminAuth.routes';
@@ -40,7 +39,10 @@ app.use('/api/admin/categories', adminCategoryRoutes);
 app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/admin/admin-management", adminManagementRoutes);
 
-
+app.use(
+    "/uploads",
+    express.static(path.join(__dirname, "../uploads"))
+);
 AppDataSource.initialize()
     .then(async () => {
         console.log("✅ Kết nối databse thành công!");

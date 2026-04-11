@@ -11,13 +11,12 @@ import { OrderItem } from "../models/OrderItem";
 
 export class AdminProductController {
 
-  // ================= HELPER: GHI LOG =================
+  
   private static async logAction(adminId: number, action: string) {
     const logRepo = AppDataSource.getRepository(AdminLog);
     await logRepo.save(logRepo.create({ admin: { adminId }, action }));
   }
 
-  // ================= LẤY DANH SÁCH SẢN PHẨM =================
   static async getProducts(req: Request, res: Response) {
     try {
       const page = parseInt(req.query.page as string) || 1;
@@ -25,18 +24,16 @@ export class AdminProductController {
       const search = (req.query.search as string) || "";
       const categoryId = req.query.categoryId;
 
-      // 🔥 CHỈNH SỬA TẠI ĐÂY: Mặc định là true, nhưng nếu FE gửi false thì lọc theo false
       const isActiveParam = req.query.isActive;
       const isActive = isActiveParam === 'false' ? false : true;
 
       const skip = (page - 1) * limit;
       const productRepo = AppDataSource.getRepository(Product);
 
-      // Bước 1: Lấy IDs
       const qb = productRepo.createQueryBuilder("product")
         .select("product.productId", "productId")
         .where("product.name LIKE :search", { search: `%${search}%` })
-        .andWhere("product.isActive = :isActive", { isActive }); // 🔥 Sử dụng biến động
+        .andWhere("product.isActive = :isActive", { isActive });
 
       if (categoryId) {
         qb.andWhere("product.categoryId = :categoryId", { categoryId: Number(categoryId) });
@@ -50,12 +47,10 @@ export class AdminProductController {
         return res.json({ items: [], meta: { totalItems: 0, totalPages: 0, currentPage: page } });
       }
 
-      // Bước 2: Load full dữ liệu
       const products = await productRepo.createQueryBuilder("product")
         .leftJoinAndSelect("product.category", "category")
         .leftJoinAndSelect("product.colors", "color")
         .leftJoinAndSelect("color.images", "image")
-        // 🔥 CHỈNH SỬA: Khi lấy danh sách sản phẩm đã ẩn, ta vẫn muốn thấy các variant của nó
         .leftJoinAndSelect("product.variants", "variant")
         .whereInIds(ids)
         .orderBy("product.productId", "DESC")
@@ -76,7 +71,7 @@ export class AdminProductController {
       return res.status(500).json({ message: "Lỗi lấy danh sách sản phẩm" });
     }
   }
-  // ================= CHI TIẾT SẢN PHẨM (KIỂM TRA ORDER) =================
+ 
   static async getDetail(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -89,7 +84,7 @@ export class AdminProductController {
 
       const orderItemRepo = AppDataSource.getRepository(OrderItem);
 
-      // Kiểm tra xem từng biến thể đã có người mua chưa
+      
       const variantsWithInfo = await Promise.all(product.variants.map(async (v) => {
         const count = await orderItemRepo.count({ where: { variant: { productVariantId: v.productVariantId } } });
         return { ...v, hasOrders: count > 0 };
@@ -102,7 +97,7 @@ export class AdminProductController {
     }
   }
 
-  // ================= THÊM MỚI SẢN PHẨM =================
+
   static async createProduct(req: Request, res: Response) {
     const queryRunner = AppDataSource.createQueryRunner();
     await queryRunner.connect();
@@ -121,7 +116,7 @@ export class AdminProductController {
         isActive: true
       });
 
-      // 2. Lưu Colors, Variants và Images
+  
       for (const colorItem of colorsData) {
         const savedColor = await queryRunner.manager.save(ProductColor, {
           color: colorItem.color,
@@ -158,7 +153,7 @@ export class AdminProductController {
     }
   }
 
-  // ================= CẬP NHẬT SẢN PHẨM =================
+ 
   static async updateProduct(req: Request, res: Response) {
     const { id } = req.params;
     const queryRunner = AppDataSource.createQueryRunner();
@@ -177,7 +172,7 @@ export class AdminProductController {
       const imageRepo = queryRunner.manager.getRepository(ProductImage);
       const orderItemRepo = queryRunner.manager.getRepository(OrderItem);
 
-      // 1. Cập nhật thông tin cơ bản Product
+      
       const product = await productRepo.findOne({ where: { productId: Number(id) } });
       if (!product) throw new Error("Sản phẩm không tồn tại");
 
@@ -185,33 +180,32 @@ export class AdminProductController {
       if (productData.categoryId) product.category = { categoryId: Number(productData.categoryId) } as any;
       await productRepo.save(product);
 
-      // 2. Duyệt qua danh sách màu sắc gửi từ Frontend
       for (const colorItem of colorsData) {
         let colorEntity: ProductColor;
 
         if (colorItem.productColorId) {
-          // --- TRƯỜNG HỢP: MÀU ĐÃ CÓ (UPDATE/ẨN) ---
+          
           colorEntity = await colorRepo.findOneOrFail({ where: { productColorId: colorItem.productColorId } });
           colorEntity.color = colorItem.color;
           colorEntity.hexCode = colorItem.hexCode;
-          colorEntity.isActive = colorItem.isActive ?? true; // Hỗ trợ ẩn màu
+          colorEntity.isActive = colorItem.isActive ?? true; 
           await colorRepo.save(colorEntity);
 
-          // XỬ LÝ XÓA ẢNH CŨ
+         
           const dbImages = await imageRepo.find({ where: { color: { productColorId: colorEntity.productColorId } } });
           const remainingImageIds = (colorItem.oldImages || []).map((img: any) => img.productImageId);
 
           for (const dbImg of dbImages) {
             if (!remainingImageIds.includes(dbImg.productImageId)) {
-              // Xóa file vật lý
+              
               const filePath = path.join(__dirname, '../../', dbImg.url);
               if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-              // Xóa database
+             
               await imageRepo.remove(dbImg);
             }
           }
         } else {
-          // --- TRƯỜNG HỢP: THÊM MÀU MỚI ---
+          
           colorEntity = await colorRepo.save(colorRepo.create({
             color: colorItem.color,
             hexCode: colorItem.hexCode,
@@ -220,7 +214,6 @@ export class AdminProductController {
           }));
         }
 
-        // 3. THÊM ẢNH MỚI (Cho cả màu cũ và màu mới)
         if (colorItem.newImageIndices && colorItem.newImageIndices.length > 0) {
           for (const idx of colorItem.newImageIndices) {
             if (files[idx]) {
@@ -232,28 +225,28 @@ export class AdminProductController {
           }
         }
 
-        // 4. XỬ LÝ BIẾN THỂ (SIZE/GIÁ/KHO)
+     
         if (colorItem.variants) {
           for (const v of colorItem.variants) {
             if (v.productVariantId) {
-              // Variant đã tồn tại: Check đơn hàng
+            
               const hasOrders = await orderItemRepo.count({
                 where: { variant: { productVariantId: v.productVariantId } }
               });
 
               if (hasOrders > 0) {
-                // Nếu có đơn: Chỉ cập nhật Giá, Kho, Trạng thái (Ẩn/Hiện)
+               
                 await variantRepo.update(v.productVariantId, {
                   price: v.price,
                   stock: v.stock,
                   isActive: v.isActive
                 });
               } else {
-                // Nếu chưa có đơn: Cho phép sửa cả Size
+                
                 await variantRepo.save(v);
               }
             } else {
-              // Variant mới: Lưu mới hoàn toàn
+            
               await variantRepo.save(variantRepo.create({
                 ...v,
                 product: product,
@@ -278,7 +271,7 @@ export class AdminProductController {
     }
   }
 
-  // ================= ẨN/HIỆN SẢN PHẨM =================
+ 
   static async toggleProduct(req: Request, res: Response) {
     try {
       const { productId } = req.params;
@@ -298,7 +291,6 @@ export class AdminProductController {
     }
   }
 
-  // ================= KHÔI PHỤC BIẾN THỂ =================
   static async restoreVariant(req: Request, res: Response) {
     try {
       const { variantId } = req.params;

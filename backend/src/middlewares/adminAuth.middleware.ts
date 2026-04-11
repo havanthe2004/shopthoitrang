@@ -12,15 +12,14 @@ export const verifyAdminToken = (req: Request, res: Response, next: NextFunction
     try {
         const secret = process.env.JWT_ADMIN_ACCESS_SECRET as string || 'admin_access_key';
 
-        // Giải mã token của Admin
+ 
         const decoded = jwt.verify(token, secret) as any;
 
-        // Bắt buộc phải có adminId và role
+
         if (!decoded.adminId || !decoded.role) {
             return res.status(403).json({ message: "Token quản trị không hợp lệ!" });
         }
 
-        // Gắn thông tin admin vào request để các Controller sau có thể sử dụng
         (req as any).admin = decoded;
 
         next();
@@ -30,7 +29,7 @@ export const verifyAdminToken = (req: Request, res: Response, next: NextFunction
     }
 };
 
-// Middleware kiểm tra quyền Tối cao (Chỉ Admin mới được dùng)
+
 export const requireAdminRole = (req: Request, res: Response, next: NextFunction) => {
     const admin = (req as any).admin;
     
