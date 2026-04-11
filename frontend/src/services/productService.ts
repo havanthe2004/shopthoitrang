@@ -74,10 +74,8 @@ export const getProductsAPI = async (
     return response.data;
 };
 
-export const searchAPI = async (keyword: string): Promise<SearchResponse> => {
-    // 1. Sửa URL thành /products/search để khớp với Route Backend mới
-    // 2. Sửa keywork thành keyword để khớp với req.query.keyword ở Backend
-    const response = await api.get(`/products/search?keyword=${keyword}`);
+export const searchAPI = async (keyword: string,limit:number): Promise<SearchResponse> => {
+    const response = await api.get(`/products/search?keyword=${keyword}&limit=${limit}`);
     return response.data;
 };
 

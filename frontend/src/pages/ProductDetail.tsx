@@ -41,7 +41,7 @@ const ProductDetail = () => {
     const [mainImage, setMainImage] = useState('');
     const [isDescOpen, setIsDescOpen] = useState(false);
 
-    const BASE_URL = "http://localhost:3000";
+    const BASE_URL = import.meta.env.VITE_API_KEY;
 
     /* ================= 1. LẤY DỮ LIỆU SẢN PHẨM ================= */
     useEffect(() => {

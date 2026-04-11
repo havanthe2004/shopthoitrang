@@ -7,6 +7,7 @@ import { clearCart } from '../../redux/slices/cartSlice';
 import type { RootState } from '../../redux/store';
 import { getCategoryTree } from '../../services/categoryService';
 import { getImageUrl } from '../../utils/imageUrl';
+import { searchAPI } from '../../services/productService';
 import axios from 'axios';
 
 const Header = () => {
@@ -41,8 +42,8 @@ const Header = () => {
             if (searchKeyword.trim().length > 0) {
                 setIsSearching(true);
                 try {
-                    const res = await axios.get(`http://localhost:3000/api/products/search?keyword=${searchKeyword}&limit=6`);
-                    const products = res.data.data || [];
+                    const res = await searchAPI(searchKeyword, 100);
+                    const products = res.data || [];
                     setSuggestions(products);
                     setShowSuggestions(true);
                 } catch (err) {
