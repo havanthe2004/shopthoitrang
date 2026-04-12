@@ -31,6 +31,7 @@ import EditProduct from './admin/pages/EditProduct.tsx';
 import AdminManagement from './admin/pages/AdminManagement.tsx'
 import StockManagement from './admin/pages/StockManagement.tsx'
 import OrderManagement from './admin/pages/OrderManagement.tsx'
+import UserManagement from './admin/pages/UserManagement.tsx'
 // Import Actions & Types
 import { fetchCartServer } from './redux/slices/cartSlice';
 import type { RootState } from './redux/store';
@@ -113,6 +114,7 @@ function App() {
             <Route path="staffs" element={<AdminManagement />} />
             <Route path="inventory" element={<StockManagement />} />
             <Route path="orders" element={<OrderManagement />} />
+            <Route path="users" element={<UserManagement />} />
             {/* Thêm các trang sau này: category, product, user... */}
           </Route>
         </Route>
