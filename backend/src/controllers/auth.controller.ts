@@ -10,7 +10,7 @@ import { sendOtpEmail } from '../utils/mailer';
 
 export class AuthController {
 
-  
+
     static async register(req: Request, res: Response) {
         try {
             const { email, password, phone, name } = req.body;
@@ -52,7 +52,7 @@ export class AuthController {
         }
     }
 
-   
+
     static async login(req: Request, res: Response) {
         try {
             const { email, password } = req.body;
@@ -61,28 +61,34 @@ export class AuthController {
                 return res.status(400).json({ message: 'Missing fields' });
             }
 
-            
+
             const userRepo = AppDataSource.getRepository(User);
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
 
             const user = await userRepo.findOne({ where: { email } });
-            if (!user || !user.isActive) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+            if (!user) {
+                return res.status(401).json({ message: 'Emai hoặc mật khẩu không chính xác' });
             }
 
+            if (!user.isActive) {
+                return res.status(403).json({
+                    message: 'Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin!',
+                    isBlocked: true
+                });
+            }
             const isMatch = await bcrypt.compare(password, user.password);
             if (!isMatch) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+                return res.status(401).json({ message: 'Emai hoặc mật khẩu không chính xác' });
             }
 
-         
+
             const accessToken = jwt.sign(
                 { id: user.userId, email: user.email },
                 process.env.JWT_ACCESS_SECRET as string,
                 { expiresIn: process.env.JWT_ACCESS_EXPIRE as any }
             );
 
-       
+
             const refreshToken = jwt.sign(
                 { id: user.userId },
                 process.env.JWT_REFRESH_SECRET as string,
@@ -123,7 +129,7 @@ export class AuthController {
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
             const userRepo = AppDataSource.getRepository(User);
 
-         
+
             const savedToken = await refreshRepo.findOne({
                 where: { token: refreshToken },
                 relations: ['user']
@@ -135,7 +141,7 @@ export class AuthController {
 
             const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET as string) as any;
 
-       
+
             const newAccessToken = jwt.sign(
                 { id: decoded.id, email: savedToken.user.email },
                 process.env.JWT_ACCESS_SECRET as string,
@@ -148,7 +154,7 @@ export class AuthController {
         }
     }
 
-  
+
     static async logout(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;

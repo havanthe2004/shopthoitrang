@@ -41,7 +41,7 @@ const LoginPage = () => {
         setServerError('');
         try {
             const response = await loginAPI(data);
-            // Lưu vào Redux (Response từ BE thường trả về accessToken và user)
+
             dispatch(loginSuccess({
                 user: response.user,
                 token: response.accessToken,
@@ -51,10 +51,8 @@ const LoginPage = () => {
         } catch (err: any) {
             console.log("Login error:", err);
 
-            if (err.response) {
-                setServerError(
-                    "Email hoặc mật khẩu không chính xác!"
-                );
+            if (err.response && err.response.data && err.response.data.message) {
+                setServerError(err.response.data.message);
             } else {
                 setServerError("Không thể kết nối tới server!");
             }
