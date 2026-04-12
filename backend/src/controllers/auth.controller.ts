@@ -61,6 +61,7 @@ export class AuthController {
                 return res.status(400).json({ message: 'Missing fields' });
             }
 
+            
             const userRepo = AppDataSource.getRepository(User);
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
 
