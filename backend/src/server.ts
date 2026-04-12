@@ -18,6 +18,7 @@ import adminProductRoutes from './routes/adminProduct.routes'
 import adminManagementRoutes from "./routes/adminManagement.routes";
 import adminStockRoutes from "./routes/adminStock.routes";
 import adminOrderRoutes from "./routes/adminOrder.routes";
+import adminUserRoutes from "./routes/adminUser.routes";
 
 import cors from 'cors';
 const app = express();
@@ -42,6 +43,7 @@ app.use("/api/admin/products", adminProductRoutes);
 app.use("/api/admin/admin-management", adminManagementRoutes);
 app.use("/api/admin/stock", adminStockRoutes);
 app.use("/api/admin/orders", adminOrderRoutes);
+app.use("/api/admin/users", adminUserRoutes);
 
 app.use(
     "/uploads",

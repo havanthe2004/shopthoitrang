@@ -1,7 +1,9 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
+import { AppDataSource } from "../config/data-source";
+import { User } from "../models/User";
 
-export const verifyToken = (req: Request, res: Response, next: NextFunction) => {
+export const verifyToken = async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
     const token = authHeader && authHeader.split(" ")[1];
 
@@ -18,6 +20,24 @@ export const verifyToken = (req: Request, res: Response, next: NextFunction) => 
         }
 
         const decoded = jwt.verify(token, secret) as any;
+        const userRepo = AppDataSource.getRepository(User);
+        const user = await userRepo.findOne({
+            where: { userId: decoded.id },
+            select: ["userId", "isActive"] // Chỉ lấy các trường cần thiết để tối ưu tốc độ
+        });
+
+        if (!user) {
+            return res.status(401).json({ message: "Người dùng không tồn tại!" });
+        }
+
+        if (!user.isActive) {
+            // Nếu bị khóa, trả về 403 Forbidden
+            return res.status(403).json({
+                message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin!",
+                isBlocked: true
+            });
+        }
+
 
         (req as any).user = decoded;
 
