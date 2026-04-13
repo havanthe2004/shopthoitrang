@@ -15,7 +15,7 @@ const Header = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [isSearching, setIsSearching] = useState(false);
+    const [isSearching, setIsSearching] = useState(false); // Trạng thái đang gọi API
     const searchRef = useRef<HTMLDivElement>(null);
 
     const { totalQuantity } = useSelector((state: RootState) => state.cart);
@@ -24,7 +24,7 @@ const Header = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-
+    // 1. Lấy danh mục menu
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -35,13 +35,13 @@ const Header = () => {
         fetchCategories();
     }, []);
 
-
+    // 2. Logic Tìm kiếm gợi ý
     useEffect(() => {
         const delayDebounceFn = setTimeout(async () => {
             if (searchKeyword.trim().length > 0) {
                 setIsSearching(true);
                 try {
-                    const res = await axios.get(`${import.meta.env.VITE_API_KEY}/products/search?keyword=${searchKeyword}&limit=6`);
+                    const res = await axios.get(`http://localhost:3000/api/products/search?keyword=${searchKeyword}&limit=6`);
                     const products = res.data.data || [];
                     setSuggestions(products);
                     setShowSuggestions(true);
@@ -159,7 +159,7 @@ const Header = () => {
                                     </div>
                                 </>
                             ) : (
-
+                                // TRƯỜNG HỢP KHÔNG TÌM THẤY SẢN PHẨM
                                 <div className="p-6 text-center flex flex-col items-center gap-2">
                                     <FaRegFrown className="text-gray-300 text-3xl" />
                                     <p className="text-sm font-bold text-gray-600">Rất tiếc, không tìm thấy sản phẩm!</p>

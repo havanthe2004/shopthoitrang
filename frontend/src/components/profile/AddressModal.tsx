@@ -46,11 +46,11 @@ const AddressModal = ({ isOpen, onClose, onSuccess, initialData }: Props) => {
     const selectedProvince = watch("province");
     const selectedDistrict = watch("district");
 
-
+    // Xử lý load dữ liệu ban đầu khi Sửa hoặc Thêm
     useEffect(() => {
         if (isOpen) {
             if (initialData) {
-
+                // Hydrate dữ liệu từ string sang object cho react-select
                 const p = provinceOptions.find(i => i.label === initialData.province);
                 const dList = p ? getDistrictsByProvinceCode(p.value).map(d => ({ label: d.name, value: d.code })) : [];
                 const d = dList.find(i => i.label === initialData.district);
@@ -74,7 +74,7 @@ const AddressModal = ({ isOpen, onClose, onSuccess, initialData }: Props) => {
             const districts = getDistrictsByProvinceCode(selectedProvince.value);
             setDistrictOptions(districts.map(d => ({ label: d.name, value: d.code })));
 
-
+            // Chỉ reset nếu đây là hành động click thay đổi (không phải lúc load initialData)
             if (!initialData || selectedProvince.label !== initialData.province) {
                 setValue("district", null);
                 setValue("ward", null);

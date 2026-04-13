@@ -14,18 +14,17 @@ export class UserController {
 
             const user = await userRepo.findOne({
                 where: { userId: userId },
-                relations: ['addresses']
+                relations: ['addresses'] 
             });
 
             if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
 
-            const { password, ...userData } = user;
+            const { password, ...userData } = user; 
             return res.json(userData);
         } catch (err) {
             return res.status(500).json({ message: "Lỗi hệ thống", error: err });
         }
     }
-
 
     static async updateProfile(req: Request, res: Response) {
         try {
@@ -36,12 +35,11 @@ export class UserController {
             const user = await userRepo.findOneBy({ userId: userId });
             if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
 
-
             if (name) user.name = name;
             if (phone) user.phone = phone;
 
-
             if (req.file) {
+
                 if (user.avatar && fs.existsSync(path.join(__dirname, '../../', user.avatar))) {
                     fs.unlinkSync(path.join(__dirname, '../../', user.avatar));
                 }
@@ -55,6 +53,7 @@ export class UserController {
             return res.status(500).json({ message: "Lỗi cập nhật hồ sơ" });
         }
     }
+
 
     static async changePassword(req: Request, res: Response) {
         try {
@@ -70,10 +69,11 @@ export class UserController {
 
             if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
 
+        
             const isMatch = await bcrypt.compare(oldPassword, user.password);
             if (!isMatch) return res.status(400).json({ message: "Mật khẩu cũ không chính xác" });
 
-
+         
             user.password = await bcrypt.hash(newPassword, 10);
             await userRepo.save(user);
 
@@ -82,7 +82,6 @@ export class UserController {
             return res.status(500).json({ message: "Lỗi khi đổi mật khẩu" });
         }
     }
-
 
     static async getAddresses(req: Request, res: Response) {
         try {
@@ -108,7 +107,6 @@ export class UserController {
             const count = await addressRepo.count({ where: { user: { userId: userId } } });
             if (count === 0) addressData.isDefault = true;
 
-
             if (addressData.isDefault) {
                 await addressRepo.update({ user: { userId: userId } }, { isDefault: false });
             }
@@ -121,7 +119,6 @@ export class UserController {
             return res.status(500).json({ message: "Lỗi thêm địa chỉ" });
         }
     }
-
 
     static async updateAddress(req: Request, res: Response) {
         try {
@@ -146,7 +143,6 @@ export class UserController {
         }
     }
 
-
     static async deleteAddress(req: Request, res: Response) {
         try {
             const { id } = req.params;
@@ -166,10 +162,9 @@ export class UserController {
 
     static async setDefaultAddress(req: Request, res: Response) {
         try {
-            const { id } = req.params;
+            const { id } = req.params; 
             const userId = (req as any).user.id;
             const addressRepo = AppDataSource.getRepository(Address);
-
 
             const targetAddress = await addressRepo.findOne({
                 where: { addressId: Number(id), user: { userId: userId } }
@@ -179,12 +174,10 @@ export class UserController {
                 return res.status(404).json({ message: "Không tìm thấy địa chỉ để thiết lập mặc định" });
             }
 
-
             await addressRepo.update(
                 { user: { userId: userId } },
                 { isDefault: false }
             );
-
 
             targetAddress.isDefault = true;
             await addressRepo.save(targetAddress);

@@ -4,6 +4,7 @@ import { Product } from '../models/Product';
 import { Category } from '../models/Category';
 
 export class ProductController {
+
     static async getAll(req: Request, res: Response) {
         try {
             const {
@@ -12,9 +13,7 @@ export class ProductController {
                 minPrice,
                 maxPrice,
                 keyword
-            } = req.query;
-
-
+            } = req.query;           
             const page = Number(req.query.page) || 1;
             const limit = Number(req.query.limit) || 10;
             const skip = (page - 1) * limit;
@@ -28,8 +27,8 @@ export class ProductController {
                 .leftJoinAndSelect("variant.color", "variantColor")
                 .leftJoinAndSelect("product.colors", "color")
                 .leftJoinAndSelect("color.images", "image")
-                .where("product.isActive = :isActive", { isActive: true });
-
+                .where("product.isActive = :isActive", { isActive: true })
+                .andWhere("variant.isActive = :variantActive", { variantActive: true });;        
             if (keyword) {
                 query.andWhere(
                     `(LOWER(product.name) LIKE LOWER(:keyword)
@@ -37,9 +36,7 @@ export class ProductController {
                     OR LOWER(color.color) LIKE LOWER(:keyword))`,
                     { keyword: `%${keyword}%` }
                 );
-            }
-
-
+            }      
             if (slug) {
                 const foundCat = await categoryRepo.findOne({
                     where: { slug: slug as string },
@@ -58,7 +55,6 @@ export class ProductController {
                 }
             }
 
-
             if (minPrice) {
                 query.andWhere("variant.price >= :min", { min: Number(minPrice) });
             }
@@ -67,7 +63,7 @@ export class ProductController {
                 query.andWhere("variant.price <= :max", { max: Number(maxPrice) });
             }
 
-
+          
             if (sort === 'price-asc') {
                 query.orderBy("variant.price", "ASC");
             } else if (sort === 'price-desc') {
@@ -77,10 +73,10 @@ export class ProductController {
             }
 
             query.addOrderBy("image.productImageId", "ASC");
-
+         
             query.distinct(true);
 
-
+       
             query.skip(skip).take(limit);
 
             const [products, total] = await query.getManyAndCount();
@@ -100,6 +96,7 @@ export class ProductController {
             return res.status(500).json({ message: "Lỗi Server" });
         }
     }
+
 
     static async getBySlug(req: Request, res: Response) {
         try {
@@ -121,9 +118,8 @@ export class ProductController {
                 .where("product.slug = :slug", { slug: slugParam })
                 .andWhere("product.isActive = :isActive", { isActive: true })
                 .andWhere("category.isActive = :categoryActive", { categoryActive: true })
-                .andWhere(
-                    `(parentCategory.categoryId IS NULL OR parentCategory.isActive = true)`
-                )
+                .andWhere(`(parentCategory.categoryId IS NULL OR parentCategory.isActive = true)`)
+                .andWhere("variant.isActive = true")
                 .getOne();
 
             if (!product) {
@@ -141,10 +137,7 @@ export class ProductController {
     static async search(req: Request, res: Response) {
         try {
             const productRepo = AppDataSource.getRepository(Product);
-
-
             const keyword = req.query.keyword;
-
 
             const query = productRepo.createQueryBuilder("product")
                 .leftJoinAndSelect("product.category", "category")
@@ -154,10 +147,8 @@ export class ProductController {
                 .leftJoinAndSelect("color.images", "image") 
                 .where("product.isActive = :isActive", { isActive: true })
                 .andWhere("category.isActive = :categoryActive", { categoryActive: true })
-                .andWhere(
-                    `(parentCategory.categoryId IS NULL OR parentCategory.isActive = true)`
-                );
-
+                .andWhere(`(parentCategory.categoryId IS NULL OR parentCategory.isActive = true)`)
+                .andWhere("variant.isActive = :variantActive", { variantActive: true });
 
             if (keyword) {
                 query.andWhere(
@@ -167,16 +158,12 @@ export class ProductController {
                     { keyword: `%${keyword}%` }
                 );
             }
-  
             const limit = Number(req.query.limit) || 10;
             query.take(limit);
 
-
             query.distinct(true);
 
-
             const products = await query.getMany();
-
 
             return res.status(200).json({
                 success: true,

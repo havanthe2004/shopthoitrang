@@ -11,6 +11,7 @@ import { format } from "date-fns";
 
 export class OrderController {
 
+
     private static sortObject(obj: any) {
         const sorted: any = {};
         const keys = Object.keys(obj).sort();
@@ -21,6 +22,7 @@ export class OrderController {
 
         return sorted;
     }
+
 
     static createOrder = async (req: Request, res: Response) => {
         const queryRunner = AppDataSource.createQueryRunner();
@@ -42,16 +44,18 @@ export class OrderController {
                 return res.status(400).json({ message: "Không có sản phẩm nào được chọn" });
             }
 
+          
             if (paymentMethod === "COD") {
                 await queryRunner.connect();
                 await queryRunner.startTransaction();
 
                 try {
+                 
                     const cartItems = await queryRunner.manager
                         .createQueryBuilder(CartItem, "item")
                         .leftJoinAndSelect("item.variant", "variant")
                         .leftJoinAndSelect("variant.product", "product")
-                        .setLock("pessimistic_write")
+                        .setLock("pessimistic_write") 
                         .where("variant.productVariantId IN (:...ids)", { ids: selectedIds })
                         .getMany();
 
@@ -59,13 +63,14 @@ export class OrderController {
                         throw new Error("Không tìm thấy sản phẩm trong giỏ");
                     }
 
+                    
                     for (const item of cartItems) {
                         if (item.variant.stock < item.quantity) {
                             throw new Error(`Sản phẩm "${item.variant.product.name}" không đủ hàng`);
                         }
                     }
 
-              
+                 
                     const order = queryRunner.manager.create(Order, {
                         user: { userId },
                         receiverName,
@@ -80,18 +85,20 @@ export class OrderController {
 
                     const savedOrder = await queryRunner.manager.save(order);
 
+                    
                     for (const item of cartItems) {
 
-                      
+
+                       
                         item.variant.stock -= item.quantity;
                         await queryRunner.manager.save(item.variant);
 
-                    
+                       
                         const product = item.variant.product;
                         product.sold += item.quantity;
                         await queryRunner.manager.save(Product, product);
 
-                 
+                      
                         const orderItem = queryRunner.manager.create(OrderItem, {
                             order: savedOrder,
                             variant: item.variant,
@@ -102,7 +109,7 @@ export class OrderController {
                         await queryRunner.manager.save(orderItem);
                     }
 
-                
+                  
                     await queryRunner.manager.delete(
                         CartItem,
                         cartItems.map(i => i.cartItemId)
@@ -123,7 +130,7 @@ export class OrderController {
                 }
             }
 
-
+           
             if (paymentMethod === "VNPAY") {
 
                 const orderData = {
@@ -174,7 +181,7 @@ export class OrderController {
         }
     };
 
-
+  
     static vnpayReturn = async (req: Request, res: Response) => {
         const queryRunner = AppDataSource.createQueryRunner();
 
@@ -196,11 +203,12 @@ export class OrderController {
                 return res.redirect(`http://localhost:5173/order-success?status=error`);
             }
 
-
+           
             if (req.query.vnp_ResponseCode !== "00") {
                 return res.redirect(`http://localhost:5173/order-success?status=cancel`);
             }
 
+          
             await queryRunner.connect();
             await queryRunner.startTransaction();
 
@@ -209,7 +217,7 @@ export class OrderController {
                     Buffer.from(req.query.vnp_OrderInfo as string, "base64").toString()
                 );
 
-          
+               
                 const cartItems = await queryRunner.manager
                     .createQueryBuilder(CartItem, "item")
                     .leftJoinAndSelect("item.variant", "variant")
@@ -218,14 +226,16 @@ export class OrderController {
                     .where("variant.productVariantId IN (:...ids)", { ids: orderData.selectedIds })
                     .getMany();
 
-             
+               
                 for (const item of cartItems) {
+                    if (!item.variant.isActive) {
+                        throw new Error(`Sản phẩm "${item.variant.product.name}" đã ngừng bán`);
+                    }
                     if (item.variant.stock < item.quantity) {
                         throw new Error("Không đủ hàng");
                     }
                 }
 
-            
                 const order = queryRunner.manager.create(Order, {
                     user: { userId: orderData.userId },
                     receiverName: orderData.receiverName,
@@ -239,12 +249,13 @@ export class OrderController {
 
                 const savedOrder = await queryRunner.manager.save(order);
 
+               
                 for (const item of cartItems) {
 
                     item.variant.stock -= item.quantity;
                     await queryRunner.manager.save(item.variant);
 
-          
+                  
                     const product = item.variant.product;
                     product.sold += item.quantity;
                     await queryRunner.manager.save(Product, product);
@@ -259,7 +270,7 @@ export class OrderController {
                     await queryRunner.manager.save(orderItem);
                 }
 
-         
+            
                 await queryRunner.manager.delete(
                     CartItem,
                     cartItems.map(i => i.cartItemId)
@@ -281,7 +292,6 @@ export class OrderController {
         }
     };
     
-
     static async getMyOrders(req: any, res: Response) {
         try {
             const userId = req.user.userId;
@@ -324,7 +334,7 @@ export class OrderController {
         }
     }
 
-
+  
     static async cancelOrder(req: any, res: Response) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
@@ -334,7 +344,7 @@ export class OrderController {
             const userId = req.user.userId;
             const { orderId } = req.params;
 
-  
+         
             const order = await queryRunner.manager.findOne(Order, {
                 where: { orderId: Number(orderId), user: { userId } },
                 relations: ["items", "items.variant", "items.variant.product"]
@@ -344,29 +354,30 @@ export class OrderController {
                 return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
             }
 
-        
+         
             if (order.status !== "pending") {
                 return res.status(400).json({ message: "Chỉ có thể hủy đơn hàng đang chờ xác thực" });
             }
 
+       
             for (const item of order.items) {
                 const variant = item.variant;
                 const product = variant.product;
 
-      
+              
                 variant.stock += item.quantity;
                 await queryRunner.manager.save(variant);
 
-     
+              
                 product.sold = Math.max(0, product.sold - item.quantity);
                 await queryRunner.manager.save(product);
             }
 
-  
+     
             order.status = "cancelled";
             await queryRunner.manager.save(order);
 
-
+        
             await queryRunner.commitTransaction();
 
             return res.json({
@@ -375,16 +386,17 @@ export class OrderController {
             });
 
         } catch (error) {
-
+         
             await queryRunner.rollbackTransaction();
             console.error("Cancel Order Error:", error);
             return res.status(500).json({ message: "Lỗi hệ thống khi hủy đơn hàng" });
         } finally {
-
+        
             await queryRunner.release();
         }
     }
 
+  
     static async returnOrder(req: any, res: Response) {
         try {
             const userId = req.user.userId;

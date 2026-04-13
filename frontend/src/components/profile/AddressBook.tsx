@@ -9,6 +9,7 @@ const AddressBook = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingAddress, setEditingAddress] = useState<any>(null);
 
+    // Hàm lấy dữ liệu (dùng useCallback để tránh render thừa)
     const fetchAddresses = useCallback(async () => {
         setLoading(true);
         try {
@@ -37,6 +38,7 @@ const AddressBook = () => {
         }
     };
 
+    // Xử lý Đặt mặc định
     const handleSetDefault = async (id: number) => {
         try {
             await setDefaultAddressAPI(id);
@@ -46,13 +48,13 @@ const AddressBook = () => {
         }
     };
 
-
+    // Mở modal để Sửa
     const openEditModal = (addr: any) => {
         setEditingAddress(addr);
         setIsModalOpen(true);
     };
 
-
+    // Mở modal để Thêm mới
     const openAddModal = () => {
         setEditingAddress(null);
         setIsModalOpen(true);

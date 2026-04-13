@@ -14,7 +14,7 @@ const CheckoutPage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-
+    // --- 1. STATE MANAGEMENT ---
     const [paymentMethod, setPaymentMethod] = useState<'COD' | 'VNPAY'>(
         (localStorage.getItem('temp_payment') as 'COD' | 'VNPAY') || 'COD'
     );
@@ -27,7 +27,9 @@ const CheckoutPage = () => {
 
     const { totalAmount = 0, selectedIds = [] } = state || {};
 
-  
+    // --- 2. LOGIC FUNCTIONS ---
+    
+    // Sử dụng useCallback để tránh khởi tạo lại hàm vô ích
     const fetchAddresses = useCallback(async () => {
         try {
             const data = await getAddressesAPI();
@@ -64,10 +66,10 @@ const CheckoutPage = () => {
             const result = await dispatch(createOrderServer(orderData) as any);
 
             if (result.meta.requestStatus === 'fulfilled') {
-              
+                // ĐỒNG BỘ GIỎ HÀNG: Cập nhật lại Header ngay lập tức
                 await dispatch(fetchCartServer() as any);
                 
-          
+                // Xóa dữ liệu tạm khi thành công
                 localStorage.removeItem('temp_payment');
                 localStorage.removeItem('temp_note');
                 localStorage.removeItem('temp_address_id');
@@ -77,11 +79,11 @@ const CheckoutPage = () => {
                 } else {
                     navigate('/order-success', { 
                         state: { orderId: result.payload.orderId },
-                        replace: true 
+                        replace: true // Không cho quay lại trang thanh toán bằng nút back
                     });
                 }
             } else {
-                toast.error(result.payload?.message || "Đặt hàng thất bại");
+                toast.error(result.payload?.message || "Đặt hàng thất bại hihi");
             }
         } catch (error) {
             toast.error("Đã có lỗi xảy ra");
@@ -90,26 +92,29 @@ const CheckoutPage = () => {
         }
     };
 
+    // --- 3. SIDE EFFECTS ---
 
+    // Chặn truy cập trực tiếp nếu không qua giỏ hàng
     useEffect(() => {
         if (!state) {
             navigate('/cart', { replace: true });
         }
     }, [state, navigate]);
 
-  
+    // Fetch dữ liệu khi mount
     useEffect(() => {
         if (state) {
             fetchAddresses();
         }
     }, [state, fetchAddresses]);
 
-
+    // Lưu dữ liệu tạm khi thay đổi option
     useEffect(() => {
         localStorage.setItem('temp_payment', paymentMethod);
         localStorage.setItem('temp_note', note);
     }, [paymentMethod, note]);
 
+    // Nếu không có state, không render gì để tránh lỗi layout
     if (!state) return null;
 
     return (

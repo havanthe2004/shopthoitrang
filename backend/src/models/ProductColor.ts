@@ -18,6 +18,9 @@ export class ProductColor {
     @Column({ nullable: true })
     hexCode!: string; // ví dụ: #000000 (optional)
 
+    @Column({ default: true })
+    isActive!: boolean;
+
     @ManyToOne(() => Product, p => p.colors, { onDelete: "CASCADE" })
     product!: Product;
 

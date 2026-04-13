@@ -9,7 +9,6 @@ export function createUploader(subFolder: string) {
     subFolder
   );
 
-  // Tạo folder nếu chưa có
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }

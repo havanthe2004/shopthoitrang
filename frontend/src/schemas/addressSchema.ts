@@ -1,12 +1,30 @@
 import * as z from 'zod';
 
 export const addressSchema = z.object({
-    receiverName: z.string().min(1, "Vui lòng nhập tên người nhận"),
-    phone: z.string().regex(/^(03|05|07|08|09)[0-9]{8}$/, "Số điện thoại không hợp lệ"),
-    province: z.string().min(1, "Vui lòng chọn Tỉnh/Thành phố"),
-    district: z.string().min(1, "Vui lòng chọn Quận/Huyện"),
-    ward: z.string().min(1, "Vui lòng chọn Phường/Xã"),
-    detailAddress: z.string().min(5, "Vui lòng nhập địa chỉ chi tiết (số nhà, tên đường)"),
+    receiverName: z.string()
+        .trim()
+        .min(1, "Tên người nhận không được để trống"),
+
+    phone: z.string()
+        .trim()
+        .min(1, "Số điện thoại không được để trống")
+        .regex(/^(03|05|07|08|09)[0-9]{8}$/, "Số điện thoại không hợp lệ"),
+
+    province: z.string()
+        .trim()
+        .min(1, "Tỉnh/Thành phố không được để trống"),
+
+    district: z.string()
+        .trim()
+        .min(1, "Quận/Huyện không được để trống"),
+
+    ward: z.string()
+        .trim()
+        .min(1, "Phường/Xã không được để trống"),
+
+    detailAddress: z.string()
+        .trim()
+        .min(1, "Địa chỉ chi tiết không được để trống"),
+
     isDefault: z.boolean().optional(),
 });
-

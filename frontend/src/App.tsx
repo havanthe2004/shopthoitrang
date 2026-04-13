@@ -20,11 +20,22 @@ import CheckoutPage from './pages/CheckoutPage.tsx';
 import OrderSuccessPage from './pages/OrderSuccessPage.tsx';
 import OrderHistory from './pages/OrderHistory.tsx';
 
-
-
+// Import Admin
+import AdminLayout from './admin/layouts/AdminLayout';
+import AdminLoginPage from './admin/pages/AdminLoginPage'; // Mới thêm
+import AdminProtectedRoute from './admin/components/AdminProtectedRoute';
+import DashboardPage from './admin/pages/DashboardPage';
+import CategoryPage from './admin/pages/CategoryPage';
+import AdminProductPage from './admin/pages/ProductList.tsx';
+import EditProduct from './admin/pages/EditProduct.tsx';
+import AdminManagement from './admin/pages/AdminManagement.tsx'
+import StockManagement from './admin/pages/StockManagement.tsx'
+import OrderManagement from './admin/pages/OrderManagement.tsx'
+import UserManagement from './admin/pages/UserManagement.tsx'
 // Import Actions & Types
 import { fetchCartServer } from './redux/slices/cartSlice';
 import type { RootState } from './redux/store';
+import AddProductStepper from './admin/pages/AddProductStepper.tsx';
 
 // ==========================================
 // 1. TẠO CLIENT LAYOUT (DÀNH CHO KHÁCH HÀNG)
@@ -37,7 +48,7 @@ const ClientLayout = () => {
         className="min-h-screen"
         style={{ backgroundImage: "url('/background/background.jpg')" }}
       >
-  
+        {/* Nội dung các trang HomePage, LoginPage... sẽ được render vào Outlet này */}
         <Outlet />
       </div>
       <Footer />
@@ -47,7 +58,9 @@ const ClientLayout = () => {
 
 
 
-
+// ==========================================
+// 3. COMPONENT CHÍNH CỦA APP
+// ==========================================
 function App() {
   const dispatch = useDispatch();
   const { currentUser } = useSelector((state: RootState) => state.auth);
@@ -64,7 +77,9 @@ function App() {
   return (
     <Router>
       <Routes>
-
+        {/* ====================================================== */}
+        {/* LUỒNG 1: GIAO DIỆN KHÁCH HÀNG (Sử dụng ClientLayout)   */}
+        {/* ====================================================== */}
         <Route element={<ClientLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
@@ -81,12 +96,34 @@ function App() {
           <Route path="/my-order" element={<OrderHistory />} />
         </Route>
 
+        {/* ====================================================== */}
+        {/* LUỒNG 2: GIAO DIỆN ADMIN (Sử dụng AdminLayout)         */}
+        {/* ====================================================== */}
+
+
+
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+
+        <Route element={<AdminProtectedRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="categories" element={<CategoryPage />} />
+            <Route path="products" element={<AdminProductPage />} />
+            <Route path="products/add" element={<AddProductStepper />} />
+            <Route path="products/edit/:id" element={<EditProduct />} />
+            <Route path="staffs" element={<AdminManagement />} />
+            <Route path="inventory" element={<StockManagement />} />
+            <Route path="orders" element={<OrderManagement />} />
+            <Route path="users" element={<UserManagement />} />
+            {/* Thêm các trang sau này: category, product, user... */}
+          </Route>
+        </Route>
 
         {/* Trang 404 cho toàn bộ hệ thống */}
         <Route path="*" element={<div className="text-center py-20 text-2xl font-bold">404 - Không tìm thấy trang</div>} />
       </Routes>
 
-
+      {/* Toast thông báo đặt ngoài cùng để dùng chung cho cả Client và Admin */}
       <ToastContainer
         position="top-right"
         autoClose={3000}

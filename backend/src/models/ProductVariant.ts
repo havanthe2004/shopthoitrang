@@ -14,7 +14,6 @@ export class ProductVariant {
     @ManyToOne(() => Product, p => p.variants, { onDelete: "CASCADE" })
     product!: Product;
 
-    // ✅ thay string color bằng relation
     @ManyToOne(() => ProductColor, c => c.variants, { onDelete: "CASCADE" })
     color!: ProductColor;
 
@@ -26,4 +25,7 @@ export class ProductVariant {
 
     @Column()
     stock!: number;
+
+    @Column({ default: true })
+    isActive!: boolean;
 }

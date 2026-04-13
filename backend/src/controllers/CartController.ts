@@ -14,22 +14,31 @@ export class CartController {
             const cartItemRepo = AppDataSource.getRepository(CartItem);
             const variantRepo = AppDataSource.getRepository(ProductVariant);
 
+            
             let cart = await cartRepo.findOne({ where: { user: { userId: userId } } });
             if (!cart) {
                 cart = cartRepo.create({ user: { userId: userId } });
                 await cartRepo.save(cart);
             }
 
-            const variant = await variantRepo.findOneBy({ productVariantId: productVariantId });
+            const variant = await variantRepo.findOne({
+                where: {
+                    productVariantId,
+                    isActive: true
+                }
+            });
             if (!variant) return res.status(404).json({ message: "Sản phẩm không tồn tại" });
 
+           
             let item = await cartItemRepo.findOne({
                 where: { cart: { cartId: cart.cartId }, variant: { productVariantId: productVariantId } }
             });
 
             if (item) {
+             
                 item.quantity += quantity;
             } else {
+             
                 item = cartItemRepo.create({
                     cart: cart,
                     variant: variant,
@@ -45,6 +54,7 @@ export class CartController {
         }
     }
 
+   
     static async getCart(req: Request, res: Response) {
         try {
             const userId = (req as any).user.id;
@@ -79,8 +89,10 @@ export class CartController {
                     name: item.variant.product.name,
                     price: item.variant.price,
 
+                   
                     image: images[0]?.url || "",
 
+                  
                     color: color?.color || "",
 
                     size: item.variant.size,
@@ -104,6 +116,7 @@ export class CartController {
         }
     }
 
+  
     static async updateQuantity(req: Request, res: Response) {
         try {
             const { variantId, quantity } = req.body;
@@ -113,6 +126,7 @@ export class CartController {
 
             const cartItemRepo = AppDataSource.getRepository(CartItem);
 
+          
             const item = await cartItemRepo.findOne({
                 where: {
                     cart: { user: { userId: userId } },
@@ -131,6 +145,7 @@ export class CartController {
         }
     }
 
+  
     static async removeFromCart(req: Request, res: Response) {
         try {
             const variantId = parseInt(req.params.variantId as string);

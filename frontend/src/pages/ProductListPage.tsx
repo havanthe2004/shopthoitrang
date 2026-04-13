@@ -17,7 +17,7 @@ const ProductListPage = () => {
         });
     }, []);
 
-
+    // Tìm category hiện tại và cha của nó để làm Breadcrumb
     const { currentCat, parentCat } = useMemo(() => {
         let current = null;
         let parent = null;
@@ -42,7 +42,7 @@ const ProductListPage = () => {
 
     return (
         <div className="min-h-screen ">
-        
+            {/* BREADCRUMB - Chỉ hiện ở Level 2 hoặc khi có cha */}
             {currentCat.parent !== null && (
                 <div className="max-w-7xl mx-auto px-4 pt-6 flex items-center gap-2 text-[11px] uppercase tracking-widest text-gray-400" style={{ fontFamily: 'Times New Roman' }}>
                     <Link to="/" className="hover:text-black flex items-center gap-1"><FaHome /> Trang chủ</Link>
@@ -57,7 +57,7 @@ const ProductListPage = () => {
                 </div>
             )}
 
-     
+            {/* RENDER VIEW */}
             {currentCat.parentId === null ? (
                 <CategoryLevel1View category={currentCat} />
             ) : (

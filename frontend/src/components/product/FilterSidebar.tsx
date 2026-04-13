@@ -9,10 +9,10 @@ interface FilterProps {
 }
 
 const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
-    const { slug } = useParams(); 
+    const { slug } = useParams(); // Lấy slug hiện tại để highlight menu
     const [categories, setCategories] = useState<any[]>([]);
 
-
+    // 1. Lấy danh sách danh mục từ Backend
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -25,6 +25,7 @@ const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
         fetchCategories();
     }, []);
 
+    // 2. Hàm xử lý lọc giá
     const handlePriceFilter = (min: number | string, max: number | string) => {
         if (min === "" && max === "") {
             searchParams.delete('minPrice');
@@ -36,7 +37,7 @@ const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
         setSearchParams(searchParams);
     };
 
-
+    // 3. Kiểm tra xem khoảng giá có đang được chọn không để highlight
     const isPriceActive = (min: string, max: string) => {
         return searchParams.get('minPrice') === min && searchParams.get('maxPrice') === max;
     };
@@ -50,7 +51,15 @@ const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
                     <FaFilter className="text-[10px]" /> Danh mục
                 </h3>
                 <ul className="space-y-3">
-                 
+                    {/* <li>
+                        <Link 
+                            to="/category/all" 
+                            className={`text-[13px] uppercase transition-all flex items-center justify-between group ${!slug || slug === 'all' ? 'font-black text-red-600' : 'text-gray-500 hover:text-black'}`}
+                        >
+                            Tất cả sản phẩm
+                            <FaChevronRight className={`text-[8px] transition-transform ${!slug || slug === 'all' ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'}`} />
+                        </Link>
+                    </li> */}
                     {categories.map((cat) => (
                         <li key={cat.categoryId}>
                             <Link 
@@ -61,7 +70,7 @@ const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
                                 <FaChevronRight className={`text-[8px] transition-transform ${slug === cat.slug ? 'translate-x-0' : '-translate-x-2 opacity-0 group-hover:opacity-100 group-hover:translate-x-0'}`} />
                             </Link>
                             
-                   
+                            {/* Danh mục con (nếu có và nếu danh mục cha đang được chọn) */}
                             {cat.children && cat.children.length > 0 && (slug === cat.slug || cat.children.some((c:any) => c.slug === slug)) && (
                                 <ul className="pl-4 mt-3 space-y-2 border-l border-gray-100">
                                     {cat.children.map((sub: any) => (
@@ -81,7 +90,7 @@ const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
                 </ul>
             </div>
 
-         
+            {/* NHÓM KHOẢNG GIÁ */}
             <div>
                 <h3 className="text-[12px] font-black uppercase tracking-[0.2em] mb-6 border-b pb-2">
                     Khoảng giá
@@ -105,7 +114,7 @@ const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
                 </div>
             </div>
 
-     
+            {/* NÚT XÓA BỘ LỌC */}
             {(searchParams.get('minPrice') || searchParams.get('sort')) && (
                 <button 
                     onClick={() => {
@@ -120,7 +129,12 @@ const FilterSidebar = ({ searchParams, setSearchParams }: FilterProps) => {
                 </button>
             )}
 
-          
+            {/* QUẢNG CÁO NHỎ (TÙY CHỌN) */}
+            {/* <div className="bg-gray-900 p-6 rounded-2xl text-white">
+                <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-gray-400 mb-2">Member Only</p>
+                <p className="text-[15px] font-black leading-tight mb-4 italic">GIẢM 10% CHO ĐƠN HÀNG ĐẦU TIÊN</p>
+                <button className="text-[10px] font-black uppercase border-b-2 border-white pb-1">Đăng ký ngay</button>
+            </div> */}
         </div>
     );
 };

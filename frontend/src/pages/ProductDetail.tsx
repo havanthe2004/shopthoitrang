@@ -8,12 +8,12 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
-
+// Import service và thunk từ slice bạn vừa viết
 import { getProductBySlug } from '../services/productService';
 import { addToCartServer } from '../redux/slices/cartSlice';
 import type { RootState } from '../redux/store';
 
-
+// Helper: Map tên màu sang mã Hex
 const getColorCode = (colorName: string): string => {
     const map: { [key: string]: string } = {
         'Đen': '#000000', 'Trắng': '#FFFFFF', 'Đỏ': '#B91C1C', 'Xám': '#808080',
@@ -43,6 +43,7 @@ const ProductDetail = () => {
 
     const BASE_URL = "http://localhost:3000";
 
+    /* ================= 1. LẤY DỮ LIỆU SẢN PHẨM ================= */
     useEffect(() => {
         const fetchProduct = async () => {
             if (!slug) return;
@@ -92,11 +93,14 @@ const ProductDetail = () => {
     const availableSizes = useMemo(() => {
         if (!product?.variants || !selectedColor) return [];
 
-        return product.variants
-            .filter((v: any) => v.color?.color === selectedColor)
+        // Lấy tất cả các size thuộc về màu đang chọn
+        const sizes = product.variants
+            .filter((v: any) => v.color?.color === selectedColor && v.isActive)
             .map((v: any) => v.size);
-    }, [product, selectedColor]);
 
+        // Sử dụng Set để loại bỏ các size trùng lặp (nếu có)
+        return Array.from(new Set(sizes));
+    }, [product, selectedColor]);
     const currentVariant = useMemo(() => {
         return product?.variants?.find(
             (v: any) =>
@@ -220,22 +224,28 @@ const ProductDetail = () => {
 
                             {/* SIZE SELECT */}
                             <div>
-                                <h4 className="text-[11px] font-black uppercase tracking-widest mb-4">Kích thước: <span className="text-red-600">{selectedSize}</span></h4>
+                                <h4 className="text-[11px] font-black uppercase tracking-widest mb-4">
+                                    Kích thước: <span className="text-red-600">{selectedSize}</span>
+                                </h4>
                                 <div className="flex gap-2.5 flex-wrap">
-                                    {['S', 'M', 'L', 'XL', '2XL'].map(size => {
-                                        const isAvailable = availableSizes.includes(size);
-                                        return (
+                                    {/* 🔥 SỬA TẠI ĐÂY: Dùng availableSizes thay vì mảng cứng */}
+                                    {availableSizes.length > 0 ? (
+                                        availableSizes.map(size => (
                                             <button
-                                                key={size} disabled={!isAvailable}
+                                                key={size}
                                                 onClick={() => setSelectedSize(size)}
                                                 className={`px-8 py-3 border text-[12px] font-black transition-all
-                                                    ${!isAvailable ? 'opacity-20 cursor-not-allowed border-gray-100' :
-                                                        selectedSize === size ? 'bg-black text-white border-black' : 'border-gray-200 hover:border-black'}`}
+                        ${selectedSize === size
+                                                        ? 'bg-black text-white border-black'
+                                                        : 'border-gray-200 hover:border-black'
+                                                    }`}
                                             >
                                                 {size}
                                             </button>
-                                        );
-                                    })}
+                                        ))
+                                    ) : (
+                                        <p className="text-xs italic text-gray-400">Màu này hiện đã hết size.</p>
+                                    )}
                                 </div>
                             </div>
 
