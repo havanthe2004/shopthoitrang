@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useDispatch } from 'react-redux'; // Thêm để cập nhật Header
 import { adminProfileService } from '../services/adminProfileService';
 import { adminProfileSchema } from '../../schemas/adminProfile.schema';
+import  { updateAdminInfo } from '../../redux/slices/adminAuthSlice'; // Import action cập nhật
 import {
     Camera, User, Phone, Lock, Save, ShieldCheck,
     RefreshCcw, AlertCircle, CheckCircle2
@@ -9,6 +11,7 @@ import { toast } from 'react-toastify';
 
 const AdminProfile = () => {
     const BASE_URL = import.meta.env.VITE_API_KEY;
+    const dispatch = useDispatch(); // Khởi tạo dispatch
 
     // State quản lý thông tin hồ sơ
     const [profile, setProfile] = useState({
@@ -82,16 +85,16 @@ const AdminProfile = () => {
 
         if (!validate.success) {
             const formattedErrors: any = {};
-
-            // Dùng validate.error.format() hoặc validate.error.issues
-            // Cách này an toàn và chuẩn nhất cho Zod:
-            validate.error.issues.forEach((issue) => {
-                const path = issue.path[0];
-                // Chỉ lấy lỗi đầu tiên nếu một trường có nhiều lỗi
-                if (!formattedErrors[path]) {
-                    formattedErrors[path] = issue.message;
-                }
-            });
+            
+            // Sửa lỗi forEach: Truy cập an toàn vào issues
+            if (validate.error && validate.error.issues) {
+                validate.error.issues.forEach((issue) => {
+                    const path = issue.path[0];
+                    if (!formattedErrors[path]) {
+                        formattedErrors[path] = issue.message;
+                    }
+                });
+            }
 
             setErrors(formattedErrors);
             return toast.error("Vui lòng kiểm tra lại dữ liệu nhập vào");
@@ -99,16 +102,23 @@ const AdminProfile = () => {
 
         setLoading(true);
         try {
-            await adminProfileService.updateAdminProfile({
+            const response = await adminProfileService.updateAdminProfile({
                 ...profile,
                 ...passwords,
                 avatarFile: selectedFile
             });
+
+            // 🔥 CẬP NHẬT REDUX ĐỂ HEADER ĐỔI THÔNG TIN NGAY LẬP TỨC
+            if (response.admin) {
+                dispatch(updateAdminInfo(response.admin));
+            }
+            
             toast.success("Cập nhật thành công!");
             setPasswords({ oldPassword: '', newPassword: '', confirmPassword: '' });
             setSelectedFile(null);
             setAvatarPreview(null);
-            loadProfile();
+            loadProfile(); // Load lại state local
+            
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Lỗi cập nhật");
         } finally {
@@ -131,7 +141,7 @@ const AdminProfile = () => {
         <div className="p-8 bg-[#F1F5F9] min-h-screen font-sans text-slate-700">
             <div className="max-w-5xl mx-auto">
 
-                {/* Header */}
+                {/* Header UI */}
                 <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-indigo-200">
@@ -145,12 +155,11 @@ const AdminProfile = () => {
                 </div>
 
                 <div className="grid grid-cols-12 gap-8">
-
-                    {/* Cột Trái: Avatar & Thông tin thẻ */}
+                    {/* Cột Trái: Avatar */}
                     <div className="col-span-12 lg:col-span-4 space-y-6">
                         <div className="bg-white p-8 rounded-[2.5rem] shadow-xl border border-slate-200 text-center relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-4">
-                                <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase border ${profile.role === 'admin' ? 'bg-rose-50 text-rose-600 border-rose-100' : 'bg-indigo-50 text-indigo-600 border-indigo-100'}`}>
+                                <span className="px-3 py-1 rounded-full text-[9px] font-black uppercase border bg-indigo-50 text-indigo-600 border-indigo-100">
                                     {profile.role}
                                 </span>
                             </div>
@@ -165,6 +174,7 @@ const AdminProfile = () => {
                                     />
                                 </div>
                                 <button
+                                    type="button"
                                     onClick={() => fileInputRef.current?.click()}
                                     className="absolute -bottom-2 -right-2 p-3 bg-slate-900 text-white rounded-2xl shadow-xl hover:bg-indigo-600 transition-all active:scale-90"
                                 >
@@ -185,11 +195,10 @@ const AdminProfile = () => {
                         </div>
                     </div>
 
-                    {/* Cột Phải: Form chỉnh sửa */}
+                    {/* Cột Phải: Form */}
                     <div className="col-span-12 lg:col-span-8">
                         <form onSubmit={handleSubmit} className="bg-white p-10 rounded-[3rem] shadow-xl border border-slate-200 space-y-10">
-
-                            {/* Section 1: Thông tin cơ bản */}
+                            
                             <div className="space-y-6">
                                 <div className="flex items-center gap-2 mb-2">
                                     <User className="text-indigo-600" size={18} />
@@ -203,7 +212,6 @@ const AdminProfile = () => {
                                             className={`w-full px-6 py-4 bg-slate-50 border rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white outline-none font-bold transition-all ${errors.username ? 'border-red-500' : 'border-slate-100'}`}
                                             value={profile.username}
                                             onChange={(e) => setProfile({ ...profile, username: e.target.value })}
-                                            placeholder="Nhập tên hiển thị..."
                                         />
                                         {errors.username && <p className="text-red-500 text-[10px] font-bold italic ml-2">{errors.username}</p>}
                                     </div>
@@ -216,7 +224,6 @@ const AdminProfile = () => {
                                                 className={`w-full pl-12 pr-6 py-4 bg-slate-50 border rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white outline-none font-bold transition-all ${errors.phone ? 'border-red-500' : 'border-slate-100'}`}
                                                 value={profile.phone}
                                                 onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                                                placeholder="09xx xxx xxx"
                                             />
                                         </div>
                                         {errors.phone && <p className="text-red-500 text-[10px] font-bold italic ml-2">{errors.phone}</p>}
@@ -224,17 +231,17 @@ const AdminProfile = () => {
                                 </div>
                             </div>
 
-                            {/* Section 2: Thay đổi mật khẩu */}
+                            {/* Section: Mật khẩu */}
                             <div className="space-y-6 pt-10 border-t border-slate-100">
                                 <div className="flex items-center gap-2 mb-2">
                                     <Lock className="text-indigo-600" size={18} />
-                                    <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest italic">Thay đổi mật mật mã</h4>
+                                    <h4 className="text-[11px] font-black text-slate-900 uppercase tracking-widest italic">Thay đổi mật khẩu</h4>
                                 </div>
 
                                 <div className="p-6 bg-amber-50/50 rounded-2xl border border-amber-100 flex gap-3 items-start">
                                     <AlertCircle className="text-amber-500 shrink-0" size={18} />
                                     <p className="text-[10px] font-bold text-amber-700 leading-relaxed italic">
-                                        Xác nhận mật khẩu hiện tại trước khi thiết lập mật mã mới.
+                                        Xác nhận mật khẩu hiện tại trước khi thiết lập mật khẩu mới.
                                     </p>
                                 </div>
 
@@ -271,7 +278,6 @@ const AdminProfile = () => {
                                 </div>
                             </div>
 
-                            {/* Nút hành động */}
                             <div className="pt-6">
                                 <button
                                     type="submit"
