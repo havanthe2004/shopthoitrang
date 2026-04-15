@@ -32,6 +32,8 @@ import AdminManagement from './admin/pages/AdminManagement.tsx'
 import StockManagement from './admin/pages/StockManagement.tsx'
 import OrderManagement from './admin/pages/OrderManagement.tsx'
 import UserManagement from './admin/pages/UserManagement.tsx'
+import AdminProfile from './admin/pages/AdminProfile.tsx'
+import SystemConfig from './admin/pages/SystemConfig.tsx'
 // Import Actions & Types
 import { fetchCartServer } from './redux/slices/cartSlice';
 import type { RootState } from './redux/store';
@@ -115,6 +117,8 @@ function App() {
             <Route path="inventory" element={<StockManagement />} />
             <Route path="orders" element={<OrderManagement />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="settings" element={<SystemConfig />} />
             {/* Thêm các trang sau này: category, product, user... */}
           </Route>
         </Route>
