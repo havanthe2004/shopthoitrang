@@ -57,9 +57,14 @@ export class AuthController {
         try {
             const { email, password } = req.body;
 
-            if (!email || !password) {
-                return res.status(400).json({ message: 'Missing fields' });
+            if (email == "" || password == "") {
+                return res.status(400).json({ message: 'Dữ liệu trong trường trống' })
             }
+
+            if (!email || !password) {
+                return res.status(400).json({ message: 'Thiếu trường' });
+            }
+
 
 
             const userRepo = AppDataSource.getRepository(User);
@@ -124,6 +129,7 @@ export class AuthController {
     static async refreshToken(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;
+            if(refreshToken =="") return res.status()
             if (!refreshToken) return res.status(401).json({ message: "Refresh Token missing" });
 
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
@@ -163,6 +169,13 @@ export class AuthController {
             }
 
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
+            const tokenInDb = await refreshRepo.findOne({
+                where: { token: refreshToken }
+            });
+
+            if (!tokenInDb) {
+                return res.status(401).json({ message: 'Invalid refresh token' });
+            }
 
             await refreshRepo.delete({ token: refreshToken });
 
