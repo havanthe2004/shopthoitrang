@@ -84,7 +84,8 @@ export class AdminProfileController {
                 admin: {
                     username: admin.username,
                     phone: admin.phone,
-                    avatar: admin.avatar
+                    avatar: admin.avatar,
+                    role: admin.role
                 }
             });
 
