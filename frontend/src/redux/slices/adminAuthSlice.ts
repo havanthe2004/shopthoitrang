@@ -29,6 +29,12 @@ const adminAuthSlice = createSlice({
             localStorage.setItem('adminRefreshToken', action.payload.refreshToken);
         },
 
+        updateAdminInfo: (state, action: PayloadAction<any>) => {
+            state.currentAdmin = action.payload;
+            // Cập nhật lại bản sao dưới LocalStorage để khi F5 không bị mất dữ liệu mới
+            localStorage.setItem('adminInfo', JSON.stringify(action.payload));
+        },
+
         // Action phụ để cập nhật lại token khi refresh thành công
         updateAdminAccessToken: (state, action: PayloadAction<string>) => {
             state.adminToken = action.payload;
@@ -47,5 +53,5 @@ const adminAuthSlice = createSlice({
     },
 });
 
-export const { adminLoginSuccess, adminLogout, updateAdminAccessToken } = adminAuthSlice.actions;
+export const { adminLoginSuccess, adminLogout, updateAdminAccessToken,updateAdminInfo } = adminAuthSlice.actions;
 export default adminAuthSlice.reducer;
