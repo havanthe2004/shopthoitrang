@@ -1,0 +1,254 @@
+{
+  "info": {
+    "name": "Admin API Collection",
+    "_postman_id": "12345-admin-api",
+    "description": "Test API Admin (Auth, Dashboard, Category, Product)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000"
+    },
+    {
+      "key": "accessToken",
+      "value": ""
+    },
+    {
+      "key": "refreshToken",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Admin Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/auth/login",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "auth", "login"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"123456\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "const res = pm.response.json();",
+              "pm.environment.set('accessToken', res.accessToken);",
+              "pm.environment.set('refreshToken', res.refreshToken);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Refresh Token",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/auth/refresh-token",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "auth", "refresh-token"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "3. Logout",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/auth/logout",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "auth", "logout"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"refreshToken\": \"{{refreshToken}}\"\n}"
+        }
+      }
+    },
+    {
+      "name": "4. Dashboard",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/dashboard",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "dashboard"]
+        }
+      }
+    },
+    {
+      "name": "5. Get Categories",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/category",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "category"]
+        }
+      }
+    },
+    {
+      "name": "6. Create Category",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/category",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "category"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Áo nam\",\n  \"parentId\": null\n}"
+        }
+      }
+    },
+    {
+      "name": "7. Update Category",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/category/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "category", "1"]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Áo nữ\"\n}"
+        }
+      }
+    },
+    {
+      "name": "8. Toggle Category",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/category/1/soft-delete",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "category", "1", "soft-delete"]
+        }
+      }
+    },
+    {
+      "name": "9. Get Products",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/product",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "product"]
+        }
+      }
+    },
+    {
+      "name": "10. Create Product (Form Data)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{accessToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/admin/product",
+          "host": ["{{base_url}}"],
+          "path": ["api", "admin", "product"]
+        },
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "name",
+              "value": "Áo thun",
+              "type": "text"
+            },
+            {
+              "key": "price",
+              "value": "100000",
+              "type": "text"
+            },
+            {
+              "key": "images",
+              "type": "file",
+              "src": ""
+            }
+          ]
+        }
+      }
+    }
+  ]
+}
