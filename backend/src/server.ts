@@ -6,8 +6,9 @@ import { AppDataSource } from "./config/data-source";
 import authRoute from './routes/auth.route';
 import categoryRoute from "./routes/category.routes";
 import userRoutes from "./routes/user.routes";
-import cartRoutes from "./routes/cart.routes"
-import orderRoutes from "./routes/order.routes"
+import cartRoutes from "./routes/cart.routes";
+import orderRoutes from "./routes/order.routes";
+import bannerRoutes from "./routes/banner.routes"
 import { seedAdmin } from "./seeds/admin.seed";
 
 // import của admin
@@ -21,6 +22,7 @@ import adminOrderRoutes from "./routes/adminOrder.routes";
 import adminUserRoutes from "./routes/adminUser.routes";
 import adminProfileRoutes from "./routes/adminProfile.routes";
 import systemConfig from "./routes/systemConfig.routes"
+
 import cors from 'cors';
 const app = express();
 app.use(express.json());
@@ -34,7 +36,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoute)
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
-
+app.use("/api/banners",bannerRoutes );
 
 //admin
 app.use('/api/admin/auth', adminAuthRoutes);
