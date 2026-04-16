@@ -1,0 +1,28 @@
+{
+"productData": {
+"name": "Đầm nữ",
+"slug": "dam-nu-7",
+"description": "Đầm sang trọng",
+"price": 500000,
+"categoryId": 5
+},
+"colorsData": [
+{
+"color": "Đen",
+"hexCode": "#000000",
+"variants": [
+{
+"size": "M",
+"price": 500000,
+"stock": 10
+},
+{
+"size": "L",
+"price": 510000,
+"stock": 5
+}
+],
+"imageIndices": [0, 1, 2, 3]
+}
+]
+}

@@ -1,0 +1,42 @@
+{
+  "productData": {
+    "name": "Đầm nữ NEW",
+    "slug": "dam-nu-10-2",
+    "description": "Đầm sang trọng hơn",
+    "price": 550000,
+    "categoryId": 5
+  },
+  "colorsData": [
+    {
+      "productColorId": 27,
+      "color": "Đen",
+      "hexCode": "#000000",
+      "variants": [
+        {
+          "productVariantId": 42,
+          "size": "M",
+          "price": 600000,
+          "stock": 20
+        },
+        {
+          "productVariantId": 43,
+          "size": "L",
+          "price": 600000,
+          "stock": 20
+        },
+        {
+          "size": "XL",
+          "price": 650000,
+          "stock": 10
+        }
+      ],
+      "oldImages": [
+       { "productImageId": 68 },
+        { "productImageId": 69 },
+        { "productImageId": 70 },
+        { "productImageId": 71 }
+      ],
+      "newImageIndices": [0]
+    }
+  ]
+}

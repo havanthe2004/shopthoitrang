@@ -6,8 +6,7 @@ try {
     jsonData = null;
 }
 */
-*/
-*/
+
 // Kiểm tra thời gian phản hồi
 /*
 pm.test("Thời gian phản hồi < 1000ms", function () {
@@ -74,5 +73,4 @@ pm.test("Phản hồi là dạng json hợp lệ", function () {
         ).to.be.true;
     }
 }); 
-*/
 */
