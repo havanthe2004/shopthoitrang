@@ -88,14 +88,14 @@ const Header = () => {
     };
 
     return (
-        <header className="bg-white w-full border-b border-gray-200 sticky top-0 z-[1000] shadow-sm" style={{ fontFamily: '"Times New Roman", Times, serif' }}>
+        <header className="bg-white backdrop-blur-mdw-full border-b border-gray-200 sticky top-0 z-[1000] shadow-sm" >
             {/* TẦNG 1 */}
             <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between relative gap-4">
 
                 {/* LOGO & BRAND */}
                 <div className="flex items-center gap-3 z-[1100]">
                     <Link to="/" className="transition-transform hover:scale-105">
-                        <div className="w-16 h-16 md:w-28 md:h-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white mt-6 md:mt-12">
+                        <div className="w-16 h-16 md:w-28 md:h-28 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white/90 mt-6 md:mt-12">
                             <img src="/logo/logo.png" alt="Logo" className="w-full h-full object-cover" />
                         </div>
                     </Link>
@@ -124,7 +124,7 @@ const Header = () => {
 
                     {/* HIỂN THỊ DANH SÁCH GỢI Ý HOẶC THÔNG BÁO LỖI */}
                     {showSuggestions && (
-                        <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 shadow-2xl rounded-xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="absolute top-full left-0 right-0 mt-2 bg-white/90 border border-gray-200 shadow-2xl rounded-xl overflow-hidden z-[9999] animate-in fade-in slide-in-from-top-1 duration-200">
 
                             {isSearching ? (
                                 <div className="p-4 text-center text-gray-500 text-sm italic">Đang tìm kiếm...</div>
@@ -140,7 +140,7 @@ const Header = () => {
                                                     setShowSuggestions(false);
                                                     setSearchKeyword('');
                                                 }}
-                                                className="flex items-center gap-4 p-3 hover:bg-red-50 cursor-pointer transition-colors border-b border-gray-50 last:border-none"
+                                                className="flex items-center gap-4 p-3 hover:bg-green-100 cursor-pointer transition-colors border-b border-gray-50 last:border-none"
                                             >
                                                 <img
                                                     src={p.colors?.[0]?.images?.[0]?.url ? getImageUrl(p.colors[0].images[0].url) : '/placeholder.jpg'}
@@ -197,7 +197,7 @@ const Header = () => {
                         </Link>
                         {currentUser && (
                             <div className="absolute right-0 top-full pt-2 w-48 hidden group-hover:block z-[130]">
-                                <div className="bg-white border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1">
+                                <div className="bg-white/90 border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1">
                                     <Link to="/profile" className="flex items-center px-4 py-3 hover:bg-gray-50 text-xs font-bold uppercase transition-colors">
                                         <FaUserEdit className="mr-3 text-gray-400" /> Hồ sơ cá nhân
                                     </Link>
@@ -228,7 +228,7 @@ const Header = () => {
             </div>
 
             {/* TẦNG 2: NAVIGATION */}
-            <nav className="hidden md:block border-t border-gray-100 bg-white relative z-[900]">
+            <nav className="hidden md:block border-t border-gray-100 bg-white/90 relative z-[900]">
                 <div className="max-w-7xl mx-auto flex justify-center">
                     <ul className="flex items-center gap-12 font-bold uppercase text-[13px] tracking-[0.15em] h-14">
                         <li><Link to="/" className="hover:text-red-600 transition-colors py-4">Trang chủ</Link></li>
@@ -239,7 +239,7 @@ const Header = () => {
                                     {parent.children?.length > 0 && <FaChevronDown className="text-[8px]" />}
                                 </div>
                                 {parent.children?.length > 0 && (
-                                    <ul className="absolute left-1/2 -translate-x-1/2 top-full w-52 bg-white border border-gray-100 shadow-2xl rounded-b-xl py-2 hidden group-hover:block z-[1000] normal-case font-medium">
+                                    <ul className="absolute left-1/2 -translate-x-1/2 top-full w-52 bg-white/90 border border-gray-100 shadow-2xl rounded-b-xl py-2 hidden group-hover:block z-[1000] normal-case font-medium">
                                         {parent.children.map((child: any) => (
                                             <li key={child.categoryId}>
                                                 <Link to={`/category/${child.slug}`} className="block px-6 py-2.5 hover:bg-red-50 hover:text-red-600 transition-all text-sm">
