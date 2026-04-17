@@ -1,7 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import path from 'path';
-import productRoutes from "./routes/product.route";
+import productRoutes from "./routes/product.routes";
 import { AppDataSource } from "./config/data-source";
 import authRoute from './routes/auth.route';
 import categoryRoute from "./routes/category.routes";
