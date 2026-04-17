@@ -6,7 +6,7 @@ import { uploadBanner } from "../config/uploaders";
 const router = Router();
 
 // Website Config
-router.get("/website", verifyAdminToken, SystemConfigController.getWebsiteConfig);
+router.get("/website", SystemConfigController.getWebsiteConfig);
 router.put("/website", verifyAdminToken, SystemConfigController.updateWebsiteConfig);
 
 // Banners
