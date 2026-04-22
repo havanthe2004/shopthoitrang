@@ -64,6 +64,8 @@ export interface SearchResponse {
     success: boolean;
     data: Product[];
 }
+
+
 // ==============================
 // API: GET LIST PRODUCTS
 // ==============================
@@ -74,10 +76,8 @@ export const getProductsAPI = async (
     return response.data;
 };
 
-export const searchAPI = async (keyword: string): Promise<SearchResponse> => {
-    // 1. Sửa URL thành /products/search để khớp với Route Backend mới
-    // 2. Sửa keywork thành keyword để khớp với req.query.keyword ở Backend
-    const response = await api.get(`/products/search?keyword=${keyword}`);
+export const searchAPI = async (searchKeyword: string): Promise<SearchResponse> => {
+    const response = await api.get(`/products/search?keyword=${searchKeyword}&limit=6`);
     return response.data;
 };
 
@@ -90,3 +90,8 @@ export const getProductBySlug = async (
     const response = await api.get(`/products/${slug}`);
     return response.data;
 };
+
+export const getBestSellersAPI = async() =>{
+    const response = await api.get(`/products/best-sellers`);
+    return response.data;
+}

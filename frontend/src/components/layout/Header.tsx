@@ -7,15 +7,22 @@ import { clearCart } from '../../redux/slices/cartSlice';
 import type { RootState } from '../../redux/store';
 import { getCategoryTree } from '../../services/categoryService';
 import { getImageUrl } from '../../utils/imageUrl';
+import { getWebsiteConfig } from '../../services/configServise';
+import {searchAPI} from '../../services/productService'
 import axios from 'axios';
 
+interface IWebsiteConfig {
+    siteName: string;
+}
+
 const Header = () => {
+    const [config, setConfig] = useState<IWebsiteConfig | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [categories, setCategories] = useState<any[]>([]);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [isSearching, setIsSearching] = useState(false); // Trạng thái đang gọi API
+    const [isSearching, setIsSearching] = useState(false); 
     const searchRef = useRef<HTMLDivElement>(null);
 
     const { totalQuantity } = useSelector((state: RootState) => state.cart);
@@ -24,7 +31,21 @@ const Header = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // 1. Lấy danh mục menu
+
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const data = await getWebsiteConfig();
+                setConfig(data);
+            } catch (err) {
+                console.error("Lỗi lấy cấu hình website:", err);
+            }
+        };
+        fetchConfig();
+    }, []);
+
+    const siteName = config?.siteName || "FASHION STORE";
+
     useEffect(() => {
         const fetchCategories = async () => {
             try {
@@ -35,14 +56,14 @@ const Header = () => {
         fetchCategories();
     }, []);
 
-    // 2. Logic Tìm kiếm gợi ý
+
     useEffect(() => {
         const delayDebounceFn = setTimeout(async () => {
             if (searchKeyword.trim().length > 0) {
                 setIsSearching(true);
                 try {
-                    const res = await axios.get(`http://localhost:3000/api/products/search?keyword=${searchKeyword}&limit=6`);
-                    const products = res.data.data || [];
+                    const res = await searchAPI(searchKeyword);
+                    const products = res.data || [];
                     setSuggestions(products);
                     setShowSuggestions(true);
                 } catch (err) {
@@ -55,11 +76,11 @@ const Header = () => {
                 setSuggestions([]);
                 setShowSuggestions(false);
             }
-        }, 150); // Giảm debounce xuống chút cho cảm giác mượt mà
+        }, 150); 
         return () => clearTimeout(delayDebounceFn);
     }, [searchKeyword]);
 
-    // 3. Đóng gợi ý khi click ra ngoài
+   
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -70,10 +91,9 @@ const Header = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    // 4. Chặn việc chuyển trang khi submit form
+
     const handleSearchSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        // Không navigate đi đâu cả, chỉ tập trung vào việc hiện kết quả ở dropdown
         if (searchKeyword.trim().length > 0) {
             setShowSuggestions(true);
         }
@@ -101,8 +121,20 @@ const Header = () => {
                     </Link>
 
                     <Link to="/" className="flex flex-col ml-1">
-                        <span className="text-lg md:text-4xl font-black tracking-tighter text-black leading-none mt-10 uppercase">FASHION</span>
-                        <span className="text-[10px] md:text-2xl font-bold text-red-600 tracking-[0.2em] uppercase">STORE</span>
+                        {siteName && typeof siteName === 'string' && siteName.includes(" ")  ? (
+                            <>
+                                <span className="text-lg md:text-4xl font-black tracking-tighter text-black leading-none mt-10 uppercase">
+                                    {siteName.split(" ")[0]}
+                                </span>
+                                <span className="text-[10px] md:text-2xl font-bold text-red-600 tracking-[0.2em] uppercase">
+                                    {siteName.split(" ").slice(1).join(" ")}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-lg md:text-4xl font-black tracking-tighter text-black leading-none mt-10 uppercase">
+                                {siteName}
+                            </span>
+                        )}
                     </Link>
                 </div>
 
@@ -159,7 +191,7 @@ const Header = () => {
                                     </div>
                                 </>
                             ) : (
-                                // TRƯỜNG HỢP KHÔNG TÌM THẤY SẢN PHẨM
+                    
                                 <div className="p-6 text-center flex flex-col items-center gap-2">
                                     <FaRegFrown className="text-gray-300 text-3xl" />
                                     <p className="text-sm font-bold text-gray-600">Rất tiếc, không tìm thấy sản phẩm!</p>
@@ -252,6 +284,7 @@ const Header = () => {
                             </li>
                         ))}
                         <li><Link to="/contact" className="hover:text-red-600 transition-colors py-4 text-gray-400">Liên hệ</Link></li>
+                        <li><Link to="/post" className="hover:text-red-600 transition-colors py-4 text-gray-400">Tin tức</Link></li>
                     </ul>
                 </div>
             </nav>

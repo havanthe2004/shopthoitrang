@@ -9,16 +9,13 @@ import {
 
 const Sidebar = () => {
     const navigate = useNavigate();
-    const [currentRole, setCurrentRole] = useState<string>('staff'); // Mặc định là staff
-
-    // Lấy role từ localStorage ngay khi Sidebar được mount
+    const [currentRole, setCurrentRole] = useState<string>('staff');
     useEffect(() => {
         const adminInfoStr = localStorage.getItem('adminInfo');
         if (adminInfoStr) {
             const adminInfo = JSON.parse(adminInfoStr);
             setCurrentRole(adminInfo.role);
             console.log(adminInfo.role);
-            // role trong DB của bạn là: "staff", "manager", "admin"
         }
     }, []);
 
@@ -29,7 +26,7 @@ const Sidebar = () => {
         { title: 'Quản lý sản phẩm', path: '/admin/products', icon: <FaBoxOpen />, roles: ['admin', 'manager', 'staff'] },
         { title: 'Quản lý tồn kho', path: '/admin/inventory', icon: <FaWarehouse />, roles: ['admin', 'manager', 'staff'] },
         { title: 'Xử lý đơn hàng', path: '/admin/orders', icon: <FaClipboardList />, roles: ['admin', 'manager', 'staff'] },
-        { title: 'Quản lý tin tức', path: '/admin/news', icon: <FaRegNewspaper />, roles: ['admin', 'manager'] },
+        { title: 'Quản lý tin tức', path: '/admin/posts', icon: <FaRegNewspaper />, roles: ['admin', 'manager'] },
         { title: 'Quản lý người dùng', path: '/admin/users', icon: <FaUsers />, roles: ['admin', 'manager'] },
         { title: 'Quản lý nhân viên', path: '/admin/staffs', icon: <FaUserTie />, roles: ['admin'] }, // CHỈ ADMIN TỐI CAO
     ];
@@ -70,7 +67,7 @@ const Sidebar = () => {
     };
 
     return (
-        <div className="w-64 bg-white/80 backdrop-blur-md border-r border-gray-200/50 h-screen sticky top-0 flex flex-col shadow-lg font-serif">
+        <div className="w-64 bg-white/80 backdrop-blur-md border-r border-gray-200/50 h-screen sticky top-0 flex flex-col shadow-lg font-sans">
             <div className="h-20 flex items-center justify-center border-b border-gray-300">
                 <h1 className="text-3xl font-black text-red-600 italic tracking-widest">Admin</h1>
             </div>

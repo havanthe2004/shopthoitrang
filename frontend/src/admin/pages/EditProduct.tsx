@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { productService } from '../services/productService';
+import { productService } from '../services/adminProductService';
 import { adminCategoryService } from '../services/adminCategoryService';
 import {
   Save, ArrowLeft, Plus, Trash2, Upload,

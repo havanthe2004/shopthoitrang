@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation } from 'swiper/modules';
-import 'swiper/css';
-import 'swiper/css/navigation';
 import { getProductsAPI } from '../../services/productService';
 import type { Product } from '../../services/productService';
 import ProductCard from './ProductCard';
 
+type Category = {
+    categoryId: number;
+    name: string;
+    slug: string;
+};
+
 const CategorySection = ({ parentCategory }: { parentCategory: any }) => {
 
-    const [selectedSub, setSelectedSub] = useState<any>(
+    const [selectedSub, setSelectedSub] = useState<Category | null>(
         parentCategory.children?.[0] || null
     );
 
@@ -25,7 +27,7 @@ const CategorySection = ({ parentCategory }: { parentCategory: any }) => {
 
                 const res = await getProductsAPI({
                     category: selectedSub.slug,
-                    limit: 8
+                    limit: 100 
                 });
 
                 setProducts(res.data);
@@ -43,13 +45,14 @@ const CategorySection = ({ parentCategory }: { parentCategory: any }) => {
     return (
         <section className="max-w-7xl mx-auto px-4 py-16 border-b">
 
+            {/* HEADER */}
             <div className="flex justify-between mb-10">
                 <h2 className="text-3xl font-bold">
                     {parentCategory.name}
                 </h2>
 
                 <div className="flex gap-4">
-                    {parentCategory.children?.map((sub: any) => (
+                    {parentCategory.children?.map((sub: Category) => (
                         <button
                             key={sub.categoryId}
                             onClick={() => setSelectedSub(sub)}
@@ -65,21 +68,19 @@ const CategorySection = ({ parentCategory }: { parentCategory: any }) => {
                 </div>
             </div>
 
+            {/* CONTENT */}
             {loading ? (
-                <div>Loading...</div>
+                <div className="text-center py-10">Loading...</div>
             ) : (
-                <Swiper
-                    modules={[Navigation]}
-                    spaceBetween={24}
-                    slidesPerView={4}
-                    navigation
-                >
-                    {products.map((p) => (
-                        <SwiperSlide key={p.productId}>
-                            <ProductCard product={p} />
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
+                <div className="max-h-[600px] overflow-y-auto pr-2">
+                    
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+                        {products.map((p) => (
+                            <ProductCard key={p.productId} product={p} />
+                        ))}
+                    </div>
+
+                </div>
             )}
         </section>
     );

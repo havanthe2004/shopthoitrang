@@ -5,7 +5,6 @@ import "slick-carousel/slick/slick-theme.css";
 import { getImageUrl } from '../../utils/imageUrl';
 import { bannerService } from '../../services/bannerService'
 
-// Định nghĩa kiểu dữ liệu dựa trên Model Banner
 interface BannerData {
     bannerId: number;
     imageUrl: string;

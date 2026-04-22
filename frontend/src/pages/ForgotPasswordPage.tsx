@@ -22,7 +22,7 @@ const ForgotPasswordPage = () => {
     const onSubmit = async (data: ForgotInput) => {
         setServerError('');
         try {
-            // Khi await ở đây, nút sẽ chuyển sang trạng thái disabled nhờ isSubmitting
+
             await forgotPasswordAPI(data.email);
             alert('Mã OTP đã được gửi về email của bạn.');
             navigate('/reset-password', { state: { email: data.email } });

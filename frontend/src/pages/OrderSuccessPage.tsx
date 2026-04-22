@@ -8,12 +8,11 @@ const OrderSuccessPage = () => {
     const [searchParams] = useSearchParams();
     const dispatch = useDispatch();
 
-    // Kết quả từ VNPAY (nếu có)
     const status = searchParams.get('status');
     const orderId = searchParams.get('orderId');
 
     useEffect(() => {
-        // Nếu thanh toán thành công, xóa giỏ hàng ở Client (Redux)
+
         if (status === 'success') {
             dispatch(clearCart());
         }

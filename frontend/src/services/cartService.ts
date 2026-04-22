@@ -1,5 +1,4 @@
 import api from './api';
-import { useParams } from 'react-router-dom';
 
 export const cartService = {
     // Lưu sản phẩm vào MySQL thông qua Backend

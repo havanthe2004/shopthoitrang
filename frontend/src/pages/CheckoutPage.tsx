@@ -14,7 +14,7 @@ const CheckoutPage = () => {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    // --- 1. STATE MANAGEMENT ---
+
     const [paymentMethod, setPaymentMethod] = useState<'COD' | 'VNPAY'>(
         (localStorage.getItem('temp_payment') as 'COD' | 'VNPAY') || 'COD'
     );
@@ -26,10 +26,6 @@ const CheckoutPage = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { totalAmount = 0, selectedIds = [] } = state || {};
-
-    // --- 2. LOGIC FUNCTIONS ---
-    
-    // Sử dụng useCallback để tránh khởi tạo lại hàm vô ích
     const fetchAddresses = useCallback(async () => {
         try {
             const data = await getAddressesAPI();
@@ -66,10 +62,8 @@ const CheckoutPage = () => {
             const result = await dispatch(createOrderServer(orderData) as any);
 
             if (result.meta.requestStatus === 'fulfilled') {
-                // ĐỒNG BỘ GIỎ HÀNG: Cập nhật lại Header ngay lập tức
                 await dispatch(fetchCartServer() as any);
-                
-                // Xóa dữ liệu tạm khi thành công
+    
                 localStorage.removeItem('temp_payment');
                 localStorage.removeItem('temp_note');
                 localStorage.removeItem('temp_address_id');
@@ -79,7 +73,7 @@ const CheckoutPage = () => {
                 } else {
                     navigate('/order-success', { 
                         state: { orderId: result.payload.orderId },
-                        replace: true // Không cho quay lại trang thanh toán bằng nút back
+                        replace: true 
                     });
                 }
             } else {
@@ -92,29 +86,25 @@ const CheckoutPage = () => {
         }
     };
 
-    // --- 3. SIDE EFFECTS ---
 
-    // Chặn truy cập trực tiếp nếu không qua giỏ hàng
     useEffect(() => {
         if (!state) {
             navigate('/cart', { replace: true });
         }
     }, [state, navigate]);
 
-    // Fetch dữ liệu khi mount
+
     useEffect(() => {
         if (state) {
             fetchAddresses();
         }
     }, [state, fetchAddresses]);
 
-    // Lưu dữ liệu tạm khi thay đổi option
+  
     useEffect(() => {
         localStorage.setItem('temp_payment', paymentMethod);
         localStorage.setItem('temp_note', note);
     }, [paymentMethod, note]);
-
-    // Nếu không có state, không render gì để tránh lỗi layout
     if (!state) return null;
 
     return (
@@ -123,7 +113,7 @@ const CheckoutPage = () => {
                 <div className="lg:col-span-8 space-y-12">
                     <h1 className="text-4xl font-black italic uppercase underline decoration-red-600 underline-offset-8">Thanh toán</h1>
 
-                    {/* 01. ĐỊA CHỈ */}
+            
                     <div className="space-y-6">
                         <div className="flex justify-between items-center border-b-2 pb-4">
                             <span className="font-black uppercase italic text-sm flex items-center gap-2">
@@ -170,7 +160,7 @@ const CheckoutPage = () => {
                         )}
                     </div>
 
-                    {/* 02. PHƯƠNG THỨC THANH TOÁN */}
+            
                     <div className="space-y-6">
                         <span className="font-black uppercase italic text-sm flex items-center gap-2"><FaCreditCard className="text-red-600" /> 02. Phương thức thanh toán</span>
                         <div className="flex flex-col space-y-4">
@@ -185,7 +175,7 @@ const CheckoutPage = () => {
                         </div>
                     </div>
 
-                    {/* 03. GHI CHÚ */}
+                   
                     <div className="space-y-6">
                         <span className="font-black uppercase italic text-sm flex items-center gap-2"><FaRegStickyNote className="text-red-600" /> 03. Ghi chú</span>
                         <textarea
@@ -198,7 +188,7 @@ const CheckoutPage = () => {
                     </div>
                 </div>
 
-                {/* TỔNG KẾT HÓA ĐƠN */}
+   
                 <div className="lg:col-span-4 h-fit sticky top-24">
                     <div className="bg-black text-white p-10 shadow-2xl">
                         <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-gray-400 italic mb-8 border-b border-gray-800 pb-4">Đơn hàng của bạn</h2>

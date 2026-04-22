@@ -7,7 +7,7 @@ import { FaUser, FaLock, FaMapMarkerAlt } from 'react-icons/fa';
 const ProfilePage = () => {
     const [activeTab, setActiveTab] = useState('info');
 
-    // Danh sách các tab điều hướng
+
     const menuItems = [
         { id: 'info', label: 'Thông tin cá nhân', icon: <FaUser /> },
         { id: 'password', label: 'Đổi mật khẩu', icon: <FaLock /> },
@@ -16,7 +16,7 @@ const ProfilePage = () => {
 
     return (
         <div className="max-w-7xl mx-auto px-4 py-10 flex flex-col md:flex-row gap-8" style={{ fontFamily: 'Times New Roman' }}>
-            {/* SIDEBAR BÊN TRÁI */}
+     
             <aside className="w-full md:w-1/4">
                 <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                     <div className="p-6 border-b bg-gray-50 text-center">
@@ -37,7 +37,7 @@ const ProfilePage = () => {
                 </div>
             </aside>
 
-            {/* VÙNG HIỂN THỊ NỘI DUNG BÊN PHẢI */}
+        
             <main className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm p-6 md:p-8 min-h-[500px]">
                 {activeTab === 'info' && <AccountInfo />}
                 {activeTab === 'password' && <ChangePassword />}

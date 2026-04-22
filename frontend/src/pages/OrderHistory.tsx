@@ -85,7 +85,7 @@ const OrderHistory = () => {
                 <FaBoxOpen className="text-red-600" /> Đơn hàng của tôi
             </h1>
 
-            {/* 🔥 Tabs Design */}
+    
             <div className="flex border-b border-gray-200 mb-8 overflow-x-auto no-scrollbar bg-white rounded-t-xl sticky top-20 z-10 shadow-sm">
                 {statusTabs.map((tab) => (
                     <button
@@ -118,7 +118,6 @@ const OrderHistory = () => {
                         ) : (
                             orders.map((order: any) => (
                                 <div key={order.orderId} className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-                                    {/* Order Header */}
                                     <div className="bg-gray-50 px-6 py-3 flex justify-between items-center border-b border-gray-100">
                                         <div className="flex items-center gap-4">
                                             <span className="font-black text-gray-800 tracking-tighter uppercase">Mã đơn hàng : SP - {order.orderId}</span>
@@ -129,7 +128,7 @@ const OrderHistory = () => {
                                         </span>
                                     </div>
 
-                                    {/* Order Items */}
+                            
                                     <div className="p-6 space-y-4">
                                         {order.items?.map((item: any) => (
                                             <div key={item.orderItemId} className="flex gap-6 items-center group">
@@ -152,7 +151,7 @@ const OrderHistory = () => {
                                         ))}
                                     </div>
 
-                                    {/* Order Footer */}
+                                 
                                     <div className="px-6 py-4 bg-gray-50/50 flex flex-col md:flex-row justify-between items-center gap-4 border-t border-gray-100">
                                         <div className="text-sm">
                                             <span className="text-gray-400 uppercase font-bold text-[10px] tracking-widest mr-2">Tổng số tiền:</span>
@@ -186,7 +185,6 @@ const OrderHistory = () => {
                         )}
                     </div>
 
-                    {/* 🔥 Pagination Design */}
                     {totalPages > 1 && (
                         <div className="flex justify-center items-center gap-3 mt-12 pb-12">
                             <button

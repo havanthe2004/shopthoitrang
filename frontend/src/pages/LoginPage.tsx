@@ -7,7 +7,7 @@ import * as z from 'zod';
 import { loginSuccess } from '../redux/slices/authSlice';
 import { loginAPI } from '../services/authService';
 
-// 1. Định nghĩa Schema xác thực cho Đăng nhập
+
 const loginSchema = z.object({
     email: z.string()
         .min(1, "Vui lòng nhập email")
@@ -25,7 +25,7 @@ const LoginPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // 2. Cấu hình React Hook Form
+
     const {
         register,
         handleSubmit,
@@ -67,7 +67,7 @@ const LoginPage = () => {
             >
                 <h2 className="text-2xl font-bold text-center mb-8 uppercase tracking-widest text-black">Đăng nhập</h2>
 
-                {/* Trường Email */}
+        
                 <div className="mb-4">
                     <label className="block mb-1 font-bold text-gray-700 text-[13px]">Email *</label>
                     <input
@@ -81,7 +81,7 @@ const LoginPage = () => {
                     )}
                 </div>
 
-                {/* Trường Mật khẩu */}
+             
                 <div className="mb-2">
                     <label className="block mb-1 font-bold text-gray-700 text-[13px]">
                         Mật khẩu *
@@ -111,21 +111,21 @@ const LoginPage = () => {
                     )}
                 </div>
 
-                {/* Link Quên mật khẩu */}
+           
                 <div className="flex justify-end mb-6">
                     <Link to="/forgot-password" size={13} className="text-[12px] text-gray-500 hover:text-red-600 hover:underline transition">
                         Quên mật khẩu?
                     </Link>
                 </div>
 
-                {/* Thông báo lỗi từ Server (nếu có) */}
+               
                 {serverError && (
                     <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 text-center text-[13px] rounded">
                         ❌ {serverError}
                     </div>
                 )}
 
-                {/* Nút Đăng nhập */}
+               
                 <button
                     type="submit"
                     disabled={isSubmitting}
@@ -135,7 +135,7 @@ const LoginPage = () => {
                     {isSubmitting ? 'Đang xác thực...' : 'Đăng nhập'}
                 </button>
 
-                {/* Link Đăng ký */}
+               
                 <div className="text-center mt-6 text-[13px]">
                     <p className="text-gray-500">
                         Chưa có tài khoản?{' '}

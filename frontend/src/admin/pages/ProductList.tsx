@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { productService } from '../services/productService';
+import { useEffect, useState } from 'react';
+import { productService } from '../services/adminProductService';
 import {
-  Plus, Search, Edit3, Eye, EyeOff,
+  Plus, Search, Edit3, EyeOff,
   ChevronLeft, ChevronRight, Filter, Package, Trash2, RotateCcw
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -52,7 +52,7 @@ const ProductList = () => {
     try {
       await productService.toggleProduct(productId);
       // Sau khi toggle, sản phẩm sẽ mất khỏi danh sách hiện tại, load lại trang
-      fetchProducts(meta.currentPage);
+      fetchProducts();
     } catch (err) {
       alert("Cập nhật trạng thái thất bại.");
     }
@@ -136,7 +136,7 @@ const ProductList = () => {
               ) : products.map((p: any) => (
                 <tr key={p.productId} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 text-center">
-                    <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200 inline-block">
+                    <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
                       {p.colors?.[0]?.images?.[0]?.url ? (
                         <img src={`http://localhost:3000/${p.colors[0].images[0].url}`} alt="" className="w-full h-full object-cover" />
                       ) : <Package className="text-slate-300" size={20} />}
@@ -233,8 +233,8 @@ const ProductList = () => {
                     key={page}
                     onClick={() => handlePageChange(page)}
                     className={`px-2 py-1 rounded text-sm font-semibold ${params.page === page
-                        ? 'bg-indigo-600 text-white'
-                        : 'text-slate-500 hover:bg-slate-100'
+                      ? 'bg-indigo-600 text-white'
+                      : 'text-slate-500 hover:bg-slate-100'
                       }`}
                   >
                     {page}
