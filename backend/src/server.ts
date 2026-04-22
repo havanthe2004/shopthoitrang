@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import path from 'path';
+import { seedAdmin } from "./seeds/admin.seed";
 import productRoutes from "./routes/product.routes";
 import { AppDataSource } from "./config/data-source";
 import authRoute from './routes/auth.route';
@@ -9,7 +10,8 @@ import userRoutes from "./routes/user.routes";
 import cartRoutes from "./routes/cart.routes";
 import orderRoutes from "./routes/order.routes";
 import bannerRoutes from "./routes/banner.routes"
-import { seedAdmin } from "./seeds/admin.seed";
+import postRotes from "./routes/post.routes"
+
 
 // import của admin
 import adminAuthRoutes from './routes/adminAuth.routes';
@@ -21,13 +23,17 @@ import adminStockRoutes from "./routes/adminStock.routes";
 import adminOrderRoutes from "./routes/adminOrder.routes";
 import adminUserRoutes from "./routes/adminUser.routes";
 import adminProfileRoutes from "./routes/adminProfile.routes";
-import systemConfig from "./routes/systemConfig.routes"
+import systemConfig from "./routes/systemConfig.routes";
+import adminPostRoutes from './routes/adminPost.routes'
 
 import cors from 'cors';
 const app = express();
 app.use(express.json());
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
+
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ limit: '100mb', extended: true }));
 
 app.use(cors());
 app.use('/api/products', productRoutes);
@@ -37,6 +43,7 @@ app.use('/api/categories', categoryRoute)
 app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/banners",bannerRoutes );
+app.use("/api/posts",postRotes );
 
 //admin
 app.use('/api/admin/auth', adminAuthRoutes);
@@ -49,7 +56,7 @@ app.use("/api/admin/orders", adminOrderRoutes);
 app.use("/api/admin/users", adminUserRoutes);
 app.use("/api/admin/profile", adminProfileRoutes)
 app.use("/api/admin/system", systemConfig)
-
+app.use('/api/admin/posts',adminPostRoutes)
 app.use(
     "/uploads",
     express.static(path.join(__dirname, "../uploads"))

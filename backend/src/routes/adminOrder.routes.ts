@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { OrderManagementController } from "../controllers/OrderManagementController";
+import { OrderManagementController } from "../controllers/AdminOrderManagementController";
 import { verifyAdminToken } from "../middlewares/adminAuth.middleware";
 
 const router = Router();
