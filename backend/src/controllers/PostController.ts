@@ -17,7 +17,7 @@ export class PostController {
 
             // 3. findAndCount trả về [danh_sách, tổng_số_lượng]
             const [items, total] = await PostController.postRepo.findAndCount({
-                select: ["postId", "title", "createdAt", "image"], // Thêm image nếu có
+                select: ["postId", "title", "createdAt", "image", "content"], 
                 order: { createdAt: "DESC" },
                 skip: skip, // Bỏ qua bao nhiêu bản ghi
                 take: limit  // Lấy bao nhiêu bản ghi
@@ -55,7 +55,7 @@ export class PostController {
     static async getLatestPosts(req: Request, res: Response) {
     try {
         const posts = await AppDataSource.getRepository(Post).find({
-            select: ["postId", "title", "createdAt", "image"], 
+            select: ["postId", "title", "createdAt", "image","content"], 
             order: { createdAt: "DESC" },
             take: 3
         });
