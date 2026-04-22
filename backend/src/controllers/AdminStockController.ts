@@ -94,7 +94,7 @@ export class StockController {
 
             const oldStock = variant.stock;
 
-            // 🔥 THỰC HIỆN CỘNG DỒN
+        
             variant.stock = Number(oldStock) + incrementValue;
 
             await variantRepo.save(variant);

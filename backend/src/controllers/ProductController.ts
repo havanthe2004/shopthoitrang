@@ -178,4 +178,18 @@ export class ProductController {
             });
         }
     }
+
+    static async getBestSellers(req: Request, res: Response) {
+    try {
+        const products = await AppDataSource.getRepository(Product).find({
+            where: { isActive: true },
+            relations: ["colors", "colors.images", "variants"],
+            order: { sold: "DESC" }, // Lấy theo số lượng đã bán
+            take: 10 // Lấy top 10 bản ghi
+        });
+        return res.json(products);
+    } catch (error) {
+        return res.status(500).json({ message: "Lỗi Server" });
+    }
+}
 }
