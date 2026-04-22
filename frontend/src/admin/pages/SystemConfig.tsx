@@ -186,7 +186,7 @@ const SystemConfig = () => {
                                     <input type="text" placeholder="https://..." className="w-full px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl outline-none font-bold text-xs"
                                         value={bannerLink} onChange={(e) => setBannerLink(e.target.value)} />
                                 </div>
-                                <button type="submit" disabled={loading} className="px-8 py-2.5 bg-slate-900 text-white rounded-xl font-black uppercase text-[10px] flex items-center gap-2 shadow-lg">
+                                <button type="submit" disabled={loading}  className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95">
                                     <Plus size={16} /> Thêm Banner
                                 </button>
                             </form>

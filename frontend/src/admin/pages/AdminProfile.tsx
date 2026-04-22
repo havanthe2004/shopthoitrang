@@ -5,7 +5,7 @@ import { adminProfileSchema } from '../../schemas/adminProfile.schema';
 import  { updateAdminInfo } from '../../redux/slices/adminAuthSlice'; // Import action cập nhật
 import {
     Camera, User, Phone, Lock, Save, ShieldCheck,
-    RefreshCcw, AlertCircle, CheckCircle2
+    RefreshCcw, AlertCircle
 } from 'lucide-react';
 import { toast } from 'react-toastify';
 
@@ -108,7 +108,7 @@ const AdminProfile = () => {
                 avatarFile: selectedFile
             });
 
-            // 🔥 CẬP NHẬT REDUX ĐỂ HEADER ĐỔI THÔNG TIN NGAY LẬP TỨC
+
             if (response.admin) {
                 dispatch(updateAdminInfo(response.admin));
             }

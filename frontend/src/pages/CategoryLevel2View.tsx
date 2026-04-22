@@ -21,7 +21,7 @@ const CategoryLevel2View = ({ categorySlug, categoryName }: any) => {
         })
             .then(res => {
                 if (isMounted) {
-                    setProducts(res.data); // ✅ FIX
+                    setProducts(res.data); 
                     setLoading(false);
                 }
             })
@@ -34,16 +34,16 @@ const CategoryLevel2View = ({ categorySlug, categoryName }: any) => {
     }, [categorySlug, searchParams]);
 
     return (
-        // Sử dụng font Times New Roman thống nhất cho toàn bộ view
+  
         <div className="max-w-7xl mx-auto px-4 py-12 flex flex-col md:flex-row gap-12 bg-transparent"
             style={{ fontFamily: 'Times New Roman' }}>
 
-            {/* Sidebar bộ lọc */}
+         
             <aside className="w-full md:w-64 flex-shrink-0">
                 <FilterSidebar searchParams={searchParams} setSearchParams={setSearchParams} />
             </aside>
 
-            {/* Danh sách sản phẩm */}
+        
             <main className="flex-1">
                 <div className="flex justify-between items-end mb-10 border-b border-black/10 pb-6">
                     <h1 className="text-4xl md:text-5xl font-black uppercase italic tracking-tighter text-black">
@@ -55,7 +55,7 @@ const CategoryLevel2View = ({ categorySlug, categoryName }: any) => {
                 </div>
 
                 {loading ? (
-                    // Hiển thị skeleton đơn giản khi đang load
+             
                     <div className="grid grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-12">
                         {[1, 2, 3, 4, 5, 6].map(i => (
                             <div key={i} className="aspect-[3/4] bg-black/5 animate-pulse rounded-sm" />

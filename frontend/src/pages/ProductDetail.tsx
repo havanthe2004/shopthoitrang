@@ -8,42 +8,30 @@ import {
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 
-// Import service và thunk từ slice bạn vừa viết
 import { getProductBySlug } from '../services/productService';
 import { addToCartServer } from '../redux/slices/cartSlice';
 import type { RootState } from '../redux/store';
-
-// Helper: Map tên màu sang mã Hex
-const getColorCode = (colorName: string): string => {
-    const map: { [key: string]: string } = {
-        'Đen': '#000000', 'Trắng': '#FFFFFF', 'Đỏ': '#B91C1C', 'Xám': '#808080',
-        'Be': '#F5F5DC', 'Kem': '#FFFDD0', 'Nâu': '#8B4513', 'Camel': '#C19A6B',
-        'Xanh dương': '#1E40AF', 'Xanh navy': '#000080', 'Xanh rêu': '#4B5320'
-    };
-    return map[colorName] || '#E5E7EB';
-};
 
 const ProductDetail = () => {
     const { slug } = useParams<{ slug: string }>();
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    // Lấy thông tin user từ Redux Auth
+
     const { currentUser } = useSelector((state: RootState) => state.auth);
 
     const [product, setProduct] = useState<any>(null);
     const [loading, setLoading] = useState(true);
 
-    // State lựa chọn sản phẩm
     const [selectedColor, setSelectedColor] = useState('');
     const [selectedSize, setSelectedSize] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [mainImage, setMainImage] = useState('');
     const [isDescOpen, setIsDescOpen] = useState(false);
 
-    const BASE_URL = "http://localhost:3000";
+    const BASE_URL = import.meta.env.VITE_API_KEY;
 
-    /* ================= 1. LẤY DỮ LIỆU SẢN PHẨM ================= */
+
     useEffect(() => {
         const fetchProduct = async () => {
             if (!slug) return;
@@ -61,7 +49,6 @@ const ProductDetail = () => {
 
                     setSelectedSize(firstVariant?.size || '');
 
-                    // ✅ lấy ảnh từ color.images
                     setMainImage(firstColor.images?.[0]?.url || '');
                 }
 
@@ -75,7 +62,7 @@ const ProductDetail = () => {
         fetchProduct();
     }, [slug]);
 
-    /* ================= 2. LOGIC TÍNH TOÁN (useMemo) ================= */
+
     const imageList = useMemo(() => {
         if (!product?.colors) return [];
 
@@ -93,12 +80,10 @@ const ProductDetail = () => {
     const availableSizes = useMemo(() => {
         if (!product?.variants || !selectedColor) return [];
 
-        // Lấy tất cả các size thuộc về màu đang chọn
         const sizes = product.variants
             .filter((v: any) => v.color?.color === selectedColor && v.isActive)
             .map((v: any) => v.size);
 
-        // Sử dụng Set để loại bỏ các size trùng lặp (nếu có)
         return Array.from(new Set(sizes));
     }, [product, selectedColor]);
     const currentVariant = useMemo(() => {
@@ -109,34 +94,28 @@ const ProductDetail = () => {
         );
     }, [selectedColor, selectedSize, product]);
 
-    /* ================= 3. XỬ LÝ SỰ KIỆN ================= */
     const handleColorClick = (colorObj: any) => {
         setSelectedColor(colorObj.color);
         setSelectedSize('');
-
-        // ✅ đổi ảnh theo màu
         if (colorObj.images?.length > 0) {
             setMainImage(colorObj.images[0].url);
         }
     };
 
     const handleAddToCart = () => {
-        // Kiểm tra đăng nhập
         if (!currentUser) {
             return toast.info("Chào bạn! Hãy đăng nhập để có thể thêm hàng vào giỏ nhé.");
         }
 
-        // Kiểm tra lựa chọn đầy đủ
         if (!selectedColor || !selectedSize) {
             return toast.error("Vui lòng chọn đầy đủ Màu sắc và Kích thước.");
         }
 
-        // Kiểm tra tồn kho
         if (!currentVariant || currentVariant.stock <= 0) {
             return toast.error("Lựa chọn này hiện đang hết hàng.");
         }
 
-        // Chuẩn bị dữ liệu để update UI ngay lập tức
+
         const itemData = {
             id: product.productId,
             variantId: currentVariant.productVariantId,
@@ -151,7 +130,7 @@ const ProductDetail = () => {
         dispatch(addToCartServer({
             productVariantId: currentVariant.productVariantId,
             quantity,
-            // itemData
+            itemData
         }) as any);
 
         toast.success(`Đã thêm vào giỏ hàng thành công!`);
@@ -165,9 +144,9 @@ const ProductDetail = () => {
 
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
 
-                    {/* --- BÊN TRÁI: GALLERY ẢNH (7 CỘT) --- */}
+
                     <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-4">
-                        {/* List ảnh nhỏ chống tràn */}
+
                         <div className="flex md:flex-col gap-3 overflow-x-auto md:overflow-y-auto no-scrollbar md:w-20 shrink-0 max-h-[120px] md:max-h-[750px]">
                             {imageList.map((img, i) => (
                                 <div key={i} onClick={() => setMainImage(img)}
@@ -176,7 +155,7 @@ const ProductDetail = () => {
                                 </div>
                             ))}
                         </div>
-                        {/* Ảnh chính */}
+
                         <div className="flex-1 relative aspect-[3/4] bg-slate-50 overflow-hidden border border-slate-100">
                             <AnimatePresence mode="wait">
                                 <motion.img key={mainImage} initial={{ opacity: 0 }} animate={{ opacity: 1 }} src={`${BASE_URL}/${mainImage}`} className="w-full h-full object-cover" style={{ imageRendering: '-webkit-optimize-contrast' }} />
@@ -184,7 +163,7 @@ const ProductDetail = () => {
                         </div>
                     </div>
 
-                    {/* --- BÊN PHẢI: INFO & SELECTORS (5 CỘT - STICKY) --- */}
+
                     <div className="lg:col-span-5 lg:sticky lg:top-28 space-y-8">
                         <section className="border-b border-slate-100 pb-6">
                             <p className="text-[11px] font-bold text-gray-400 uppercase tracking-[0.4em] mb-2">{product.category?.name}</p>
@@ -199,7 +178,7 @@ const ProductDetail = () => {
                         </section>
 
                         <section className="space-y-8">
-                            {/* COLOR SELECT (Nút chấm + Chữ) */}
+
                             <div>
                                 <h4 className="text-[11px] font-black uppercase tracking-widest mb-4">Màu sắc: <span className="text-red-600">{selectedColor}</span></h4>
                                 <div className="flex gap-3 flex-wrap">
@@ -214,7 +193,7 @@ const ProductDetail = () => {
                                         >
                                             <span
                                                 className="w-4 h-4 rounded-full border"
-                                                style={{ backgroundColor: c.hexCode || getColorCode(c.color) }}
+                                                style={{ backgroundColor: c.hexCode }}
                                             />
                                             {c.color}
                                         </button>
@@ -222,25 +201,25 @@ const ProductDetail = () => {
                                 </div>
                             </div>
 
-                            {/* SIZE SELECT */}
+                          
                             <div>
                                 <h4 className="text-[11px] font-black uppercase tracking-widest mb-4">
                                     Kích thước: <span className="text-red-600">{selectedSize}</span>
                                 </h4>
                                 <div className="flex gap-2.5 flex-wrap">
-                                    {/* 🔥 SỬA TẠI ĐÂY: Dùng availableSizes thay vì mảng cứng */}
+
                                     {availableSizes.length > 0 ? (
-                                        availableSizes.map(size => (
+                                        availableSizes.map(size  => (
                                             <button
-                                                key={size}
-                                                onClick={() => setSelectedSize(size)}
+                                                key={size as string}
+                                                onClick={() => setSelectedSize(size as string)}
                                                 className={`px-8 py-3 border text-[12px] font-black transition-all
                         ${selectedSize === size
                                                         ? 'bg-black text-white border-black'
                                                         : 'border-gray-200 hover:border-black'
                                                     }`}
                                             >
-                                                {size}
+                                                {size as string}
                                             </button>
                                         ))
                                     ) : (
@@ -249,7 +228,7 @@ const ProductDetail = () => {
                                 </div>
                             </div>
 
-                            {/* QUANTITY & TOTAL */}
+                        
                             <div className="bg-gray-50 p-6 flex justify-between items-center border border-gray-100">
                                 <div className="flex items-center border border-gray-300 bg-white rounded-sm overflow-hidden h-10">
                                     <button
@@ -276,7 +255,7 @@ const ProductDetail = () => {
                                 </div>
                             </div>
 
-                            {/* ACTION BUTTON */}
+                      
                             <button onClick={handleAddToCart}
                                 className="w-full bg-black text-white py-5 text-[12px] font-black uppercase tracking-[0.3em] hover:bg-red-600 transition-all shadow-xl flex items-center justify-center gap-3"
                             >
@@ -286,7 +265,7 @@ const ProductDetail = () => {
                     </div>
                 </div>
 
-                {/* --- TOGGLE DESCRIPTION (ẨN/HIỆN) --- */}
+             
                 <div className="mt-20 border-t border-gray-100 pt-10 max-w-4xl mx-auto md:mx-0">
                     <button onClick={() => setIsDescOpen(!isDescOpen)} className="w-full flex justify-between items-center py-5 text-[13px] font-black uppercase tracking-[0.4em] border-b border-gray-50 hover:text-red-600 transition-colors">
                         Thông tin chi tiết sản phẩm

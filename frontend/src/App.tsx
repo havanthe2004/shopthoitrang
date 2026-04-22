@@ -19,8 +19,8 @@ import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage.tsx';
 import OrderSuccessPage from './pages/OrderSuccessPage.tsx';
 import OrderHistory from './pages/OrderHistory.tsx';
-
-
+import PostDetail from './pages/PostDetail.tsx'
+import PostPage from './pages/PostPage.tsx'
 // Import Admin
 import AdminLayout from './admin/layouts/AdminLayout';
 import AdminLoginPage from './admin/pages/AdminLoginPage'; // Mới thêm
@@ -35,6 +35,7 @@ import OrderManagement from './admin/pages/OrderManagement.tsx'
 import UserManagement from './admin/pages/UserManagement.tsx'
 import AdminProfile from './admin/pages/AdminProfile.tsx'
 import SystemConfig from './admin/pages/SystemConfig.tsx'
+import PostManagement from './admin/pages/PostManagement.tsx';
 // Import Actions & Types
 import { fetchCartServer } from './redux/slices/cartSlice';
 import type { RootState } from './redux/store';
@@ -97,6 +98,8 @@ function App() {
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/order-success" element={<OrderSuccessPage />} />
           <Route path="/my-order" element={<OrderHistory />} />
+          <Route path="/post" element={<PostPage />} />
+          <Route path="/post/:id" element={<PostDetail />} />
         </Route>
 
         {/* ====================================================== */}
@@ -120,6 +123,7 @@ function App() {
             <Route path="users" element={<UserManagement />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="settings" element={<SystemConfig />} />
+            <Route path="posts" element={<PostManagement />} />
             {/* Thêm các trang sau này: category, product, user... */}
           </Route>
         </Route>

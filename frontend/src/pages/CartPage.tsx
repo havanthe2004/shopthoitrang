@@ -19,21 +19,12 @@ const CartPage = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    // =========================
-    // PAGINATION STATE
-    // =========================
     const [page, setPage] = useState(1);
     const [limit] = useState(5);
     const [totalPages, setTotalPages] = useState(1);
 
-    // =========================
-    // SELECT STATE
-    // =========================
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
 
-    // =========================
-    // FETCH CART (PHÂN TRANG)
-    // =========================
     useEffect(() => {
         dispatch(fetchCartServer({ page, limit }) as any)
             .unwrap()
@@ -41,13 +32,9 @@ const CartPage = () => {
                 setTotalPages(res.pagination.totalPages);
             });
 
-        // reset select khi đổi trang
         setSelectedIds([]);
     }, [dispatch, page, limit]);
 
-    // =========================
-    // CALC TOTAL
-    // =========================
     const { selectedTotal, selectedCount, selectedItemsData } = useMemo(() => {
         const selectedItems = cartItems.filter((item: ICartItem) =>
             selectedIds.includes(item.productVariantId)
@@ -135,7 +122,7 @@ const CartPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                 <div className="lg:col-span-8">
 
-                    {/* SELECT ALL */}
+             
                     <div className="flex items-center justify-between pb-6 border-b-2 border-gray-100 mb-6">
                         <label className="flex items-center gap-3 cursor-pointer group">
                             <input
@@ -159,7 +146,7 @@ const CartPage = () => {
                         )}
                     </div>
 
-                    {/* LIST */}
+            
                     <div className="space-y-8">
                         {cartItems.map((item) => (
                             <div key={item.productVariantId} className="flex gap-4 md:gap-6 border-b pb-8 items-center group">
@@ -215,7 +202,7 @@ const CartPage = () => {
                         ))}
                     </div>
 
-                    {/* PAGINATION */}
+
                     <div className="flex justify-center items-center gap-2 mt-10">
                         <button
                             onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -251,7 +238,7 @@ const CartPage = () => {
                     </Link>
                 </div>
 
-                {/* ORDER SUMMARY GIỮ NGUYÊN */}
+
                 <div className="hidden lg:block lg:col-span-4">
                     <div className="p-8 border border-gray-100 sticky top-24 shadow-sm">
                         <h2 className="font-black uppercase tracking-[0.2em] text-sm mb-8 border-b pb-4">Order Summary</h2>
@@ -287,7 +274,6 @@ const CartPage = () => {
                 </div>
             </div>
 
-            {/* MOBILE GIỮ NGUYÊN */}
             <div className="lg:hidden fixed bottom-0 left-0 w-full border-t border-gray-100 shadow-[0_-8px_20px_rgba(0,0,0,0.1)] p-4 z-50">
                 <div className="flex items-center justify-between gap-4">
                     <div>
