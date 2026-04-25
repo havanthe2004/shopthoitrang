@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { AppDataSource } from '../config/data-source';
 import { Product } from '../models/Product';
 import { Category } from '../models/Category';
+import { MoreThan } from 'typeorm';
 
 export class ProductController {
 
@@ -13,7 +14,7 @@ export class ProductController {
                 minPrice,
                 maxPrice,
                 keyword
-            } = req.query;           
+            } = req.query;
             const page = Number(req.query.page) || 1;
             const limit = Number(req.query.limit) || 10;
             const skip = (page - 1) * limit;
@@ -28,7 +29,7 @@ export class ProductController {
                 .leftJoinAndSelect("product.colors", "color")
                 .leftJoinAndSelect("color.images", "image")
                 .where("product.isActive = :isActive", { isActive: true })
-                .andWhere("variant.isActive = :variantActive", { variantActive: true });;        
+                .andWhere("variant.isActive = :variantActive", { variantActive: true });;
             if (keyword) {
                 query.andWhere(
                     `(LOWER(product.name) LIKE LOWER(:keyword)
@@ -36,7 +37,7 @@ export class ProductController {
                     OR LOWER(color.color) LIKE LOWER(:keyword))`,
                     { keyword: `%${keyword}%` }
                 );
-            }      
+            }
             if (slug) {
                 const foundCat = await categoryRepo.findOne({
                     where: { slug: slug as string },
@@ -63,7 +64,7 @@ export class ProductController {
                 query.andWhere("variant.price <= :max", { max: Number(maxPrice) });
             }
 
-          
+
             if (sort === 'price-asc') {
                 query.orderBy("variant.price", "ASC");
             } else if (sort === 'price-desc') {
@@ -73,10 +74,10 @@ export class ProductController {
             }
 
             query.addOrderBy("image.productImageId", "ASC");
-         
+
             query.distinct(true);
 
-       
+
             query.skip(skip).take(limit);
 
             const [products, total] = await query.getManyAndCount();
@@ -110,7 +111,7 @@ export class ProductController {
             const product = await productRepo
                 .createQueryBuilder("product")
                 .leftJoinAndSelect("product.category", "category")
-                .leftJoinAndSelect("category.parent", "parentCategory") 
+                .leftJoinAndSelect("category.parent", "parentCategory")
                 .leftJoinAndSelect("product.variants", "variant")
                 .leftJoinAndSelect("variant.color", "variantColor")
                 .leftJoinAndSelect("product.colors", "color")
@@ -144,7 +145,7 @@ export class ProductController {
                 .leftJoinAndSelect("category.parent", "parentCategory")
                 .leftJoinAndSelect("product.variants", "variant")
                 .leftJoinAndSelect("product.colors", "color")
-                .leftJoinAndSelect("color.images", "image") 
+                .leftJoinAndSelect("color.images", "image")
                 .where("product.isActive = :isActive", { isActive: true })
                 .andWhere("category.isActive = :categoryActive", { categoryActive: true })
                 .andWhere(`(parentCategory.categoryId IS NULL OR parentCategory.isActive = true)`)
@@ -180,16 +181,16 @@ export class ProductController {
     }
 
     static async getBestSellers(req: Request, res: Response) {
-    try {
-        const products = await AppDataSource.getRepository(Product).find({
-            where: { isActive: true },
-            relations: ["colors", "colors.images", "variants"],
-            order: { sold: "DESC" }, // Lấy theo số lượng đã bán
-            take: 10 // Lấy top 10 bản ghi
-        });
-        return res.json(products);
-    } catch (error) {
-        return res.status(500).json({ message: "Lỗi Server" });
+        try {
+            const products = await AppDataSource.getRepository(Product).find({
+                where: { isActive: true, sold: MoreThan(0) },
+                relations: ["colors", "colors.images", "variants"],
+                order: { sold: "DESC" },
+                take: 10
+            });
+            return res.json(products);
+        } catch (error) {
+            return res.status(500).json({ message: "Lỗi Server" });
+        }
     }
-}
 }
