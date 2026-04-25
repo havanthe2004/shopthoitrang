@@ -7,7 +7,7 @@ import { Order } from "../models/Order";
 export class AdminDashboardController {
     static getDashboardData = async (req: Request, res: Response) => {
         try {
-      
+
             const {
                 revFilter = 'month', revStart, revEnd,
                 topFilter = 'month', topStart, topEnd
@@ -23,15 +23,16 @@ export class AdminDashboardController {
                 orderRepo.count()
             ]);
 
-         
+
             const revResult = await orderRepo.createQueryBuilder("order")
                 .select("SUM(order.totalPrice)", "total")
                 .where("order.status = :status", { status: "completed" })
+                .andWhere("order.paymentStatus = :paymentStatus", { paymentStatus: "paid" }) 
                 .getRawOne();
 
             const totalRevenue = revResult?.total ? Number(revResult.total) : 0;
 
-        
+
             let chartQuery = orderRepo.createQueryBuilder("order")
                 .where("order.status = :status", { status: "completed" });
 
@@ -74,7 +75,7 @@ export class AdminDashboardController {
                 .innerJoin("variant.product", "product")
                 .select("product.productId", "productId")
                 .addSelect("product.name", "productName")
-                .addSelect("SUM(item.quantity)", "totalSold") 
+                .addSelect("SUM(item.quantity)", "totalSold")
                 .addSelect("SUM(item.price * item.quantity)", "totalRevenue")
                 .where("order.status = :status", { status: "completed" });
 
@@ -83,16 +84,16 @@ export class AdminDashboardController {
             } else if (topFilter === 'year') {
                 topQuery.andWhere("YEAR(order.createdAt) = YEAR(CURDATE())");
             } else if (topFilter === 'week') {
-                topQuery.andWhere("YEARWEEK(order.createdAt, 1) = YEARWEEK(CURDATE(), 1)"); 
+                topQuery.andWhere("YEARWEEK(order.createdAt, 1) = YEARWEEK(CURDATE(), 1)");
             } else {
                 topQuery.andWhere("MONTH(order.createdAt) = MONTH(CURDATE()) AND YEAR(order.createdAt) = YEAR(CURDATE())");
             }
 
             const topProducts = await topQuery
                 .groupBy("product.productId")
-                .addGroupBy("product.name") 
-                .orderBy("totalSold", "DESC") 
-                .limit(5) 
+                .addGroupBy("product.name")
+                .orderBy("totalSold", "DESC")
+                .limit(5)
                 .getRawMany();
 
             return res.status(200).json({
