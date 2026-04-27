@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useDispatch } from 'react-redux'; // Thêm để cập nhật Header
 import { adminProfileService } from '../services/adminProfileService';
 import { adminProfileSchema } from '../../schemas/adminProfile.schema';
-import  { updateAdminInfo } from '../../redux/slices/adminAuthSlice'; // Import action cập nhật
+import  { updateAdminInfo } from '../../redux/slices/adminAuthSlice'; 
 import {
     Camera, User, Phone, Lock, Save, ShieldCheck,
     RefreshCcw, AlertCircle

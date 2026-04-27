@@ -18,12 +18,11 @@ const adminAuthSlice = createSlice({
     name: 'adminAuth',
     initialState,
     reducers: {
-        adminLoginSuccess: (state, action: PayloadAction<{ admin: any, token: string, refreshToken: string }>) => {
+        adminLoginSuccess: (state, action: PayloadAction<{ admin: string, token: string, refreshToken: string }>) => {
             state.currentAdmin = action.payload.admin;
             state.adminToken = action.payload.token;
             state.adminRefreshToken = action.payload.refreshToken;
 
-            // 🔥 Lưu tất cả vào LocalStorage tập trung tại đây
             localStorage.setItem('adminInfo', JSON.stringify(action.payload.admin));
             localStorage.setItem('adminAccessToken', action.payload.token);
             localStorage.setItem('adminRefreshToken', action.payload.refreshToken);

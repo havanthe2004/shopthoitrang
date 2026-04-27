@@ -9,10 +9,10 @@ export const store = configureStore({
     auth: authReducer,
     cart: cartReducer,
     orders: orderReducer, 
-    adminAuth: adminAuthReducer,// Lưu ý: đặt là 'orders' để đồng bộ với useSelector
+    adminAuth: adminAuthReducer,
   },
 });
 
-// 🔥 ĐẢM BẢO CÓ 2 DÒNG NÀY Ở CUỐI FILE
+
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
