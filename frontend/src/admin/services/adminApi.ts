@@ -5,44 +5,77 @@ declare module 'axios' {
     _retry?: boolean;
   }
 }
-
+const API_URL = import.meta.env.VITE_API_KEY;
 const adminApi = axios.create({
-  baseURL: 'http://localhost:3000/api',
+  // baseURL: `import.meta.env.VITE_API_KEY/api`,\
+  baseURL: `${API_URL}/api`,
 });
 
-// Request Interceptor: Gắn Access Token của ADMIN vào header
+// ==========================================
+// 1. REQUEST INTERCEPTOR
+// ==========================================
 adminApi.interceptors.request.use((config) => {
-  // 🔥 SỬA Ở ĐÂY: Dùng đúng tên 'adminAccessToken'
   const adminAccessToken = localStorage.getItem('adminAccessToken');
-
   if (adminAccessToken) {
     config.headers.Authorization = `Bearer ${adminAccessToken}`;
   }
   return config;
 });
 
-// Response Interceptor: Xử lý lỗi 401 (Hết hạn Token)
+// ==========================================
+// 2. RESPONSE INTERCEPTOR (XỬ LÝ REFRESH TOKEN)
+// ==========================================
 adminApi.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    // Bỏ qua nếu đang ở trang login của admin
-    if (originalRequest.url === "/admin/auth/login") {
-        return Promise.reject(error);
+    // Tránh vòng lặp vô tận nếu API login hoặc refresh-token bị lỗi 401
+    if (
+      originalRequest.url === "/admin/auth/login" ||
+      originalRequest.url === "/admin/auth/refresh-token"
+    ) {
+      return Promise.reject(error);
     }
 
+    // Nếu lỗi 401 (Hết hạn Access Token) và chưa thử retry lần nào
     if (error.response?.status === 401 && !originalRequest._retry) {
-        originalRequest._retry = true;
+      originalRequest._retry = true;
 
-        // Tạm thời log out luôn nếu Access Token chết (Sau này bạn có thể ráp API refresh-token vào đây)
-        // 🔥 SỬA Ở ĐÂY: Xóa đúng các biến đã lưu
+      try {
+        const refreshToken = localStorage.getItem('adminRefreshToken');
+
+        if (!refreshToken) {
+          throw new Error("No refresh token found");
+        }
+
+        // 🔥 GỌI API REFRESH TOKEN (Dùng axios gốc để tránh interceptor này lặp lại)
+        const res = await axios.post(`${API_URL}/api/admin/auth/refresh-token`, {
+          refreshToken: refreshToken
+        });
+
+        // Backend trả về accessToken mới
+        const { accessToken } = res.data;
+
+        // 1. Cập nhật vào LocalStorage
+        localStorage.setItem('adminAccessToken', accessToken);
+
+        // 2. Gắn token mới vào request cũ bị lỗi và thực hiện lại nó
+        originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+        return adminApi(originalRequest);
+
+      } catch (refreshError) {
+        // Nếu Refresh Token cũng hết hạn hoặc lỗi -> Xóa sạch và logout thật sự
+        console.error("Refresh token expired or invalid:", refreshError);
+
         localStorage.removeItem('adminAccessToken');
         localStorage.removeItem('adminRefreshToken');
         localStorage.removeItem('adminInfo');
-        
-        // Đá về trang đăng nhập
-        window.location.replace('/admin/login'); 
+
+        // Ép tải lại trang để Redux/State về null và đẩy ra trang login
+        window.location.href = '/admin/login';
+        return Promise.reject(refreshError);
+      }
     }
 
     return Promise.reject(error);
