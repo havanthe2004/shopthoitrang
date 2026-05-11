@@ -35,7 +35,7 @@ const AdminLoginPage = () => {
     return (
         <div
             className="min-h-screen flex items-center justify-center bg-cover bg-center "
-            style={{ backgroundImage: "url('/background/admin-bg.jpg')" }} // Đổi link ảnh nền của bạn nếu cần
+            // style={{ backgroundImage: "url('/background/admin-bg.jpg')" }} 
         >
             <div className="bg-white/90 backdrop-blur-md p-8 rounded-xl shadow-2xl w-full max-w-md border border-white/50">
                 <div className="text-center mb-8">

@@ -12,23 +12,24 @@ export class AdminAuthController {
             const { username, password } = req.body;
 
             if (!username || !password) {
-                return res.status(400).json({ message: 'Missing fields' });
+                return res.status(400).json({ message: 'Vui lòng nhập đủ tài khoản và mật khẩu' });
             }
 
             const adminRepo = AppDataSource.getRepository(Admin);
             const refreshRepo = AppDataSource.getRepository(AdminRefreshToken);
 
             const admin = await adminRepo.findOne({ where: { username } });
-            if (!admin || !admin.isActive) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+            if (!admin) {
+                return res.status(401).json({ message: 'Tài khoản hoặc mật khẩu không đúng!' });
+            }
+            if (!admin.isActive) {
+                return res.status(401).json({ message: 'Tài khoản đã bị KHOÁ' });
             }
 
             const isMatch = await bcrypt.compare(password, admin.password);
             if (!isMatch) {
-                return res.status(401).json({ message: 'Invalid credentials' });
+                return res.status(401).json({ message: 'Tài khoản hoặc mật khẩu không đúng!' });
             }
-
-
             const accessToken = jwt.sign(
                 { adminId: admin.adminId, role: admin.role },
                 process.env.JWT_ADMIN_ACCESS_SECRET as string,
@@ -44,8 +45,8 @@ export class AdminAuthController {
 
             const refreshEntity = refreshRepo.create({
                 token: refreshToken,
-                expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
-                admin, 
+                expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                admin,
             });
 
             await refreshRepo.save(refreshEntity);
@@ -75,20 +76,20 @@ export class AdminAuthController {
 
             const refreshRepo = AppDataSource.getRepository(AdminRefreshToken);
 
-         
+
             const savedToken = await refreshRepo.findOne({
                 where: { token: refreshToken },
-                relations: ['admin'] 
+                relations: ['admin']
             });
 
             if (!savedToken || savedToken.expiredAt < new Date()) {
                 return res.status(403).json({ message: "Refresh Token invalid or expired" });
             }
 
-        
+
             const decoded = jwt.verify(refreshToken, process.env.JWT_ADMIN_REFRESH_SECRET as string) as any;
 
-       
+
             const newAccessToken = jwt.sign(
                 { adminId: decoded.adminId, role: savedToken.admin.role },
                 process.env.JWT_ADMIN_ACCESS_SECRET as string,
@@ -101,7 +102,7 @@ export class AdminAuthController {
         }
     }
 
-   
+
     static async adminLogout(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;

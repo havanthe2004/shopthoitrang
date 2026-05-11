@@ -107,6 +107,80 @@ const CheckoutPage = () => {
     }, [paymentMethod, note]);
     if (!state) return null;
 
+  const confirmOrder = () => {
+    toast(
+        ({ closeToast }) => (
+            <div className="w-[300px] text-sm font-sans">
+                
+                {/* Title */}
+                <h3 className="text-lg font-bold text-black mb-2">
+                    Xác nhận đặt hàng
+                </h3>
+
+                {/* Divider */}
+                <div className="h-[1px] bg-gray-200 mb-3"></div>
+
+                {/* Info */}
+                <div className="space-y-2 text-gray-600 text-xs">
+                    <div className="flex justify-between">
+                        <span>Phương thức:</span>
+                        <span className="font-semibold text-black">
+                            {paymentMethod === 'COD' ? 'COD' : 'VNPAY'}
+                        </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                        <span>Số sản phẩm:</span>
+                        <span className="font-semibold text-black">
+                            {selectedIds.length}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Total */}
+                <div className="mt-4 p-3 bg-gray-100 rounded-md flex justify-between items-center">
+                    <span className="text-xs font-semibold text-gray-500 uppercase">
+                        Tổng tiền
+                    </span>
+                    <span className="text-lg font-bold text-red-600">
+                        {new Intl.NumberFormat('vi-VN').format(totalAmount)}đ
+                    </span>
+                </div>
+
+                {/* Warning */}
+                <p className="text-[11px] text-gray-400 italic mt-3">
+                    * Vui lòng kiểm tra kỹ thông tin trước khi đặt hàng
+                </p>
+
+                {/* Buttons */}
+                <div className="flex gap-2 mt-4">
+                    <button
+                        onClick={() => {
+                            closeToast();
+                            handleConfirmOrder();
+                        }}
+                        className="flex-1 py-2 bg-black text-white text-xs font-bold uppercase tracking-wider hover:bg-red-600 transition"
+                    >
+                        Xác nhận
+                    </button>
+
+                    <button
+                        onClick={closeToast}
+                        className="flex-1 py-2 bg-gray-200 text-black text-xs font-bold uppercase hover:bg-gray-300 transition"
+                    >
+                        Hủy
+                    </button>
+                </div>
+            </div>
+        ),
+        {
+            autoClose: false,
+            closeOnClick: false,
+            closeButton: false,
+            className: "rounded-xl shadow-2xl border border-gray-200"
+        }
+    );
+};
     return (
         <div className="max-w-7xl mx-auto px-4 py-12" style={{ fontFamily: 'Times New Roman' }}>
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
@@ -199,7 +273,7 @@ const CheckoutPage = () => {
                             </span>
                         </div>
                         <button
-                            onClick={handleConfirmOrder}
+                            onClick={confirmOrder}
                             disabled={isLoading}
                             className={`w-full py-6 font-black uppercase tracking-[0.3em] text-[12px] transition-all duration-500 shadow-2xl active:scale-95 flex items-center justify-center gap-3
                                 ${isLoading ? 'bg-gray-700 cursor-not-allowed' : 'bg-white text-black hover:bg-red-600 hover:text-white'}`}

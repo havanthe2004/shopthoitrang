@@ -82,7 +82,7 @@ const CategoryPage = () => {
         e.preventDefault();
         try {
             const submitData = { ...formData, parentId: formData.parentId ? Number(formData.parentId) : null };
-            
+
             if (editingId) {
                 const res = await adminCategoryService.updateCategory(editingId, submitData);
                 if (res.success) toast.success("Cập nhật thành công!");
@@ -130,32 +130,31 @@ const CategoryPage = () => {
                 <h2 className="text-2xl font-black text-gray-800">
                     {isTrash ? "Thùng rác Danh mục" : "Quản lý Danh mục"}
                 </h2>
-                
+
                 <div className="flex flex-wrap gap-3 w-full md:w-auto">
                     <div className="relative flex-grow md:flex-grow-0">
                         <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                        <input 
-                            type="text" 
-                            placeholder="Tìm kiếm danh mục..." 
+                        <input
+                            type="text"
+                            placeholder="Tìm kiếm danh mục..."
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             className="w-full pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-red-200 outline-none"
                         />
                     </div>
-                    
-                    <button 
+
+                    <button
                         onClick={() => { setIsTrash(!isTrash); setPage(1); }}
-                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${
-                            isTrash ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
-                        }`}
+                        className={`flex items-center gap-2 px-4 py-2 rounded-lg font-bold transition-colors ${isTrash ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-orange-100 text-orange-700 hover:bg-orange-200'
+                            }`}
                     >
                         {isTrash ? <><FaArrowLeft /> Quay lại</> : <><FaTrash /> Thùng rác</>}
                     </button>
 
                     {!isTrash && (
-                        <button 
+                        <button
                             onClick={handleOpenAdd}
-                             className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95"
+                            className="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all shadow-sm active:scale-95"
                         >
                             <FaPlus /> Thêm mới
                         </button>
@@ -225,27 +224,53 @@ const CategoryPage = () => {
                 </div>
 
                 {/* Phân trang */}
-                {totalPages > 1 && (
-                    <div className="p-4 border-t flex justify-between items-center bg-gray-50">
-                        <span className="text-sm text-gray-500">Trang {page} / {totalPages}</span>
-                        <div className="flex gap-2">
-                            <button 
-                                disabled={page === 1} 
-                                onClick={() => setPage(page - 1)}
-                                className="px-4 py-2 border rounded bg-white hover:bg-gray-100 disabled:opacity-50 font-bold text-sm"
-                            >
-                                Trước
-                            </button>
-                            <button 
-                                disabled={page === totalPages} 
-                                onClick={() => setPage(page + 1)}
-                                className="px-4 py-2 border rounded bg-white hover:bg-gray-100 disabled:opacity-50 font-bold text-sm"
-                            >
-                                Sau
-                            </button>
-                        </div>
+
+                <div className="p-5 flex items-center justify-between mt-4">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                        Trang {page} / {totalPages}
+                    </span>
+
+                    <div className="flex items-center gap-1">
+                        {/* Prev */}
+                        <button
+                            className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
+                            disabled={page === 1}
+                            onClick={() => setPage(page - 1)}
+                        >
+                            <FaArrowLeft />
+                        </button>
+
+                        {/* Page Numbers */}
+                        {[...Array(totalPages)].map((_, i) => {
+                            const p = i + 1;
+
+                            if (p !== 1 && p !== totalPages && Math.abs(p - page) > 1) return null;
+
+                            return (
+                                <button
+                                    key={p}
+                                    onClick={() => setPage(p)}
+                                    className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${page === p
+                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-600'
+                                        : 'text-slate-500 hover:bg-white border border-slate-200'
+                                        }`}
+                                >
+                                    {p}
+                                </button>
+                            );
+                        })}
+
+                        {/* Next */}
+                        <button
+                            className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
+                            disabled={page === totalPages}
+                            onClick={() => setPage(page + 1)}
+                        >
+                            <FaArrowLeft className="rotate-180" />
+                        </button>
                     </div>
-                )}
+                </div>
+
             </div>
 
             {/* Modal Thêm/Sửa */}
@@ -258,16 +283,16 @@ const CategoryPage = () => {
                             </h3>
                             <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-red-500 font-bold text-xl">&times;</button>
                         </div>
-                        
+
                         <form onSubmit={handleSubmit} className="p-6 space-y-4">
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Tên danh mục *</label>
-                                <input required type="text" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" placeholder="VD: Áo Nam" />
+                                <input required type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" placeholder="VD: Áo Nam" />
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Danh mục cha (Tùy chọn)</label>
-                                <select value={formData.parentId} onChange={e => setFormData({...formData, parentId: e.target.value})} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none">
+                                <select value={formData.parentId} onChange={e => setFormData({ ...formData, parentId: e.target.value })} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none">
                                     <option value="">-- Không có (Làm danh mục cấp 1) --</option>
                                     {level1Cats.filter(c => c.categoryId !== editingId).map(cat => (
                                         <option key={cat.categoryId} value={cat.categoryId}>{cat.name}</option>
@@ -279,17 +304,17 @@ const CategoryPage = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Thứ tự hiển thị</label>
-                                    <input type="number" value={formData.sortOrder} onChange={e => setFormData({...formData, sortOrder: Number(e.target.value)})} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" />
+                                    <input type="number" value={formData.sortOrder} onChange={e => setFormData({ ...formData, sortOrder: Number(e.target.value) })} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-bold text-gray-700 mb-1">Link Ảnh (Tùy chọn)</label>
-                                    <input type="text" value={formData.image} onChange={e => setFormData({...formData, image: e.target.value})} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" placeholder="https://..." />
+                                    <input type="text" value={formData.image} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" placeholder="https://..." />
                                 </div>
                             </div>
 
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Mô tả</label>
-                                <textarea rows={3} value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" placeholder="Mô tả ngắn..."></textarea>
+                                <textarea rows={3} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full border px-3 py-2 rounded focus:ring-2 focus:ring-red-200 outline-none" placeholder="Mô tả ngắn..."></textarea>
                             </div>
 
                             <div className="flex justify-end gap-3 pt-4">

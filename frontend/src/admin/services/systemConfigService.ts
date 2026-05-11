@@ -11,5 +11,6 @@ export const systemConfigService = {
         headers: { "Content-Type": "multipart/form-data" }
     }),
     deleteBanner: (id: number) => adminApi.delete(`/admin/system/banners/${id}`),
-    toggleBanner: (id: number) => adminApi.patch(`/admin/system/banners/${id}/toggle`)
+    toggleBanner: (id: number) => adminApi.patch(`/admin/system/banners/${id}/toggle`),
+    getLogs: (params?: { page?: number; limit?: number; name?: string }) => adminApi.get("/admin/system/logs", { params })
 };
