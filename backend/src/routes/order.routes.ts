@@ -6,6 +6,7 @@ const router = Router();
 
 router.post("/", verifyToken, OrderController.createOrder); 
 router.get("/vnpay-return", OrderController.vnpayReturn);
+router.get("/vnpay-ipn", OrderController.vnpayIpn);
 router.get("/my-orders", verifyToken, OrderController.getMyOrders);
 router.patch("/:orderId/cancel", verifyToken, OrderController.cancelOrder);
 router.patch("/:orderId/return", verifyToken, OrderController.returnOrder);

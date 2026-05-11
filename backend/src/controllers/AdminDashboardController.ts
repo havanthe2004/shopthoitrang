@@ -7,7 +7,6 @@ import { Order } from "../models/Order";
 export class AdminDashboardController {
     static getDashboardData = async (req: Request, res: Response) => {
         try {
-
             const {
                 revFilter = 'month', revStart, revEnd,
                 topFilter = 'month', topStart, topEnd

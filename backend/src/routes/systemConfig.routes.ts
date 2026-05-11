@@ -4,7 +4,9 @@ import { verifyAdminToken } from "../middlewares/adminAuth.middleware";
 import { uploadBanner } from "../config/uploaders";
 
 const router = Router();
-
+//logs
+router.get("/logs", verifyAdminToken, SystemConfigController.getLogAdmin
+);
 // Website Config
 router.get("/website", SystemConfigController.getWebsiteConfig);
 router.put("/website", verifyAdminToken, SystemConfigController.updateWebsiteConfig);

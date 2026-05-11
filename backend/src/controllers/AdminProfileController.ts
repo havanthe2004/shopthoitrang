@@ -34,12 +34,11 @@ export class AdminProfileController {
 
             let logDetails = [];
 
-            // 1. Cập nhật Avatar (nếu có file mới)
             if (req.file) {
                 if (admin.avatar) {
                     const oldPath = path.join(process.cwd(), admin.avatar);
                     if (fs.existsSync(oldPath)) {
-                        fs.unlinkSync(oldPath); // Xóa file vật lý
+                        fs.unlinkSync(oldPath); 
                     }
                 }
                 admin.avatar = `uploads/avatars/admin/${req.file.filename}`;

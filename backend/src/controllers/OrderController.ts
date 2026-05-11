@@ -44,18 +44,18 @@ export class OrderController {
                 return res.status(400).json({ message: "Không có sản phẩm nào được chọn" });
             }
 
-          
+
             if (paymentMethod === "COD") {
                 await queryRunner.connect();
                 await queryRunner.startTransaction();
 
                 try {
-                 
+
                     const cartItems = await queryRunner.manager
                         .createQueryBuilder(CartItem, "item")
                         .leftJoinAndSelect("item.variant", "variant")
                         .leftJoinAndSelect("variant.product", "product")
-                        .setLock("pessimistic_write") 
+                        .setLock("pessimistic_write")
                         .where("variant.productVariantId IN (:...ids)", { ids: selectedIds })
                         .getMany();
 
@@ -63,14 +63,14 @@ export class OrderController {
                         throw new Error("Không tìm thấy sản phẩm trong giỏ");
                     }
 
-                    
+
                     for (const item of cartItems) {
                         if (item.variant.stock < item.quantity) {
                             throw new Error(`Sản phẩm "${item.variant.product.name}" không đủ hàng`);
                         }
                     }
 
-                 
+
                     const order = queryRunner.manager.create(Order, {
                         user: { userId },
                         receiverName,
@@ -85,20 +85,20 @@ export class OrderController {
 
                     const savedOrder = await queryRunner.manager.save(order);
 
-                    
+
                     for (const item of cartItems) {
 
 
-                       
+
                         item.variant.stock -= item.quantity;
                         await queryRunner.manager.save(item.variant);
 
-                       
+
                         const product = item.variant.product;
                         product.sold += item.quantity;
                         await queryRunner.manager.save(Product, product);
 
-                      
+
                         const orderItem = queryRunner.manager.create(OrderItem, {
                             order: savedOrder,
                             variant: item.variant,
@@ -109,7 +109,7 @@ export class OrderController {
                         await queryRunner.manager.save(orderItem);
                     }
 
-                  
+
                     await queryRunner.manager.delete(
                         CartItem,
                         cartItems.map(i => i.cartItemId)
@@ -130,50 +130,85 @@ export class OrderController {
                 }
             }
 
-           
+
             if (paymentMethod === "VNPAY") {
+                await queryRunner.connect();
+                await queryRunner.startTransaction();
 
-                const orderData = {
-                    userId,
-                    selectedIds,
-                    receiverName,
-                    phone,
-                    address,
-                    totalPrice,
-                    note
-                };
+                try {
+                    const cartItems = await queryRunner.manager
+                        .createQueryBuilder(CartItem, "item")
+                        .leftJoinAndSelect("item.variant", "variant")
+                        .leftJoinAndSelect("variant.product", "product")
+                        .setLock("pessimistic_write")
+                        .where("variant.productVariantId IN (:...ids)", { ids: selectedIds })
+                        .getMany();
 
-                const orderInfo = Buffer.from(JSON.stringify(orderData)).toString("base64");
+                    if (cartItems.length === 0) {
+                        throw new Error("Không có sản phẩm");
+                    }
 
-                const date = new Date();
+                    // check stock
+                    for (const item of cartItems) {
+                        if (item.variant.stock < item.quantity) {
+                            throw new Error("Không đủ hàng");
+                        }
+                    }
 
-                let vnp_Params: any = {
-                    vnp_Version: "2.1.0",
-                    vnp_Command: "pay",
-                    vnp_TmnCode: vnpayConfig.vnp_TmnCode,
-                    vnp_Locale: "vn",
-                    vnp_CurrCode: "VND",
-                    vnp_TxnRef: Date.now().toString(),
-                    vnp_OrderInfo: orderInfo,
-                    vnp_OrderType: "other",
-                    vnp_Amount: totalPrice * 100,
-                    vnp_ReturnUrl: vnpayConfig.vnp_ReturnUrl,
-                    vnp_IpAddr: req.ip || "127.0.0.1",
-                    vnp_CreateDate: format(date, "yyyyMMddHHmmss"),
-                };
+                    // 👉 TẠO ORDER TRƯỚC
+                    const order = queryRunner.manager.create(Order, {
+                        user: { userId },
+                        receiverName,
+                        phone,
+                        address,
+                        totalPrice,
+                        paymentMethod: "VNPAY",
+                        note,
+                        status: "pending",
+                        paymentStatus: "pending"
+                    });
 
-                vnp_Params = OrderController.sortObject(vnp_Params);
+                    const savedOrder = await queryRunner.manager.save(order);
 
-                const signData = qs.stringify(vnp_Params, { encode: false });
+                    await queryRunner.commitTransaction();
+                    await queryRunner.release();
 
-                const hmac = crypto.createHmac("sha512", vnpayConfig.vnp_HashSecret);
-                const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+                    // 👉 TẠO LINK VNPAY
+                    const date = new Date();
 
-                vnp_Params["vnp_SecureHash"] = signed;
+                    let vnp_Params: any = {
+                        vnp_Version: "2.1.0",
+                        vnp_Command: "pay",
+                        vnp_TmnCode: vnpayConfig.vnp_TmnCode,
+                        vnp_Locale: "vn",
+                        vnp_CurrCode: "VND",
+                        vnp_TxnRef: savedOrder.orderId.toString(), // ✅ dùng orderId
+                        vnp_OrderInfo: `Thanh toan don hang #${savedOrder.orderId}`,
+                        vnp_OrderType: "other",
+                        vnp_Amount: totalPrice * 100,
+                        vnp_ReturnUrl: vnpayConfig.vnp_ReturnUrl,
+                        vnp_IpAddr: req.ip,
+                        vnp_CreateDate: format(date, "yyyyMMddHHmmss"),
+                    };
 
-                return res.json({
-                    url: vnpayConfig.vnp_Url + "?" + qs.stringify(vnp_Params, { encode: false })
-                });
+                    vnp_Params = OrderController.sortObject(vnp_Params);
+
+                    const signData = qs.stringify(vnp_Params, { encode: false });
+
+                    const hmac = crypto.createHmac("sha512", vnpayConfig.vnp_HashSecret);
+                    const signed = hmac.update(signData).digest("hex");
+
+                    vnp_Params["vnp_SecureHash"] = signed;
+
+                    return res.json({
+                        url: vnpayConfig.vnp_Url + "?" + qs.stringify(vnp_Params, { encode: false })
+                    });
+
+                } catch (err: any) {
+                    await queryRunner.rollbackTransaction();
+                    await queryRunner.release();
+                    return res.status(400).json({ message: err.message });
+                }
             }
 
         } catch (error: any) {
@@ -181,117 +216,230 @@ export class OrderController {
         }
     };
 
-  
-    static vnpayReturn = async (req: Request, res: Response) => {
+
+    static createVnpayPayment = async (req: any, res: Response) => {
         const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
         try {
-            let vnp_Params: any = { ...req.query };
-            const secureHash = vnp_Params["vnp_SecureHash"];
+            const userId = req.user.userId;
+            const {
+                selectedIds,
+                receiverName,
+                phone,
+                address,
+                totalPrice,
+                note
+            } = req.body;
 
-            delete vnp_Params["vnp_SecureHash"];
-            delete vnp_Params["vnp_SecureHashType"];
-
-            const sortedParams = OrderController.sortObject(vnp_Params);
-
-            const signData = qs.stringify(sortedParams, { encode: false });
-
-            const hmac = crypto.createHmac("sha512", vnpayConfig.vnp_HashSecret);
-            const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
-
-            if (secureHash !== signed) {
-                return res.redirect(`http://localhost:5173/order-success?status=error`);
+            if (!selectedIds || selectedIds.length === 0) {
+                throw new Error("Không có sản phẩm");
             }
 
-           
-            if (req.query.vnp_ResponseCode !== "00") {
-                return res.redirect(`http://localhost:5173/order-success?status=cancel`);
+            // 📦 lấy cart items đúng user
+            const cartItems = await queryRunner.manager
+                .createQueryBuilder(CartItem, "item")
+                .leftJoinAndSelect("item.variant", "variant")
+                .leftJoinAndSelect("variant.product", "product")
+                .where("item.cartId = (SELECT c.cartId FROM carts c WHERE c.userUserId = :userId)", { userId })
+                .andWhere("variant.productVariantId IN (:...ids)", { ids: selectedIds })
+                .getMany();
+
+            if (cartItems.length === 0) {
+                throw new Error("Cart rỗng");
             }
 
-          
-            await queryRunner.connect();
-            await queryRunner.startTransaction();
+            // 🧾 tạo order (CHƯA xử lý kho)
+            const order = queryRunner.manager.create(Order, {
+                user: { userId },
+                receiverName,
+                phone,
+                address,
+                totalPrice,
+                note,
+                paymentMethod: "VNPAY",
+                status: "pending",
+                paymentStatus: "pending"
+            });
 
-            try {
-                const orderData = JSON.parse(
-                    Buffer.from(req.query.vnp_OrderInfo as string, "base64").toString()
-                );
+            const savedOrder = await queryRunner.manager.save(order);
 
-               
-                const cartItems = await queryRunner.manager
-                    .createQueryBuilder(CartItem, "item")
-                    .leftJoinAndSelect("item.variant", "variant")
-                    .leftJoinAndSelect("variant.product", "product")
-                    .setLock("pessimistic_write")
-                    .where("variant.productVariantId IN (:...ids)", { ids: orderData.selectedIds })
-                    .getMany();
+            await queryRunner.commitTransaction();
+            await queryRunner.release();
 
-               
-                for (const item of cartItems) {
-                    if (!item.variant.isActive) {
-                        throw new Error(`Sản phẩm "${item.variant.product.name}" đã ngừng bán`);
-                    }
-                    if (item.variant.stock < item.quantity) {
-                        throw new Error("Không đủ hàng");
-                    }
-                }
+            // 💳 tạo VNPAY params
+            const date = new Date();
 
-                const order = queryRunner.manager.create(Order, {
-                    user: { userId: orderData.userId },
-                    receiverName: orderData.receiverName,
-                    phone: orderData.phone,
-                    address: orderData.address,
-                    totalPrice: orderData.totalPrice,
-                    paymentMethod: "VNPAY",
-                    status: "pending",
-                    paymentStatus: "paid"
-                });
+            let vnp_Params: any = {
+                vnp_Version: "2.1.0",
+                vnp_Command: "pay",
+                vnp_TmnCode: vnpayConfig.vnp_TmnCode,
+                vnp_Locale: "vn",
+                vnp_CurrCode: "VND",
+                vnp_TxnRef: savedOrder.orderId.toString(),
+                vnp_OrderInfo: `Thanh toan don hang ${savedOrder.orderId}`,
+                vnp_OrderType: "other",
+                vnp_Amount: totalPrice * 100,
+                vnp_ReturnUrl: vnpayConfig.vnp_ReturnUrl,
+                vnp_IpAddr: req.headers["x-forwarded-for"] || req.socket.remoteAddress,
+                vnp_CreateDate: format(date, "yyyyMMddHHmmss"),
+            };
 
-                const savedOrder = await queryRunner.manager.save(order);
+            vnp_Params = OrderController.sortObject(vnp_Params);
 
-               
-                for (const item of cartItems) {
+            const signData = qs.stringify(vnp_Params, { encode: false });
 
-                    item.variant.stock -= item.quantity;
-                    await queryRunner.manager.save(item.variant);
+            const secureHash = crypto
+                .createHmac("sha512", vnpayConfig.vnp_HashSecret)
+                .update(signData)
+                .digest("hex");
 
-                  
-                    const product = item.variant.product;
-                    product.sold += item.quantity;
-                    await queryRunner.manager.save(Product, product);
+            vnp_Params["vnp_SecureHash"] = secureHash;
 
-                    const orderItem = queryRunner.manager.create(OrderItem, {
-                        order: savedOrder,
-                        variant: item.variant,
-                        quantity: item.quantity,
-                        price: item.variant.price
-                    });
+            return res.json({
+                url: vnpayConfig.vnp_Url + "?" + qs.stringify(vnp_Params, { encode: false })
+            });
 
-                    await queryRunner.manager.save(orderItem);
-                }
-
-            
-                await queryRunner.manager.delete(
-                    CartItem,
-                    cartItems.map(i => i.cartItemId)
-                );
-
-                await queryRunner.commitTransaction();
-
-                return res.redirect(`http://localhost:5173/order-success?status=success&id=${savedOrder.orderId}`);
-
-            } catch (err) {
-                await queryRunner.rollbackTransaction();
-                return res.redirect(`http://localhost:5173/order-success?status=error`);
-            } finally {
-                await queryRunner.release();
-            }
-
-        } catch (error) {
-            return res.redirect(`http://localhost:5173/order-success?status=error`);
+        } catch (error: any) {
+            await queryRunner.rollbackTransaction();
+            await queryRunner.release();
+            return res.status(400).json({ message: error.message });
         }
     };
-    
+
+    static vnpayIpn = async (req: any, res: Response) => {
+    const queryRunner = AppDataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+        let vnp_Params: any = { ...req.query };
+
+        const secureHash = vnp_Params["vnp_SecureHash"];
+        delete vnp_Params["vnp_SecureHash"];
+        delete vnp_Params["vnp_SecureHashType"];
+
+        const sorted = OrderController.sortObject(vnp_Params);
+
+        const signData = qs.stringify(sorted, { encode: false });
+
+        const checkHash = crypto
+            .createHmac("sha512", vnpayConfig.vnp_HashSecret)
+            .update(signData)
+            .digest("hex");
+
+        if (secureHash !== checkHash) {
+            return res.json({ RspCode: "97", Message: "Invalid signature" });
+        }
+
+        const orderId = Number(vnp_Params["vnp_TxnRef"]);
+        const amount = Number(vnp_Params["vnp_Amount"]) / 100;
+        const responseCode = vnp_Params["vnp_ResponseCode"];
+
+        // 🔒 lock order
+        const order = await queryRunner.manager.findOne(Order, {
+            where: { orderId },
+            relations: ["user"]
+        });
+
+        if (!order) {
+            return res.json({ RspCode: "01", Message: "Order not found" });
+        }
+
+        if (order.totalPrice !== amount) {
+            return res.json({ RspCode: "04", Message: "Invalid amount" });
+        }
+
+        // 🛑 chống xử lý lại
+        if (order.paymentStatus === "paid") {
+            return res.json({ RspCode: "02", Message: "Already paid" });
+        }
+
+        // ❌ fail
+        if (responseCode !== "00") {
+            order.paymentStatus = "failed";
+            await queryRunner.manager.save(order);
+            await queryRunner.commitTransaction();
+
+            return res.json({ RspCode: "00", Message: "Success" });
+        }
+
+        // ✅ SUCCESS
+
+        const cartItems = await queryRunner.manager
+            .createQueryBuilder(CartItem, "item")
+            .leftJoinAndSelect("item.variant", "variant")
+            .leftJoinAndSelect("variant.product", "product")
+            .leftJoinAndSelect("item.cart", "cart")
+            .where("cart.userUserId = :userId", { userId: order.user.userId })
+            .getMany();
+
+        for (const item of cartItems) {
+
+            // 🔒 check stock
+            if (item.variant.stock < item.quantity) {
+                throw new Error("Không đủ hàng");
+            }
+
+            // 🔻 trừ kho
+            item.variant.stock -= item.quantity;
+            await queryRunner.manager.save(item.variant);
+
+            // 📈 tăng sold
+            item.variant.product.sold += item.quantity;
+            await queryRunner.manager.save(item.variant.product);
+
+            // 🧾 tạo order item
+            const orderItem = queryRunner.manager.create(OrderItem, {
+                order,
+                variant: item.variant,
+                quantity: item.quantity,
+                price: item.variant.price
+            });
+
+            await queryRunner.manager.save(orderItem);
+        }
+
+        // 🗑️ clear cart
+        await queryRunner.manager.delete(CartItem, {
+            cart: { user: { userId: order.user.userId } }
+        });
+
+        // ✅ update order
+        order.paymentStatus = "paid";
+        order.status = "processing";
+
+        await queryRunner.manager.save(order);
+
+        await queryRunner.commitTransaction();
+
+        return res.json({ RspCode: "00", Message: "Success" });
+
+    } catch (error) {
+        await queryRunner.rollbackTransaction();
+        console.error(error);
+        return res.json({ RspCode: "99", Message: "Error" });
+    } finally {
+        await queryRunner.release();
+    }
+};
+
+   static vnpayReturn = async (req: any, res: Response) => {
+    try {
+        const vnp_ResponseCode = req.query.vnp_ResponseCode;
+
+        if (vnp_ResponseCode === "00") {
+            return res.redirect("http://localhost:5173/order-success?status=success");
+        }
+
+        return res.redirect("http://localhost:5173/order-success?status=failed");
+
+    } catch (error) {
+        return res.redirect("http://localhost:5173/order-success?status=error");
+    }
+};
+
     static async getMyOrders(req: any, res: Response) {
         try {
             const userId = req.user.userId;
@@ -334,7 +482,7 @@ export class OrderController {
         }
     }
 
-  
+
     static async cancelOrder(req: any, res: Response) {
         const queryRunner = AppDataSource.createQueryRunner();
         await queryRunner.connect();
@@ -344,7 +492,7 @@ export class OrderController {
             const userId = req.user.userId;
             const { orderId } = req.params;
 
-         
+
             const order = await queryRunner.manager.findOne(Order, {
                 where: { orderId: Number(orderId), user: { userId } },
                 relations: ["items", "items.variant", "items.variant.product"]
@@ -354,30 +502,30 @@ export class OrderController {
                 return res.status(404).json({ message: "Không tìm thấy đơn hàng" });
             }
 
-         
+
             if (order.status !== "pending") {
                 return res.status(400).json({ message: "Chỉ có thể hủy đơn hàng đang chờ xác thực" });
             }
 
-       
+
             for (const item of order.items) {
                 const variant = item.variant;
                 const product = variant.product;
 
-              
+
                 variant.stock += item.quantity;
                 await queryRunner.manager.save(variant);
 
-              
+
                 product.sold = Math.max(0, product.sold - item.quantity);
                 await queryRunner.manager.save(product);
             }
 
-     
+
             order.status = "cancelled";
             await queryRunner.manager.save(order);
 
-        
+
             await queryRunner.commitTransaction();
 
             return res.json({
@@ -386,17 +534,17 @@ export class OrderController {
             });
 
         } catch (error) {
-         
+
             await queryRunner.rollbackTransaction();
             console.error("Cancel Order Error:", error);
             return res.status(500).json({ message: "Lỗi hệ thống khi hủy đơn hàng" });
         } finally {
-        
+
             await queryRunner.release();
         }
     }
 
-  
+
     static async returnOrder(req: any, res: Response) {
         try {
             const userId = req.user.userId;

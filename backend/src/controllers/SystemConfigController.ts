@@ -3,11 +3,13 @@ import { AppDataSource } from "../config/data-source";
 import { Banner } from "../models/Banner";
 import { WebsiteConfig } from "../models/WebsiteConfig";
 import { AdminLog } from "../models/AdminLog";
+import {Admin} from "../models/Admin"
 import fs from "fs";
 import path from "path";
+import { DataSource } from "typeorm";
 
 export class SystemConfigController {
-    
+
     // Helper để ghi log
     private static async saveLog(adminId: number, action: string) {
         const logRepo = AppDataSource.getRepository(AdminLog);
@@ -125,6 +127,58 @@ export class SystemConfigController {
             return res.json({ message: "Cập nhật trạng thái thành công", isActive: banner.isActive });
         } catch (error) {
             return res.status(500).json({ message: "Lỗi cập nhật trạng thái" });
+        }
+    }
+
+    static async getLogAdmin(req: Request, res: Response) {
+        try {
+            const adminLogRepo = AppDataSource.getRepository(AdminLog);
+            
+            const page = parseInt(req.query.page as string) || 1;
+            const limit = parseInt(req.query.limit as string) || 10;
+            const searchName = req.query.name as string; 
+
+
+            const queryBuilder = adminLogRepo.createQueryBuilder("log")
+                .leftJoinAndSelect("log.admin", "admin") 
+                .select([
+                    "log.adminLogId", 
+                    "log.action", 
+                    "log.createdAt", 
+                    "admin.adminId", 
+                    "admin.username", 
+                    "admin.role"
+                ]);
+
+
+            if (searchName) {
+                queryBuilder.where("admin.username LIKE :name", { name: `%${searchName}%` });
+            }
+
+
+            queryBuilder
+                .orderBy("log.createdAt", "DESC")
+                .skip((page - 1) * limit)
+                .take(limit);
+
+            const [items, total] = await queryBuilder.getManyAndCount();
+
+            return res.status(200).json({
+                message: "Lấy lịch sử thao tác thành công",
+                data: items,
+                pagination: {
+                    page,
+                    limit,
+                    total,
+                    totalPages: Math.ceil(total / limit)
+                }
+            });
+        } catch (error) {
+            console.error("Lỗi getLogAdmin:", error);
+            return res.status(500).json({ 
+                message: "Lỗi hệ thống khi lấy lịch sử",
+                error: error instanceof Error ? error.message : "Unknown error"
+            });
         }
     }
 }

@@ -65,8 +65,8 @@ AppDataSource.initialize()
     .then(async () => {
         console.log("✅ Kết nối databse thành công!");
         await seedAdmin();
-        app.listen(3000, () => {
-            console.log("🚀 Server đang chạy ở http://localhost:3000");
+        app.listen(process.env.PORT, () => {
+            console.log(` Server đang chạy ở ${process.env.PORT} `);
         });
     })
     .catch((err) => {
