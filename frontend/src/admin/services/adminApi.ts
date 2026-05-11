@@ -7,7 +7,6 @@ declare module 'axios' {
 }
 const API_URL = import.meta.env.VITE_API_KEY;
 const adminApi = axios.create({
-  // baseURL: `import.meta.env.VITE_API_KEY/api`,\
   baseURL: `${API_URL}/api`,
 });
 
@@ -33,7 +32,7 @@ adminApi.interceptors.response.use(
     // Tránh vòng lặp vô tận nếu API login hoặc refresh-token bị lỗi 401
     if (
       originalRequest.url === "/admin/auth/login" ||
-      originalRequest.url === "/admin/auth/refresh-token"
+      originalRequest.url === "/admin/auth/refresh-token" 
     ) {
       return Promise.reject(error);
     }
@@ -49,7 +48,7 @@ adminApi.interceptors.response.use(
           throw new Error("No refresh token found");
         }
 
-        // 🔥 GỌI API REFRESH TOKEN (Dùng axios gốc để tránh interceptor này lặp lại)
+        // GỌI API REFRESH TOKEN (Dùng axios gốc để tránh interceptor này lặp lại)
         const res = await axios.post(`${API_URL}/api/admin/auth/refresh-token`, {
           refreshToken: refreshToken
         });
