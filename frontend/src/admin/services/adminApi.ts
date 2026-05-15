@@ -10,9 +10,7 @@ const adminApi = axios.create({
   baseURL: `${API_URL}/api`,
 });
 
-// ==========================================
-// 1. REQUEST INTERCEPTOR
-// ==========================================
+// gắn token 
 adminApi.interceptors.request.use((config) => {
   const adminAccessToken = localStorage.getItem('adminAccessToken');
   if (adminAccessToken) {
@@ -21,9 +19,7 @@ adminApi.interceptors.request.use((config) => {
   return config;
 });
 
-// ==========================================
-// 2. RESPONSE INTERCEPTOR (XỬ LÝ REFRESH TOKEN)
-// ==========================================
+// REFRESH token
 adminApi.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -48,30 +44,24 @@ adminApi.interceptors.response.use(
           throw new Error("No refresh token found");
         }
 
-        // GỌI API REFRESH TOKEN (Dùng axios gốc để tránh interceptor này lặp lại)
         const res = await axios.post(`${API_URL}/api/admin/auth/refresh-token`, {
           refreshToken: refreshToken
         });
 
-        // Backend trả về accessToken mới
         const { accessToken } = res.data;
 
-        // 1. Cập nhật vào LocalStorage
         localStorage.setItem('adminAccessToken', accessToken);
 
-        // 2. Gắn token mới vào request cũ bị lỗi và thực hiện lại nó
         originalRequest.headers.Authorization = `Bearer ${accessToken}`;
         return adminApi(originalRequest);
 
       } catch (refreshError) {
-        // Nếu Refresh Token cũng hết hạn hoặc lỗi -> Xóa sạch và logout thật sự
         console.error("Refresh token expired or invalid:", refreshError);
 
         localStorage.removeItem('adminAccessToken');
         localStorage.removeItem('adminRefreshToken');
         localStorage.removeItem('adminInfo');
 
-        // Ép tải lại trang để Redux/State về null và đẩy ra trang login
         window.location.href = '/admin/login';
         return Promise.reject(refreshError);
       }

@@ -40,12 +40,13 @@ const DashboardPage = () => {
             };
 
             const res = await adminDashboardService.getDashboardData(filters);
-
+            console.log(res)
             if (res.success) {
                 setData(res.data);
             }
         } catch (error) {
             toast.error("Không thể tải dữ liệu thống kê");
+            console.log(error)
         } finally {
             setLoading(false);
         }
@@ -113,7 +114,7 @@ const DashboardPage = () => {
                             value={revFilter}
                             onChange={(e) => setRevFilter(e.target.value)}
                             className="border px-4 py-2 rounded-lg font-bold text-sm"
-                        >
+                        >  
                             <option value="week">Theo tuần</option>
                             <option value="month">Theo tháng</option>
                             <option value="year">Theo năm</option>
@@ -153,7 +154,7 @@ const DashboardPage = () => {
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
                             <LineChart data={data.chartData}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
+                                <CartesianGrid strokeDasharray="3 3 " vertical={false} stroke="#E5E7EB" />
                                 <XAxis dataKey="date" tick={{ fontSize: 12 }} />
                                 <YAxis
                                     tickFormatter={(val) => `${val / 1000000}M`}
@@ -176,44 +177,44 @@ const DashboardPage = () => {
 
             {/* ===== TOP PRODUCTS ===== */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-               <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-        <h3 className="text-lg font-bold flex items-center gap-2">
-            <FaCrown className="text-yellow-500" />
-            Top Sản Phẩm
-        </h3>
+                <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
+                    <h3 className="text-lg font-bold flex items-center gap-2">
+                        <FaCrown className="text-yellow-500" />
+                        Top Sản Phẩm
+                    </h3>
 
-        {/* BỘ LỌC THỜI GIAN TOP SẢN PHẨM */}
-        <div className="flex gap-2">
-            <select
-                value={topFilter}
-                onChange={(e) => setTopFilter(e.target.value)}
-                className="border px-4 py-2 rounded-lg font-bold text-sm"
-            >
-                <option value="week">Trong tuần này</option>
-                <option value="month">Trong tháng này</option>
-                <option value="year">Trong năm nay</option>
-                <option value="custom">Tùy chỉnh</option>
-            </select>
+                    {/* BỘ LỌC THỜI GIAN TOP SẢN PHẨM */}
+                    <div className="flex gap-2">
+                        <select
+                            value={topFilter}
+                            onChange={(e) => setTopFilter(e.target.value)}
+                            className="border px-4 py-2 rounded-lg font-bold text-sm"
+                        >
+                            <option value="week">Trong tuần này</option>
+                            <option value="month">Trong tháng này</option>
+                            <option value="year">Trong năm nay</option>
+                            <option value="custom">Tùy chỉnh</option>
+                        </select>
 
-            {topFilter === 'custom' && (
-                <>
-                    <input
-                        type="date"
-                        value={topStart}
-                        onChange={(e) => setTopStart(e.target.value)}
-                        className="border px-2 py-2 rounded-lg text-sm"
-                    />
-                    <span className="flex items-center">-</span>
-                    <input
-                        type="date"
-                        value={topEnd}
-                        onChange={(e) => setTopEnd(e.target.value)}
-                        className="border px-2 py-2 rounded-lg text-sm"
-                    />
-                </>
-            )}
-        </div>
-    </div>
+                        {topFilter === 'custom' && (
+                            <>
+                                <input
+                                    type="date"
+                                    value={topStart}
+                                    onChange={(e) => setTopStart(e.target.value)}
+                                    className="border px-2 py-2 rounded-lg text-sm"
+                                />
+                                <span className="flex items-center">-</span>
+                                <input
+                                    type="date"
+                                    value={topEnd}
+                                    onChange={(e) => setTopEnd(e.target.value)}
+                                    className="border px-2 py-2 rounded-lg text-sm"
+                                />
+                            </>
+                        )}
+                    </div>
+                </div>
 
                 <div className="overflow-x-auto">
                     <table className="w-full">

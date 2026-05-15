@@ -7,7 +7,7 @@ import {
 import { toast } from 'react-toastify';
 import type { RootState } from '../../redux/store';
 import { createAdminSchema, updateAdminSchema } from '../../schemas/addadminSchema';
-
+import Pagination from "../components/Pagination"
 const AdminManagement = () => {
     const BASE_URL = import.meta.env.VITE_API_KEY;
     const { currentAdmin } = useSelector((state: RootState) => state.adminAuth);
@@ -239,52 +239,13 @@ const AdminManagement = () => {
                     </div>
 
                     {/* Nút phân trang */}
-                    <div className="flex items-center gap-2">
 
-                        {/* Prev */}
-                        <button
-                            onClick={() => handlePageChange(params.page - 1)}
-                            disabled={params.page === 1}
-                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-40"
-                        >
-                            ←
-                        </button>
-
-                        {/* Page numbers */}
-                        {[...Array(meta.totalPages)].map((_, i) => {
-                            const page = i + 1;
-
-                            // limit hiển thị (max 5 page)
-                            if (
-                                page !== 1 &&
-                                page !== meta.totalPages &&
-                                Math.abs(page - params.page) > 1
-                            ) return null;
-
-                            return (
-                                <button
-                                    key={page}
-                                    onClick={() => handlePageChange(page)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${params.page === page
-                                        ? 'bg-indigo-600 text-white shadow'
-                                        : 'text-slate-500 hover:bg-slate-100'
-                                        }`}
-                                >
-                                    {page}
-                                </button>
-                            );
-                        })}
-
-                        {/* Next */}
-                        <button
-                            onClick={() => handlePageChange(params.page + 1)}
-                            disabled={params.page === meta.totalPages}
-                            className="px-3 py-1.5 rounded-lg border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-100 disabled:opacity-40"
-                        >
-                            →
-                        </button>
-
-                    </div>
+                    <Pagination
+                        currentPage={params.page}
+                        totalPages={meta.totalPages}
+                        onPageChange={handlePageChange}
+                    />
+                   
                 </div>
             </div>
 

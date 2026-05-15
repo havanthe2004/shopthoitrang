@@ -2,9 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { adminOrderService } from '../services/adminOrderService';
 import {
     Search, Truck, RotateCcw,
-    Eye, ChevronLeft, ChevronRight, PackageCheck, ShoppingBag,
+    Eye,  PackageCheck, ShoppingBag,
     X, MapPin, User, FileText, BadgeInfo, Wallet, Check, CalendarClock
 } from 'lucide-react';
+import Pagination from '../components/Pagination';
 import { toast } from 'react-toastify';
 
 const OrderManagement = () => {
@@ -165,26 +166,13 @@ const OrderManagement = () => {
                 </table>
             </div>
 
-            <div className="p-5 flex items-center justify-between mt-4">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Trang {params.page} / {meta.totalPages}</span>
-                <div className="flex items-center gap-1">
-                    <button className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 border border-transparent shadow-sm" disabled={params.page === 1} onClick={() => handlePageChange(params.page - 1)}>
-                        <ChevronLeft size={18} />
-                    </button>
-                    {[...Array(meta.totalPages)].map((_, i) => {
-                        const page = i + 1;
-                        if (page !== 1 && page !== meta.totalPages && Math.abs(page - params.page) > 1) return null;
-                        return (
-                            <button key={page} onClick={() => handlePageChange(page)} className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${params.page === page ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-600' : 'text-slate-500 hover:bg-white border border-slate-200'}`}>
-                                {page}
-                            </button>
-                        );
-                    })}
-                    <button className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 border border-transparent shadow-sm" disabled={params.page === meta.totalPages} onClick={() => handlePageChange(params.page + 1)}>
-                        <ChevronRight size={18} />
-                    </button>
-                </div>
-            </div>
+          
+
+            <Pagination
+                currentPage={params.page}
+                totalPages={meta.totalPages}
+                onPageChange={handlePageChange}
+            />
 
             {/* MODAL CHI TIẾT */}
             {isDetailOpen && selectedOrder && (

@@ -23,7 +23,7 @@ export class AuthController {
 
             const existingUser = await userRepo.findOne({ where: { email } });
             if (existingUser) {
-                return res.status(409).json({ message: 'Email already exists' });
+                return res.status(409).json({ message: 'Email đã được sử dụng. Vui lòng chọn email khác' });
             }
 
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -48,7 +48,7 @@ export class AuthController {
             });
         } catch (err) {
             console.error(err);
-            return res.status(500).json({ message: 'Register failed' });
+            return res.status(500).json({ message: 'Không thể đăng ký tài khoản vào lúc này. Vui lòng thử lại sau' });
         }
     }
 
@@ -121,7 +121,7 @@ export class AuthController {
             });
         } catch (err) {
             console.error(err);
-            return res.status(500).json({ message: 'Login failed' });
+            return res.status(500).json({ message: 'Không thể đăng nhập tài khoản vào lúc này. Vui lòng thử lại sau' });
         }
     }
 
@@ -129,7 +129,7 @@ export class AuthController {
     static async refreshToken(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;
-            if(refreshToken =="") return res.status()
+            if (refreshToken == "") return res.status()
             if (!refreshToken) return res.status(401).json({ message: "Refresh Token missing" });
 
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
