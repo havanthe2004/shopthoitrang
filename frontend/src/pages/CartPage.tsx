@@ -71,11 +71,38 @@ const CartPage = () => {
         }
     };
 
-    const handleUpdateQuantity = (productVariantId: number, currentQty: number, adjustment: number) => {
+    const handleUpdateQuantity = async (
+        productVariantId: number,
+        currentQty: number,
+        adjustment: number,
+        stock: number
+    ) => {
+
         const newQty = currentQty + adjustment;
+
         if (newQty < 1) return;
 
-        dispatch(updateQuantityServer({ productVariantId, quantity: newQty }) as any);
+        // check stock
+        if (newQty > stock) {
+            return toast.warning(
+                `Chỉ còn ${stock} sản phẩm trong kho`
+            );
+        }
+
+        try {
+
+            await dispatch(updateQuantityServer({
+                productVariantId,
+                quantity: newQty
+            }) as any).unwrap();
+
+        } catch (error: any) {
+
+            toast.error(
+                error?.message ||
+                "Không thể cập nhật số lượng"
+            );
+        }
     };
 
     const handleRemoveItem = (productVariantId: number) => {
@@ -102,6 +129,7 @@ const CartPage = () => {
     }
 
     const handleGoToCheckout = () => {
+
         if (selectedIds.length === 0) return toast.warning("Vui lòng chọn sản phẩm!");
 
         navigate('/checkout', {
@@ -122,7 +150,7 @@ const CartPage = () => {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-16">
                 <div className="lg:col-span-8">
 
-             
+
                     <div className="flex items-center justify-between pb-6 border-b-2 border-gray-100 mb-6">
                         <label className="flex items-center gap-3 cursor-pointer group">
                             <input
@@ -146,7 +174,7 @@ const CartPage = () => {
                         )}
                     </div>
 
-            
+
                     <div className="space-y-8">
                         {cartItems.map((item) => (
                             <div key={item.productVariantId} className="flex gap-4 md:gap-6 border-b pb-8 items-center group">
@@ -181,11 +209,11 @@ const CartPage = () => {
 
                                     <div className="flex items-center justify-between mt-auto">
                                         <div className="flex items-center border border-black h-8 md:h-10">
-                                            <button onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, -1)} className="px-2 md:px-4">
+                                            <button onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, -1, item.stock)} className="px-2 md:px-4">
                                                 <FaMinus size={8} />
                                             </button>
                                             <span className="px-3 md:px-6 font-bold text-xs md:text-sm">{item.quantity}</span>
-                                            <button onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, 1)} className="px-2 md:px-4">
+                                            <button onClick={() => handleUpdateQuantity(item.productVariantId, item.quantity, 1, item.stock)} className="px-2 md:px-4">
                                                 <FaPlus size={8} />
                                             </button>
                                         </div>
@@ -216,9 +244,8 @@ const CartPage = () => {
                             <button
                                 key={i}
                                 onClick={() => setPage(i + 1)}
-                                className={`px-3 py-2 border text-xs font-bold ${
-                                    page === i + 1 ? "bg-black text-white" : ""
-                                }`}
+                                className={`px-3 py-2 border text-xs font-bold ${page === i + 1 ? "bg-black text-white" : ""
+                                    }`}
                             >
                                 {i + 1}
                             </button>
@@ -263,9 +290,8 @@ const CartPage = () => {
 
                         <button
                             onClick={handleGoToCheckout}
-                            className={`w-full py-5 font-black uppercase text-[11px] ${
-                                selectedIds.length > 0 ? "bg-black text-white hover:bg-red-600" : "bg-gray-200 text-gray-400"
-                            }`}
+                            className={`w-full py-5 font-black uppercase text-[11px] ${selectedIds.length > 0 ? "bg-black text-white hover:bg-red-600" : "bg-gray-200 text-gray-400"
+                                }`}
                             disabled={selectedIds.length === 0}
                         >
                             Mua hàng ({selectedCount})

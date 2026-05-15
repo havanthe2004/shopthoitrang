@@ -14,3 +14,4 @@ export const adminManagementService = {
         return adminApi.patch(`/admin/admin-management/toggle/${id}`);
     }
 };
+

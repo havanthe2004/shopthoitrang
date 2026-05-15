@@ -9,6 +9,7 @@ export interface ICartItem {
     color: string;
     size: string;
     quantity: number;
+    stock: number;
 }
 
 interface CartState {

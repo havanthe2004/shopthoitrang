@@ -8,7 +8,7 @@ import type { RootState } from '../../redux/store';
 import { getCategoryTree } from '../../services/categoryService';
 import { getImageUrl } from '../../utils/imageUrl';
 import { getWebsiteConfig } from '../../services/configServise';
-import {searchAPI} from '../../services/productService'
+import { searchAPI } from '../../services/productService'
 import axios from 'axios';
 
 interface IWebsiteConfig {
@@ -22,7 +22,7 @@ const Header = () => {
     const [searchKeyword, setSearchKeyword] = useState('');
     const [suggestions, setSuggestions] = useState<any[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [isSearching, setIsSearching] = useState(false); 
+    const [isSearching, setIsSearching] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
 
     const { totalQuantity } = useSelector((state: RootState) => state.cart);
@@ -76,11 +76,11 @@ const Header = () => {
                 setSuggestions([]);
                 setShowSuggestions(false);
             }
-        }, 150); 
+        }, 150);
         return () => clearTimeout(delayDebounceFn);
     }, [searchKeyword]);
 
-   
+
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
@@ -121,7 +121,7 @@ const Header = () => {
                     </Link>
 
                     <Link to="/" className="flex flex-col ml-1">
-                        {siteName && typeof siteName === 'string' && siteName.includes(" ")  ? (
+                        {siteName && typeof siteName === 'string' && siteName.includes(" ") ? (
                             <>
                                 <span className="text-lg md:text-4xl font-black tracking-tighter text-black leading-none mt-10 uppercase">
                                     {siteName.split(" ")[0]}
@@ -191,7 +191,7 @@ const Header = () => {
                                     </div>
                                 </>
                             ) : (
-                    
+
                                 <div className="p-6 text-center flex flex-col items-center gap-2">
                                     <FaRegFrown className="text-gray-300 text-3xl" />
                                     <p className="text-sm font-bold text-gray-600">Rất tiếc, không tìm thấy sản phẩm!</p>
@@ -231,7 +231,7 @@ const Header = () => {
                             <div className="absolute right-0 top-full pt-2 w-48 hidden group-hover:block z-[130]">
                                 <div className="bg-white/90 border border-gray-100 rounded-xl shadow-xl overflow-hidden py-1">
                                     <Link to="/profile" className="flex items-center px-4 py-3 hover:bg-gray-50 text-xs font-bold uppercase transition-colors">
-                                        <FaUserEdit className="mr-3 text-gray-400" /> Hồ sơ cá nhân
+                                        <FaUserEdit className="mr-3 text-gray-400" /> Thông tin cá nhân
                                     </Link>
                                     <Link to="/my-order" className="flex items-center px-4 py-3 hover:bg-gray-50 text-xs font-bold uppercase transition-colors">
                                         <FaUserEdit className="mr-3 text-gray-400" /> Đơn hàng của bạn

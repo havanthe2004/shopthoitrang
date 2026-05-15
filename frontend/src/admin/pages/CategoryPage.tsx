@@ -121,7 +121,10 @@ const CategoryPage = () => {
             toast.error("Lỗi khôi phục");
         }
     };
-
+    const handlePageChange = (page: number) => {
+        if (page < 1 || page > totalPages) return;
+        setParams({ ...params, page });
+    };
     // ================= RENDER =================
     return (
         <div className="space-y-6">
@@ -328,5 +331,4 @@ const CategoryPage = () => {
         </div>
     );
 };
-
 export default CategoryPage;

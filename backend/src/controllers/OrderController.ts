@@ -124,7 +124,7 @@ export class OrderController {
 
                 } catch (err: any) {
                     await queryRunner.rollbackTransaction();
-                    return res.status(400).json({ message: err.message });
+                    return res.status(400).json({ message: "Không thể tạo đơn hàng vào lúc này. Vui lòng thử lại sau." });
                 } finally {
                     await queryRunner.release();
                 }
@@ -309,136 +309,136 @@ export class OrderController {
     };
 
     static vnpayIpn = async (req: any, res: Response) => {
-    const queryRunner = AppDataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+        const queryRunner = AppDataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
 
-    try {
-        let vnp_Params: any = { ...req.query };
+        try {
+            let vnp_Params: any = { ...req.query };
 
-        const secureHash = vnp_Params["vnp_SecureHash"];
-        delete vnp_Params["vnp_SecureHash"];
-        delete vnp_Params["vnp_SecureHashType"];
+            const secureHash = vnp_Params["vnp_SecureHash"];
+            delete vnp_Params["vnp_SecureHash"];
+            delete vnp_Params["vnp_SecureHashType"];
 
-        const sorted = OrderController.sortObject(vnp_Params);
+            const sorted = OrderController.sortObject(vnp_Params);
 
-        const signData = qs.stringify(sorted, { encode: false });
+            const signData = qs.stringify(sorted, { encode: false });
 
-        const checkHash = crypto
-            .createHmac("sha512", vnpayConfig.vnp_HashSecret)
-            .update(signData)
-            .digest("hex");
+            const checkHash = crypto
+                .createHmac("sha512", vnpayConfig.vnp_HashSecret)
+                .update(signData)
+                .digest("hex");
 
-        if (secureHash !== checkHash) {
-            return res.json({ RspCode: "97", Message: "Invalid signature" });
-        }
+            if (secureHash !== checkHash) {
+                return res.json({ RspCode: "97", Message: "Invalid signature" });
+            }
 
-        const orderId = Number(vnp_Params["vnp_TxnRef"]);
-        const amount = Number(vnp_Params["vnp_Amount"]) / 100;
-        const responseCode = vnp_Params["vnp_ResponseCode"];
+            const orderId = Number(vnp_Params["vnp_TxnRef"]);
+            const amount = Number(vnp_Params["vnp_Amount"]) / 100;
+            const responseCode = vnp_Params["vnp_ResponseCode"];
 
-        // 🔒 lock order
-        const order = await queryRunner.manager.findOne(Order, {
-            where: { orderId },
-            relations: ["user"]
-        });
+            // 🔒 lock order
+            const order = await queryRunner.manager.findOne(Order, {
+                where: { orderId },
+                relations: ["user"]
+            });
 
-        if (!order) {
-            return res.json({ RspCode: "01", Message: "Order not found" });
-        }
+            if (!order) {
+                return res.json({ RspCode: "01", Message: "Order not found" });
+            }
 
-        if (order.totalPrice !== amount) {
-            return res.json({ RspCode: "04", Message: "Invalid amount" });
-        }
+            if (order.totalPrice !== amount) {
+                return res.json({ RspCode: "04", Message: "Invalid amount" });
+            }
 
-        // 🛑 chống xử lý lại
-        if (order.paymentStatus === "paid") {
-            return res.json({ RspCode: "02", Message: "Already paid" });
-        }
+            // 🛑 chống xử lý lại
+            if (order.paymentStatus === "paid") {
+                return res.json({ RspCode: "02", Message: "Already paid" });
+            }
 
-        // ❌ fail
-        if (responseCode !== "00") {
-            order.paymentStatus = "failed";
+            // ❌ fail
+            if (responseCode !== "00") {
+                order.paymentStatus = "failed";
+                await queryRunner.manager.save(order);
+                await queryRunner.commitTransaction();
+
+                return res.json({ RspCode: "00", Message: "Success" });
+            }
+
+            // ✅ SUCCESS
+
+            const cartItems = await queryRunner.manager
+                .createQueryBuilder(CartItem, "item")
+                .leftJoinAndSelect("item.variant", "variant")
+                .leftJoinAndSelect("variant.product", "product")
+                .leftJoinAndSelect("item.cart", "cart")
+                .where("cart.userUserId = :userId", { userId: order.user.userId })
+                .getMany();
+
+            for (const item of cartItems) {
+
+                // 🔒 check stock
+                if (item.variant.stock < item.quantity) {
+                    throw new Error("Không đủ hàng");
+                }
+
+                // 🔻 trừ kho
+                item.variant.stock -= item.quantity;
+                await queryRunner.manager.save(item.variant);
+
+                // 📈 tăng sold
+                item.variant.product.sold += item.quantity;
+                await queryRunner.manager.save(item.variant.product);
+
+                // 🧾 tạo order item
+                const orderItem = queryRunner.manager.create(OrderItem, {
+                    order,
+                    variant: item.variant,
+                    quantity: item.quantity,
+                    price: item.variant.price
+                });
+
+                await queryRunner.manager.save(orderItem);
+            }
+
+            // 🗑️ clear cart
+            await queryRunner.manager.delete(CartItem, {
+                cart: { user: { userId: order.user.userId } }
+            });
+
+            // ✅ update order
+            order.paymentStatus = "paid";
+            order.status = "processing";
+
             await queryRunner.manager.save(order);
+
             await queryRunner.commitTransaction();
 
             return res.json({ RspCode: "00", Message: "Success" });
+
+        } catch (error) {
+            await queryRunner.rollbackTransaction();
+            console.error(error);
+            return res.json({ RspCode: "99", Message: "Error" });
+        } finally {
+            await queryRunner.release();
         }
+    };
 
-        // ✅ SUCCESS
+    static vnpayReturn = async (req: any, res: Response) => {
+        try {
+            const vnp_ResponseCode = req.query.vnp_ResponseCode;
 
-        const cartItems = await queryRunner.manager
-            .createQueryBuilder(CartItem, "item")
-            .leftJoinAndSelect("item.variant", "variant")
-            .leftJoinAndSelect("variant.product", "product")
-            .leftJoinAndSelect("item.cart", "cart")
-            .where("cart.userUserId = :userId", { userId: order.user.userId })
-            .getMany();
-
-        for (const item of cartItems) {
-
-            // 🔒 check stock
-            if (item.variant.stock < item.quantity) {
-                throw new Error("Không đủ hàng");
+            if (vnp_ResponseCode === "00") {
+                return res.redirect("http://localhost:5173/order-success?status=success");
             }
 
-            // 🔻 trừ kho
-            item.variant.stock -= item.quantity;
-            await queryRunner.manager.save(item.variant);
+            return res.redirect("http://localhost:5173/order-success?status=failed");
 
-            // 📈 tăng sold
-            item.variant.product.sold += item.quantity;
-            await queryRunner.manager.save(item.variant.product);
-
-            // 🧾 tạo order item
-            const orderItem = queryRunner.manager.create(OrderItem, {
-                order,
-                variant: item.variant,
-                quantity: item.quantity,
-                price: item.variant.price
-            });
-
-            await queryRunner.manager.save(orderItem);
+        } catch (error) {
+            return res.redirect("http://localhost:5173/order-success?status=error");
         }
-
-        // 🗑️ clear cart
-        await queryRunner.manager.delete(CartItem, {
-            cart: { user: { userId: order.user.userId } }
-        });
-
-        // ✅ update order
-        order.paymentStatus = "paid";
-        order.status = "processing";
-
-        await queryRunner.manager.save(order);
-
-        await queryRunner.commitTransaction();
-
-        return res.json({ RspCode: "00", Message: "Success" });
-
-    } catch (error) {
-        await queryRunner.rollbackTransaction();
-        console.error(error);
-        return res.json({ RspCode: "99", Message: "Error" });
-    } finally {
-        await queryRunner.release();
-    }
-};
-
-   static vnpayReturn = async (req: any, res: Response) => {
-    try {
-        const vnp_ResponseCode = req.query.vnp_ResponseCode;
-
-        if (vnp_ResponseCode === "00") {
-            return res.redirect("http://localhost:5173/order-success?status=success");
-        }
-
-        return res.redirect("http://localhost:5173/order-success?status=failed");
-
-    } catch (error) {
-        return res.redirect("http://localhost:5173/order-success?status=error");
-    }
-};
+    };
 
     static async getMyOrders(req: any, res: Response) {
         try {

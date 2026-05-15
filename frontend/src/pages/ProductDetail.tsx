@@ -102,7 +102,7 @@ const ProductDetail = () => {
         }
     };
 
-    const handleAddToCart = () => {
+    const handleAddToCart = async () => {
         if (!currentUser) {
             return toast.info("Chào bạn! Hãy đăng nhập để có thể thêm hàng vào giỏ nhé.");
         }
@@ -115,6 +115,9 @@ const ProductDetail = () => {
             return toast.error("Lựa chọn này hiện đang hết hàng.");
         }
 
+        if (quantity > currentVariant.stock) {
+            return toast.error(`Chỉ còn ${currentVariant.stock} sản phẩm trong kho`);
+        }
 
         const itemData = {
             id: product.productId,
@@ -127,13 +130,22 @@ const ProductDetail = () => {
             quantity: quantity
         };
 
-        dispatch(addToCartServer({
-            productVariantId: currentVariant.productVariantId,
-            quantity,
-            itemData
-        }) as any);
+        try {
 
-        toast.success(`Đã thêm vào giỏ hàng thành công!`);
+            await dispatch(addToCartServer({
+                productVariantId: currentVariant.productVariantId,
+                quantity,
+                itemData
+            }) as any).unwrap();
+
+            toast.success("Đã thêm vào giỏ hàng thành công!");
+
+        } catch (error: any) {
+
+            toast.error(
+                error?.message 
+            );
+        }
     };
 
     if (loading) return <div className="h-screen flex items-center justify-center italic text-gray-400">Loading...</div>;
@@ -201,7 +213,7 @@ const ProductDetail = () => {
                                 </div>
                             </div>
 
-                          
+
                             <div>
                                 <h4 className="text-[11px] font-black uppercase tracking-widest mb-4">
                                     Kích thước: <span className="text-red-600">{selectedSize}</span>
@@ -209,7 +221,7 @@ const ProductDetail = () => {
                                 <div className="flex gap-2.5 flex-wrap">
 
                                     {availableSizes.length > 0 ? (
-                                        availableSizes.map(size  => (
+                                        availableSizes.map(size => (
                                             <button
                                                 key={size as string}
                                                 onClick={() => setSelectedSize(size as string)}
@@ -228,7 +240,7 @@ const ProductDetail = () => {
                                 </div>
                             </div>
 
-                        
+
                             <div className="bg-gray-50 p-6 flex justify-between items-center border border-gray-100">
                                 <div className="flex items-center border border-gray-300 bg-white rounded-sm overflow-hidden h-10">
                                     <button
@@ -255,7 +267,7 @@ const ProductDetail = () => {
                                 </div>
                             </div>
 
-                      
+
                             <button onClick={handleAddToCart}
                                 className="w-full bg-black text-white py-5 text-[12px] font-black uppercase tracking-[0.3em] hover:bg-red-600 transition-all shadow-xl flex items-center justify-center gap-3"
                             >
@@ -265,7 +277,7 @@ const ProductDetail = () => {
                     </div>
                 </div>
 
-             
+
                 <div className="mt-20 border-t border-gray-100 pt-10 max-w-4xl mx-auto md:mx-0">
                     <button onClick={() => setIsDescOpen(!isDescOpen)} className="w-full flex justify-between items-center py-5 text-[13px] font-black uppercase tracking-[0.4em] border-b border-gray-50 hover:text-red-600 transition-colors">
                         Thông tin chi tiết sản phẩm

@@ -14,12 +14,12 @@ export class UserController {
 
             const user = await userRepo.findOne({
                 where: { userId: userId },
-                relations: ['addresses'] 
+                relations: ['addresses']
             });
 
             if (!user) return res.status(404).json({ message: "Không tìm thấy người dùng" });
 
-            const { password, ...userData } = user; 
+            const { password, ...userData } = user;
             return res.json(userData);
         } catch (err) {
             return res.status(500).json({ message: "Lỗi hệ thống", error: err });
@@ -50,7 +50,7 @@ export class UserController {
             const { password, ...updatedUser } = user;
             return res.json({ message: "Cập nhật hồ sơ thành công", user: updatedUser });
         } catch (err) {
-            return res.status(500).json({ message: "Lỗi cập nhật hồ sơ" });
+            return res.status(500).json({ message: "Không thể cập nhật thông tin vào lúc này. Vui lòng thử lại sau" });
         }
     }
 
@@ -69,11 +69,11 @@ export class UserController {
 
             if (!user) return res.status(404).json({ message: "Người dùng không tồn tại" });
 
-        
+
             const isMatch = await bcrypt.compare(oldPassword, user.password);
             if (!isMatch) return res.status(400).json({ message: "Mật khẩu cũ không chính xác" });
 
-         
+
             user.password = await bcrypt.hash(newPassword, 10);
             await userRepo.save(user);
 
@@ -162,7 +162,7 @@ export class UserController {
 
     static async setDefaultAddress(req: Request, res: Response) {
         try {
-            const { id } = req.params; 
+            const { id } = req.params;
             const userId = (req as any).user.id;
             const addressRepo = AppDataSource.getRepository(Address);
 

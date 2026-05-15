@@ -94,7 +94,7 @@ export class ProductController {
 
         } catch (err) {
             console.error(err);
-            return res.status(500).json({ message: "Lỗi Server" });
+            return res.status(500).json({ message: "Không thể tải danh sách sản phẩm. Vui lòng thử lại sau" });
         }
     }
 
@@ -131,7 +131,7 @@ export class ProductController {
 
         } catch (err) {
             console.error(err);
-            return res.status(500).json({ message: "Lỗi hệ thống" });
+            return res.status(500).json({ message: "Không thể tải thông tin chi tiết sản phẩm. Vui lòng thử lại sau." });
         }
     }
 
@@ -175,7 +175,7 @@ export class ProductController {
             console.error("Search Error:", err);
             return res.status(500).json({
                 success: false,
-                message: "Lỗi máy chủ khi tìm kiếm"
+                message: "Không thể thực hiện tìm kiếm vào lúc này. Vui lòng thử lại sau"
             });
         }
     }
