@@ -5,10 +5,7 @@ import type { RootState } from '../../redux/store'; // Điều chỉnh đường
 
 const Header = () => {
     const BASE_URL = import.meta.env.VITE_API_KEY;
-
-    // Lấy thông tin từ state.adminAuth dựa trên cấu trúc store.ts bạn vừa gửi
     const { currentAdmin } = useSelector((state: RootState) => state.adminAuth);
-    console.log(currentAdmin)
 
     // Chuyển đổi Role sang Tiếng Việt
     const getRoleLabel = (role: string) => {

@@ -1,25 +1,44 @@
 import { useEffect, useState } from 'react';
 import { productService } from '../services/adminProductService';
+import { adminCategoryService } from '../services/adminCategoryService'; 
 import {
-  Plus, Search, Edit3, EyeOff,
-  ChevronLeft, ChevronRight, Filter, Package, Trash2, RotateCcw
+  Plus, Search, Edit3, EyeOff, Filter, Package, Trash2, RotateCcw
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import Pagination from '../components/Pagination';
 
 const ProductList = () => {
+  const URL = import.meta.env.VITE_API_KEY;
   const navigate = useNavigate();
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]); 
   const [meta, setMeta] = useState({ totalPages: 1, currentPage: 1 });
-  // const [search, setSearch] = useState("");
+
   const [params, setParams] = useState({
     page: 1,
     limit: 10,
-    search: ""
+    search: "",
+    categoryId: ""
   });
   const [loading, setLoading] = useState(false);
 
-  // viewMode: 'active' (đang bán) hoặc 'hidden' (đã ẩn)
+
   const [viewMode, setViewMode] = useState<'active' | 'hidden'>('active');
+
+  // Lấy danh sách danh mục cấp 2 khi load trang
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await adminCategoryService.getLevel2Categories();
+        if (res.success) {
+          setCategories(res.data);
+        }
+      } catch (err) {
+        console.error("Lỗi lấy danh mục:", err);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -30,7 +49,7 @@ const ProductList = () => {
         params.page,
         params.limit,
         params.search,
-        undefined,
+        params.categoryId || undefined, 
         currentIsActive
       );
 
@@ -57,12 +76,6 @@ const ProductList = () => {
       alert("Cập nhật trạng thái thất bại.");
     }
   };
-
-  const handlePageChange = (page: number) => {
-    if (page < 1 || page > meta.totalPages) return;
-    setParams({ ...params, page });
-  };
-
   return (
     <div className="p-8 bg-[#F1F5F9] min-h-screen font-sans text-slate-700">
       <div className="max-w-7xl mx-auto">
@@ -99,6 +112,7 @@ const ProductList = () => {
           </div>
 
           <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row gap-2 items-center">
+            {/* Search Input */}
             <div className="relative flex-1 w-full">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
               <input
@@ -109,10 +123,23 @@ const ProductList = () => {
                 value={params.search}
               />
             </div>
-            <button className="flex items-center gap-2 px-5 py-2.5 text-slate-600 hover:bg-slate-50 rounded-xl transition-all text-sm font-medium border-l border-slate-100">
-              <Filter size={16} />
-              Lọc nâng cao
-            </button>
+
+            {/* Filter by Category */}
+            <div className="flex items-center gap-2 px-4 py-2.5 border-l border-slate-100">
+              <Filter size={16} className="text-slate-400" />
+              <select
+                className="bg-transparent border-none focus:ring-0 outline-none text-sm font-medium text-slate-600 cursor-pointer"
+                value={params.categoryId}
+                onChange={(e) => setParams({ ...params, categoryId: e.target.value, page: 1 })}
+              >
+                <option value="">Tất cả danh mục</option>
+                {categories.map((cat: any) => (
+                  <option key={cat.categoryId} value={cat.categoryId}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -138,7 +165,7 @@ const ProductList = () => {
                   <td className="px-6 py-4 text-center">
                     <div className="w-14 h-14 rounded-lg bg-slate-100 flex items-center justify-center overflow-hidden border border-slate-200">
                       {p.colors?.[0]?.images?.[0]?.url ? (
-                        <img src={`http://localhost:3000/${p.colors[0].images[0].url}`} alt="" className="w-full h-full object-cover" />
+                        <img src={`${URL}/${p.colors[0].images[0].url}`} alt="" className="w-full h-full object-cover" />
                       ) : <Package className="text-slate-300" size={20} />}
                     </div>
                   </td>
@@ -146,7 +173,7 @@ const ProductList = () => {
                     <div className="font-semibold text-slate-900">{p.name}</div>
                     <div className="text-xs text-slate-400 mt-1">
                       <span className="bg-slate-100 px-2 py-0.5 rounded text-[10px] text-slate-500 font-bold uppercase">
-                        {p.category?.name || "N/A"}
+                        {p.category?.name}
                       </span>
                     </div>
                   </td>
@@ -202,60 +229,14 @@ const ProductList = () => {
           </table>
 
           {/* Footer & Pagination */}
-          <div className="p-5 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-              Trang {params.page} / {meta.totalPages}
-            </span>
 
-            <div className="flex items-center gap-1">
-
-              {/* Prev */}
-              <button
-                className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg disabled:opacity-20 transition-all"
-                disabled={params.page === 1}
-                onClick={() => handlePageChange(params.page - 1)}
-              >
-                <ChevronLeft size={18} />
-              </button>
-
-              {/* Page numbers */}
-              {[...Array(meta.totalPages)].map((_, i) => {
-                const page = i + 1;
-
-                if (
-                  page !== 1 &&
-                  page !== meta.totalPages &&
-                  Math.abs(page - params.page) > 1
-                ) return null;
-
-                return (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`px-2 py-1 rounded text-sm font-semibold ${params.page === page
-                      ? 'bg-indigo-600 text-white'
-                      : 'text-slate-500 hover:bg-slate-100'
-                      }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
-
-              {/* Next */}
-              <button
-                className="p-2 text-slate-500 hover:bg-slate-100 rounded-lg disabled:opacity-20 transition-all"
-                disabled={params.page === meta.totalPages}
-                onClick={() => handlePageChange(params.page + 1)}
-              >
-                <ChevronRight size={18} />
-              </button>
-
-            </div>
-          </div>
+          <Pagination
+            currentPage={meta.currentPage}
+            totalPages={meta.totalPages}
+            onPageChange={(newPage) => setParams({ ...params, page: newPage })} />
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
