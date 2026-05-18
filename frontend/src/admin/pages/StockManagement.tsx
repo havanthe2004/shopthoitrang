@@ -4,7 +4,7 @@ import { Search, AlertTriangle, Package, Edit3, Save, X, Hash, ChevronLeft, Chev
 import { toast } from 'react-toastify';
 
 const StockManagement = () => {
-    const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+    const BASE_URL = import.meta.env.VITE_API_KEY;
     const [groupedProducts, setGroupedProducts] = useState([]);
     const [loading, setLoading] = useState(false);
     const [params, setParams] = useState({ page: 1, limit: 20, search: "", lowStock: false });

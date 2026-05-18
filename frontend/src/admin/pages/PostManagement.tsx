@@ -1,8 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { adminPostService } from '../services/adminPostService';
 import { toast } from 'react-toastify';
-import { 
-    Search, FileText, Edit3, Trash2, Save, X, 
+import {
+    Search, FileText, Edit3, Trash2, Save, X,
     Image as ImageIcon, Calendar, ChevronLeft, ChevronRight, Plus
 } from 'lucide-react';
 
@@ -10,7 +10,7 @@ const PostManagement = () => {
     const BASE_URL = import.meta.env.VITE_API_KEY;
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(false);
-    
+
     // Pagination & Filter States
     const [params, setParams] = useState({ page: 1, limit: 8, search: "" });
     const [meta, setMeta] = useState({ totalPages: 1 });
@@ -26,11 +26,10 @@ const PostManagement = () => {
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            // Lưu ý: BE của bạn cần hỗ trợ phân trang params {page, limit, search}
             const res = await adminPostService.getAll(params);
             // Giả sử API trả về cấu trúc { items, meta }
-            setPosts(res.data.items || res.data); 
-            setMeta(res.data.meta || { totalPages: 1 });
+            setPosts(res.data.items );
+            setMeta(res.data.meta );
         } catch (err) {
             toast.error("Lỗi tải danh sách bài viết");
         } finally { setLoading(false); }
@@ -104,7 +103,7 @@ const PostManagement = () => {
                     </h1>
                     <p className="text-slate-400 text-sm font-medium italic">Sáng tạo và quản lý các bài viết chuyên mục Fashion Journal.</p>
                 </div>
-                <button 
+                <button
                     onClick={() => { closeModal(); setIsModalOpen(true); }}
                     className="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2"
                 >
@@ -135,43 +134,50 @@ const PostManagement = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                        {posts.map((post: any, index) => (
-                            <tr key={post.postId} className="hover:bg-indigo-50/20 transition-colors text-center font-medium">
-                                <td className="pl-8 py-6 border-r border-slate-100 font-black text-slate-400 text-xs">
-                                    {(params.page - 1) * params.limit + index + 1}
-                                </td>
-                                <td className="px-6 py-6 border-r border-slate-100 text-left">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0">
-                                            <img 
-                                                src={post.image ? `${BASE_URL}/${post.image}` : "/placeholder.jpg"} 
-                                                className="w-full h-full object-cover" 
-                                                alt="thumb" 
-                                            />
-                                        </div>
-                                        <div className="overflow-hidden">
-                                            <p className="font-black text-slate-800 text-xs uppercase leading-tight truncate max-w-[400px]">{post.title}</p>
-                                            <p className="text-[10px] font-bold text-slate-400 italic">ID: #POST-{post.postId}</p>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td className="px-6 py-6 border-r border-slate-100">
-                                    <p className="text-[10px] font-black text-slate-500 flex items-center justify-center gap-1">
-                                        <Calendar size={12}/> {new Date(post.createdAt).toLocaleDateString('vi-VN')}
-                                    </p>
-                                </td>
-                                <td className="pr-8 py-6 text-right">
-                                    <div className="flex justify-end gap-1.5">
-                                        <button onClick={() => handleEdit(post)} className="p-2 bg-slate-100 text-slate-400 rounded-xl hover:bg-indigo-600 hover:text-white transition-all active:scale-90">
-                                            <Edit3 size={16} />
-                                        </button>
-                                        <button onClick={() => handleDelete(post.postId)} className="p-2 bg-rose-50 text-rose-400 rounded-xl hover:bg-rose-600 hover:text-white transition-all active:scale-90 border border-rose-100">
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
+                        {posts.length === 0 ? (
+                            <tr>
+                                <td colSpan={4} className="py-10 text-center text-slate-400 font-bold">
+                                    Không có bài viết nào
                                 </td>
                             </tr>
-                        ))}
+                        ) :
+                            posts.map((post: any, index) => (
+                                <tr key={post.postId} className="hover:bg-indigo-50/20 transition-colors text-center font-medium">
+                                    <td className="pl-8 py-6 border-r border-slate-100 font-black text-slate-400 text-xs">
+                                        {(params.page - 1) * params.limit + index + 1}
+                                    </td>
+                                    <td className="px-6 py-6 border-r border-slate-100 text-left">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 overflow-hidden flex-shrink-0">
+                                                <img
+                                                    src={post.image ? `${BASE_URL}/${post.image}` : "/placeholder.jpg"}
+                                                    className="w-full h-full object-cover"
+                                                    alt="thumb"
+                                                />
+                                            </div>
+                                            <div className="overflow-hidden">
+                                                <p className="font-black text-slate-800 text-xs uppercase leading-tight truncate max-w-[400px]">{post.title}</p>
+                                                <p className="text-[10px] font-bold text-slate-400 italic">ID: #POST-{post.postId}</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td className="px-6 py-6 border-r border-slate-100">
+                                        <p className="text-[10px] font-black text-slate-500 flex items-center justify-center gap-1">
+                                            <Calendar size={12} /> {new Date(post.createdAt).toLocaleDateString('vi-VN')}
+                                        </p>
+                                    </td>
+                                    <td className="pr-8 py-6 text-right">
+                                        <div className="flex justify-end gap-1.5">
+                                            <button onClick={() => handleEdit(post)} className="p-2 bg-slate-100 text-slate-400 rounded-xl hover:bg-indigo-600 hover:text-white transition-all active:scale-90">
+                                                <Edit3 size={16} />
+                                            </button>
+                                            <button onClick={() => handleDelete(post.postId)} className="p-2 bg-rose-50 text-rose-400 rounded-xl hover:bg-rose-600 hover:text-white transition-all active:scale-90 border border-rose-100">
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            ))}
                     </tbody>
                 </table>
             </div>
@@ -180,29 +186,29 @@ const PostManagement = () => {
             <div className="p-5 flex items-center justify-between mt-4">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Trang {params.page} / {meta.totalPages}</span>
                 <div className="flex items-center gap-1">
-                    <button 
-                        className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent" 
-                        disabled={params.page === 1} 
-                        onClick={() => setParams({...params, page: params.page - 1})}
+                    <button
+                        className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
+                        disabled={params.page === 1}
+                        onClick={() => setParams({ ...params, page: params.page - 1 })}
                     >
                         <ChevronLeft size={18} />
                     </button>
                     {[...Array(meta.totalPages)].map((_, i) => {
                         const page = i + 1;
                         return (
-                            <button 
-                                key={page} 
-                                onClick={() => setParams({...params, page})} 
+                            <button
+                                key={page}
+                                onClick={() => setParams({ ...params, page })}
                                 className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${params.page === page ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-600' : 'text-slate-500 hover:bg-white border border-slate-200'}`}
                             >
                                 {page}
                             </button>
                         );
                     })}
-                    <button 
-                        className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent" 
-                        disabled={params.page === meta.totalPages} 
-                        onClick={() => setParams({...params, page: params.page + 1})}
+                    <button
+                        className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
+                        disabled={params.page === meta.totalPages}
+                        onClick={() => setParams({ ...params, page: params.page + 1 })}
                     >
                         <ChevronRight size={18} />
                     </button>
@@ -226,7 +232,7 @@ const PostManagement = () => {
                             {/* Cột trái: Media */}
                             <div className="md:col-span-4 space-y-6">
                                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Ảnh bìa Journal</label>
-                                <div 
+                                <div
                                     onClick={() => fileInputRef.current?.click()}
                                     className="w-full aspect-[3/4] bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem] flex flex-col items-center justify-center cursor-pointer hover:border-indigo-400 hover:bg-indigo-50 transition-all overflow-hidden group relative"
                                 >
@@ -249,22 +255,22 @@ const PostManagement = () => {
                             <div className="md:col-span-8 space-y-6">
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Tiêu đề bài viết</label>
-                                    <input 
+                                    <input
                                         type="text" required
                                         className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all font-bold text-slate-800"
                                         placeholder="Tên bài viết..."
                                         value={formData.title}
-                                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     />
                                 </div>
                                 <div>
                                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Nội dung chi tiết</label>
-                                    <textarea 
+                                    <textarea
                                         required rows={12}
                                         className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-6 py-4 outline-none focus:ring-4 focus:ring-indigo-500/10 focus:bg-white transition-all font-medium text-slate-600 leading-relaxed"
                                         placeholder="Viết nội dung tại đây..."
                                         value={formData.content}
-                                        onChange={(e) => setFormData({...formData, content: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                                     />
                                 </div>
                             </div>
@@ -272,7 +278,7 @@ const PostManagement = () => {
 
                         <div className="px-10 py-6 bg-slate-900 border-t border-slate-800 flex justify-end gap-3">
                             <button type="button" onClick={closeModal} className="px-6 py-2.5 rounded-xl font-black text-[10px] uppercase text-slate-400 hover:text-white transition-all">Hủy bỏ</button>
-                            <button 
+                            <button
                                 onClick={handleSubmit}
                                 className="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest shadow-xl shadow-indigo-900/20 hover:bg-indigo-500 transition-all flex items-center gap-2"
                             >

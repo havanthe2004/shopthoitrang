@@ -15,11 +15,10 @@ const Sidebar = () => {
         if (adminInfoStr) {
             const adminInfo = JSON.parse(adminInfoStr);
             setCurrentRole(adminInfo.role);
-            console.log(adminInfo.role);
         }
     }, []);
 
-    // Cấu hình Menu & Phân quyền
+    // Cấu hình Menu và Phân quyền
     const menuItems = [
         { title: 'Tổng quan', path: '/admin/dashboard', icon: <FaChartPie />, roles: ['admin', 'manager'] },
         { title: 'Quản lý danh mục', path: '/admin/categories', icon: <FaList />, roles: ['admin', 'manager'] },
@@ -28,11 +27,11 @@ const Sidebar = () => {
         { title: 'Xử lý đơn hàng', path: '/admin/orders', icon: <FaClipboardList />, roles: ['admin', 'manager', 'staff'] },
         { title: 'Quản lý tin tức', path: '/admin/posts', icon: <FaRegNewspaper />, roles: ['admin', 'manager'] },
         { title: 'Quản lý người dùng', path: '/admin/users', icon: <FaUsers />, roles: ['admin', 'manager'] },
-        { title: 'Quản lý nhân viên', path: '/admin/staffs', icon: <FaUserTie />, roles: ['admin'] }, // CHỈ ADMIN TỐI CAO
+        { title: 'Quản lý nhân viên', path: '/admin/staffs', icon: <FaUserTie />, roles: ['admin', "manager"] },
     ];
 
     const settingItems = [
-        { title: 'Cấu hình hệ thống', path: '/admin/settings', icon: <FaCog />, roles: ['admin'] }, // CHỈ ADMIN
+        { title: 'Cấu hình hệ thống', path: '/admin/settings', icon: <FaCog />, roles: ['admin'] },
         { title: 'Thông tin cá nhân', path: '/admin/profile', icon: <FaUserCircle />, roles: ['admin', 'manager', 'staff'] },
     ];
 
@@ -40,6 +39,7 @@ const Sidebar = () => {
     const filterMenuByRole = (items: any[]) => {
         return items.filter(item => item.roles.includes(currentRole));
     };
+
 
     const handleLogout = async () => {
         if (window.confirm("Bạn có chắc chắn muốn đăng xuất khỏi hệ thống quản trị?")) {

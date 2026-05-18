@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { adminCategoryService } from '../services/adminCategoryService';
 import { toast } from 'react-toastify';
 import { FaPlus, FaTrash, FaEdit, FaTrashRestore, FaSearch, FaArrowLeft } from 'react-icons/fa';
+import Pagination from '../components/Pagination';
 
 const CategoryPage = () => {
     // ================= STATES =================
@@ -22,19 +23,6 @@ const CategoryPage = () => {
         name: '', description: '', image: '', parentId: '', sortOrder: 0
     });
 
-    // ================= EFFECTS =================
-    // Gọi API khi page, search hoặc trạng thái thùng rác thay đổi
-    useEffect(() => {
-        fetchCategories();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [page, search, isTrash]);
-
-    // Lấy danh sách Level 1 khi mở Modal
-    useEffect(() => {
-        if (showModal) fetchLevel1Categories();
-    }, [showModal]);
-
-    // ================= FETCH DATA =================
     const fetchCategories = async () => {
         setLoading(true);
         try {
@@ -45,10 +33,16 @@ const CategoryPage = () => {
             }
         } catch (error) {
             toast.error("Lỗi lấy danh sách danh mục");
+            console.log(error)
         } finally {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchCategories();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [page, search, isTrash]);
 
     const fetchLevel1Categories = async () => {
         try {
@@ -58,6 +52,13 @@ const CategoryPage = () => {
             console.error("Lỗi lấy level 1", error);
         }
     };
+
+    // Lấy danh sách Level 1 khi mở Modal
+    useEffect(() => {
+        if (showModal) fetchLevel1Categories();
+    }, [showModal]);
+
+
 
     // ================= HANDLERS =================
     const handleOpenAdd = () => {
@@ -70,10 +71,10 @@ const CategoryPage = () => {
         setEditingId(cat.categoryId);
         setFormData({
             name: cat.name,
-            description: cat.description || '',
-            image: cat.image || '',
-            parentId: cat.parent?.categoryId || '',
-            sortOrder: cat.sortOrder || 0
+            description: cat.description ,
+            image: cat.image ,
+            parentId: cat.parent?.categoryId ,
+            sortOrder: cat.sortOrder 
         });
         setShowModal(true);
     };
@@ -91,7 +92,7 @@ const CategoryPage = () => {
                 if (res.success) toast.success("Thêm mới thành công!");
             }
             setShowModal(false);
-            fetchCategories(); // Reload data
+            fetchCategories(); 
         } catch (error: any) {
             toast.error(error.response?.data?.message || "Có lỗi xảy ra");
         }
@@ -107,6 +108,7 @@ const CategoryPage = () => {
             }
         } catch (error) {
             toast.error("Lỗi khi xóa");
+            console.log(error)
         }
     };
 
@@ -119,11 +121,8 @@ const CategoryPage = () => {
             }
         } catch (error) {
             toast.error("Lỗi khôi phục");
+            console.log(error)
         }
-    };
-    const handlePageChange = (page: number) => {
-        if (page < 1 || page > totalPages) return;
-        setParams({ ...params, page });
     };
     // ================= RENDER =================
     return (
@@ -228,51 +227,13 @@ const CategoryPage = () => {
 
                 {/* Phân trang */}
 
-                <div className="p-5 flex items-center justify-between mt-4">
-                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Trang {page} / {totalPages}
-                    </span>
+                <Pagination
+                    currentPage={page}
+                    totalPages={totalPages}
+                    onPageChange={(newPage) => setPage(newPage)}
+                />
 
-                    <div className="flex items-center gap-1">
-                        {/* Prev */}
-                        <button
-                            className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
-                            disabled={page === 1}
-                            onClick={() => setPage(page - 1)}
-                        >
-                            <FaArrowLeft />
-                        </button>
 
-                        {/* Page Numbers */}
-                        {[...Array(totalPages)].map((_, i) => {
-                            const p = i + 1;
-
-                            if (p !== 1 && p !== totalPages && Math.abs(p - page) > 1) return null;
-
-                            return (
-                                <button
-                                    key={p}
-                                    onClick={() => setPage(p)}
-                                    className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${page === p
-                                        ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-600'
-                                        : 'text-slate-500 hover:bg-white border border-slate-200'
-                                        }`}
-                                >
-                                    {p}
-                                </button>
-                            );
-                        })}
-
-                        {/* Next */}
-                        <button
-                            className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
-                            disabled={page === totalPages}
-                            onClick={() => setPage(page + 1)}
-                        >
-                            <FaArrowLeft className="rotate-180" />
-                        </button>
-                    </div>
-                </div>
 
             </div>
 

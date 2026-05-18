@@ -40,7 +40,6 @@ const DashboardPage = () => {
             };
 
             const res = await adminDashboardService.getDashboardData(filters);
-            console.log(res)
             if (res.success) {
                 setData(res.data);
             }
