@@ -11,7 +11,7 @@ function randomVietnamPhone() {
 
 test('test', async ({ page }) => {
   await page.goto('http://localhost:5173/');
-  await page.getByRole('link', { name: 'Xin chào, Đăng nhập' }).click();
+  await page.getByRole('link', { name: 'Tài khoản Đăng nhập' }).click();
   await page.getByRole('textbox', { name: 'example@gmail.com' }).click();
   await page.getByRole('textbox', { name: 'example@gmail.com' }).fill('binhduong05082004@gmail.com');
   await page.getByRole('textbox', { name: '••••••••' }).click();
@@ -22,7 +22,7 @@ test('test', async ({ page }) => {
   await page.waitForLoadState('networkidle');
 
   // mở menu user
-  await page.getByRole('link', { name: /Xin chào/ }).click();
+  await page.getByRole('link', { name: /Tài khoản Đăng nhập/ }).click();
 
   // click chỉnh sửa 
   const editBtn = page.locator('text=Chỉnh sửa');

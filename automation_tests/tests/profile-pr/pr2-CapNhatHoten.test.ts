@@ -4,12 +4,12 @@ test('Cập nhật họ tên', async ({ page }) => {
   await page.goto('http://localhost:5173/');
 
   // login
-  await page.getByRole('link', { name: 'Xin chào, Đăng nhập' }).click();
+  await page.getByRole('link', { name: 'Tài khoản Đăng nhập' }).click();
   await page.getByRole('textbox', { name: 'example@gmail.com' })
     .fill('binhduong05082004@gmail.com');
   await page.getByRole('textbox', { name: '••••••••' })
     .fill('Binhbo3012#');
-  await page.getByRole('button', { name: 'Đăng nhập' }).click();
+  await page.getByRole('button', { name: /Tài khoản Đăng nhập/ }).click();
 
   await page.waitForLoadState('networkidle');
 

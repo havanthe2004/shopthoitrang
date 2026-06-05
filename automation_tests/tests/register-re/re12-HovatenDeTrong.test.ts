@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test('test', async ({ page }) => {
   await page.goto('http://localhost:5173/');
-  await page.getByRole('link', { name: 'Xin chào, Đăng nhập' }).click();
+  await page.getByRole('link', { name: 'Tài khoản Đăng nhập' }).click();
   await page.getByRole('link', { name: 'Đăng ký ngay' }).click();
   await page.getByRole('textbox', { name: '0912345678' }).click();
   await page.getByRole('textbox', { name: '0912345678' }).fill('0912345678');
