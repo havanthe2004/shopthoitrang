@@ -4,9 +4,10 @@ import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../config/data-source';
 import { User } from '../models/User';
 import { RefreshToken } from '../models/RefreshToken';
-
+import ms, { StringValue } from "ms";
 import { Otp } from '../models/Otp';
 import { sendOtpEmail } from '../utils/mailer';
+
 
 export class AuthController {
 
@@ -16,7 +17,7 @@ export class AuthController {
             const { email, password, phone, name } = req.body;
 
             if (!email || !phone || !password || !name) {
-                return res.status(400).json({ message: 'Missing fields' });
+                return res.status(400).json({ message: 'Thiếu trường' });
             }
 
             const userRepo = AppDataSource.getRepository(User);
@@ -99,10 +100,15 @@ export class AuthController {
                 process.env.JWT_REFRESH_SECRET as string,
                 { expiresIn: process.env.JWT_REFRESH_EXPIRE as any }
             );
+            const refreshExpire = process.env.JWT_REFRESH_EXPIRE as StringValue;
+
+            if (!refreshExpire) {
+                throw new Error("JWT_REFRESH_EXPIRE chưa được cấu hình");
+            }
 
             const refreshEntity = refreshRepo.create({
                 token: refreshToken,
-                expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                expiredAt: new Date(Date.now() + ms(refreshExpire)),
                 user,
             });
 
@@ -129,11 +135,14 @@ export class AuthController {
     static async refreshToken(req: Request, res: Response) {
         try {
             const { refreshToken } = req.body;
-            if (refreshToken == "") return res.status()
-            if (!refreshToken) return res.status(401).json({ message: "Refresh Token missing" });
+            if (!refreshToken?.trim()) {
+                return res.status(400).json({
+                    message: "Thiếu Refresh Token"
+                });
+            }
+            if (!refreshToken) return res.status(401).json({ message: "Thiếu Refresh Token" });
 
             const refreshRepo = AppDataSource.getRepository(RefreshToken);
-            const userRepo = AppDataSource.getRepository(User);
 
 
             const savedToken = await refreshRepo.findOne({
@@ -142,7 +151,7 @@ export class AuthController {
             });
 
             if (!savedToken || savedToken.expiredAt < new Date()) {
-                return res.status(403).json({ message: "Refresh Token invalid or expired" });
+                return res.status(403).json({ message: "Refresh Token không hợp lệ hoặc đã hết hạn" });
             }
 
             const decoded = jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET as string) as any;
@@ -151,8 +160,9 @@ export class AuthController {
             const newAccessToken = jwt.sign(
                 { id: decoded.id, email: savedToken.user.email },
                 process.env.JWT_ACCESS_SECRET as string,
-                { expiresIn: '15m' }
+                { expiresIn: process.env.JWT_ACCESS_EXPIRE as any }
             );
+
 
             return res.json({ accessToken: newAccessToken });
         } catch (err) {

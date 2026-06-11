@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { AppDataSource } from '../config/data-source';
 import { Admin } from '../models/Admin';
 import { AdminRefreshToken } from '../models/AdminRefreshToken';
+import ms, { StringValue } from "ms"
 
 export class AdminAuthController {
 
@@ -43,11 +44,19 @@ export class AdminAuthController {
                 { expiresIn: process.env.JWT_REFRESH_EXPIRE as any }
             );
 
+            const AdminRefreshExpire = process.env.JWT_REFRESH_EXPIRE as StringValue
+
+            if (!AdminRefreshExpire) {
+                throw new Error("JWT_REFRESH_EXPIRE chưa được cấu hình")
+            }
+
             const refreshEntity = refreshRepo.create({
                 token: refreshToken,
-                expiredAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+                expiredAt: new Date(Date.now() + ms(AdminRefreshExpire)),
                 admin,
             });
+
+
 
             await refreshRepo.save(refreshEntity);
 

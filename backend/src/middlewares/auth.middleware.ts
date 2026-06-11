@@ -20,10 +20,11 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
         }
 
         const decoded = jwt.verify(token, secret) as any;
+        console.log(decoded);
         const userRepo = AppDataSource.getRepository(User);
         const user = await userRepo.findOne({
             where: { userId: decoded.id },
-            select: ["userId", "isActive"] // Chỉ lấy các trường cần thiết để tối ưu tốc độ
+            select: ["userId", "isActive"] 
         });
 
         if (!user) {
