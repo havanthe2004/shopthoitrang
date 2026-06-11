@@ -15,10 +15,10 @@ export class AdminCategoryController {
 
     static getAllCategories = async (req: Request, res: Response) => {
         try {
-            const page = parseInt(req.query.page as string) || 1;
-            const limit = parseInt(req.query.limit as string) || 10;
+            const page = parseInt(req.query.page as string);
+            const limit = parseInt(req.query.limit as string);
             const search = req.query.search as string || "";
-            const isTrash = req.query.isTrash === 'true'; 
+            const isTrash = req.query.isTrash === 'true';
 
             const categoryRepo = AppDataSource.getRepository(Category);
 
@@ -30,7 +30,7 @@ export class AdminCategoryController {
                 queryBuilder.andWhere("category.name LIKE :search", { search: `%${search}%` });
             }
 
-          
+
             queryBuilder.orderBy("category.sortOrder", "ASC")
                 .addOrderBy("category.categoryId", "DESC")
                 .skip((page - 1) * limit)
@@ -54,16 +54,19 @@ export class AdminCategoryController {
         }
     };
 
-    
+
     static getLevel1Categories = async (req: Request, res: Response) => {
         try {
             const categoryRepo = AppDataSource.getRepository(Category);
-           
+
             const categories = await categoryRepo.find({
                 where: { parent: IsNull(), isActive: true },
                 order: { sortOrder: "ASC", name: "ASC" }
             });
-            return res.status(200).json({ success: true, data: categories });
+            return res.status(200).json({
+                success: true,
+                data: categories
+            });
         } catch (error) {
             return res.status(500).json({ message: "Lỗi hệ thống" });
         }
@@ -89,7 +92,7 @@ export class AdminCategoryController {
         }
     };
 
-  
+
     static createCategory = async (req: Request, res: Response) => {
         try {
             const { name, description, image, parentId, sortOrder } = req.body;
@@ -100,23 +103,23 @@ export class AdminCategoryController {
 
             const categoryRepo = AppDataSource.getRepository(Category);
 
-       
+
             let slug = createSlug(name);
             let slugExists = await categoryRepo.findOne({ where: { slug } });
             if (slugExists) {
-                slug = `${slug}-${Date.now().toString().slice(-4)}`; 
+                slug = `${slug}-${Date.now().toString().slice(-4)}`;
             }
 
             const newCategory = categoryRepo.create({
                 name, slug, description, image, sortOrder: sortOrder || 0
             });
 
-           
+
             if (parentId) {
                 const parentCat = await categoryRepo.findOne({ where: { categoryId: parentId }, relations: ["parent"] });
                 if (!parentCat) return res.status(404).json({ message: "Danh mục cha không tồn tại" });
 
-              
+
                 if (parentCat.parent) {
                     return res.status(400).json({ message: "Không thể chọn danh mục cấp 2 làm danh mục cha (Chỉ hỗ trợ tối đa 2 cấp)" });
                 }
@@ -125,17 +128,20 @@ export class AdminCategoryController {
 
             await categoryRepo.save(newCategory);
 
-           
+
             await this.logAction(adminId, `Thêm mới danh mục: ${name}`);
 
-            return res.status(201).json({ success: true, message: "Thêm danh mục thành công" });
+            return res.status(201).json({
+                success: true,
+                message: "Thêm danh mục thành công"
+            });
         } catch (error) {
             console.error("Create Category Error:", error);
             return res.status(500).json({ message: "Lỗi hệ thống khi thêm danh mục" });
         }
     };
 
-  
+
     static updateCategory = async (req: Request, res: Response) => {
         try {
             const categoryId = parseInt(req.params.id as string);
@@ -146,11 +152,11 @@ export class AdminCategoryController {
             const category = await categoryRepo.findOne({ where: { categoryId } });
             if (!category) return res.status(404).json({ message: "Không tìm thấy danh mục" });
 
-           
+
             if (name && name !== category.name) {
                 category.name = name;
                 category.slug = createSlug(name);
-               
+
                 let slugExists = await categoryRepo.findOne({ where: { slug: category.slug } });
                 if (slugExists && slugExists.categoryId !== categoryId) {
                     category.slug = `${category.slug}-${Date.now().toString().slice(-4)}`;
@@ -161,10 +167,10 @@ export class AdminCategoryController {
             category.image = image !== undefined ? image : category.image;
             category.sortOrder = sortOrder !== undefined ? sortOrder : category.sortOrder;
 
-          
+
             if (parentId !== undefined) {
                 if (parentId === null || parentId === "") {
-                    category.parent = null; 
+                    category.parent = null;
                 } else {
                     if (Number(parentId) === categoryId) return res.status(400).json({ message: "Không thể chọn chính nó làm cha" });
 
@@ -185,7 +191,7 @@ export class AdminCategoryController {
         }
     };
 
-    
+
     static softDeleteCategory = async (req: Request, res: Response) => {
         try {
             const categoryId = parseInt(req.params.id as string);
@@ -207,7 +213,7 @@ export class AdminCategoryController {
         }
     };
 
-   
+
     static restoreCategory = async (req: Request, res: Response) => {
         try {
             const categoryId = parseInt(req.params.id as string);
@@ -218,7 +224,7 @@ export class AdminCategoryController {
 
             if (!category) return res.status(404).json({ message: "Không tìm thấy danh mục" });
 
-            category.isActive = true; 
+            category.isActive = true;
             await categoryRepo.save(category);
 
             await this.logAction(adminId, `Khôi phục danh mục ID: ${categoryId}`);

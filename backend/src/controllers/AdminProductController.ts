@@ -11,7 +11,7 @@ import { OrderItem } from "../models/OrderItem";
 
 export class AdminProductController {
 
-  
+
   private static async logAction(adminId: number, action: string) {
     const logRepo = AppDataSource.getRepository(AdminLog);
     await logRepo.save(logRepo.create({ admin: { adminId }, action }));
@@ -19,11 +19,13 @@ export class AdminProductController {
 
   static async getProducts(req: Request, res: Response) {
     try {
-      const page = parseInt(req.query.page as string) || 1;
-      const limit = parseInt(req.query.limit as string) || 10;
-      const search = (req.query.search as string) || "";
-      const categoryId = req.query.categoryId;
-
+      const page = parseInt(req.query.page as string);
+      const limit = parseInt(req.query.limit as string);
+      const search = (req.query.search as string);
+      const categoryId = req.query.categoryId && req.query.categoryId !== ""
+        ? Number(req.query.categoryId)
+        : undefined;
+      console.log(categoryId)
       const isActiveParam = req.query.isActive;
       const isActive = isActiveParam === 'false' ? false : true;
 
@@ -35,8 +37,8 @@ export class AdminProductController {
         .where("product.name LIKE :search", { search: `%${search}%` })
         .andWhere("product.isActive = :isActive", { isActive });
 
-      if (categoryId) {
-        qb.andWhere("product.categoryId = :categoryId", { categoryId: Number(categoryId) });
+      if (categoryId !== undefined) {
+        qb.andWhere("product.category = :categoryId", { categoryId });
       }
 
       const total = await qb.getCount();
@@ -71,7 +73,7 @@ export class AdminProductController {
       return res.status(500).json({ message: "Lỗi lấy danh sách sản phẩm" });
     }
   }
- 
+
   static async getDetail(req: Request, res: Response) {
     try {
       const { id } = req.params;
@@ -84,7 +86,7 @@ export class AdminProductController {
 
       const orderItemRepo = AppDataSource.getRepository(OrderItem);
 
-      
+
       const variantsWithInfo = await Promise.all(product.variants.map(async (v) => {
         const count = await orderItemRepo.count({ where: { variant: { productVariantId: v.productVariantId } } });
         return { ...v, hasOrders: count > 0 };
@@ -106,6 +108,8 @@ export class AdminProductController {
     try {
       if (!req.body.data) throw new Error("Thiếu dữ liệu!");
       const { productData, colorsData } = JSON.parse(req.body.data);
+      console.log(productData)
+      console.log(colorsData)
       const files = req.files as Express.Multer.File[];
       const adminId = (req as any).admin.adminId;
 
@@ -116,7 +120,7 @@ export class AdminProductController {
         isActive: true
       });
 
-  
+
       for (const colorItem of colorsData) {
         const savedColor = await queryRunner.manager.save(ProductColor, {
           color: colorItem.color,
@@ -153,7 +157,7 @@ export class AdminProductController {
     }
   }
 
- 
+
   static async updateProduct(req: Request, res: Response) {
     const { id } = req.params;
     const queryRunner = AppDataSource.createQueryRunner();
@@ -172,7 +176,7 @@ export class AdminProductController {
       const imageRepo = queryRunner.manager.getRepository(ProductImage);
       const orderItemRepo = queryRunner.manager.getRepository(OrderItem);
 
-      
+
       const product = await productRepo.findOne({ where: { productId: Number(id) } });
       if (!product) throw new Error("Sản phẩm không tồn tại");
 
@@ -184,28 +188,28 @@ export class AdminProductController {
         let colorEntity: ProductColor;
 
         if (colorItem.productColorId) {
-          
+
           colorEntity = await colorRepo.findOneOrFail({ where: { productColorId: colorItem.productColorId } });
           colorEntity.color = colorItem.color;
           colorEntity.hexCode = colorItem.hexCode;
-          colorEntity.isActive = colorItem.isActive ?? true; 
+          colorEntity.isActive = colorItem.isActive ?? true;
           await colorRepo.save(colorEntity);
 
-         
+
           const dbImages = await imageRepo.find({ where: { color: { productColorId: colorEntity.productColorId } } });
           const remainingImageIds = (colorItem.oldImages || []).map((img: any) => img.productImageId);
 
           for (const dbImg of dbImages) {
             if (!remainingImageIds.includes(dbImg.productImageId)) {
-              
+
               const filePath = path.join(__dirname, '../../', dbImg.url);
               if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-             
+
               await imageRepo.remove(dbImg);
             }
           }
         } else {
-          
+
           colorEntity = await colorRepo.save(colorRepo.create({
             color: colorItem.color,
             hexCode: colorItem.hexCode,
@@ -225,28 +229,28 @@ export class AdminProductController {
           }
         }
 
-     
+
         if (colorItem.variants) {
           for (const v of colorItem.variants) {
             if (v.productVariantId) {
-            
+
               const hasOrders = await orderItemRepo.count({
                 where: { variant: { productVariantId: v.productVariantId } }
               });
 
               if (hasOrders > 0) {
-               
+
                 await variantRepo.update(v.productVariantId, {
                   price: v.price,
                   stock: v.stock,
                   isActive: v.isActive
                 });
               } else {
-                
+
                 await variantRepo.save(v);
               }
             } else {
-            
+
               await variantRepo.save(variantRepo.create({
                 ...v,
                 product: product,
@@ -271,7 +275,7 @@ export class AdminProductController {
     }
   }
 
- 
+
   static async toggleProduct(req: Request, res: Response) {
     try {
       const { productId } = req.params;
@@ -291,28 +295,6 @@ export class AdminProductController {
     }
   }
 
-  static async restoreVariant(req: Request, res: Response) {
-    try {
-      const { variantId } = req.params;
-      const adminId = (req as any).admin.adminId;
-      const variantRepo = AppDataSource.getRepository(ProductVariant);
-
-      const variant = await variantRepo.findOne({
-        where: { productVariantId: Number(variantId) },
-        relations: ["product"]
-      });
-
-      if (!variant) throw new Error("Biến thể không tồn tại");
-
-      variant.isActive = true;
-      await variantRepo.save(variant);
-
-      await AdminProductController.logAction(adminId, `Khôi phục biến thể ID=${variantId}`);
-      return res.json({ success: true, message: "Đã bật lại biến thể" });
-    } catch (err: any) {
-      return res.status(400).json({ message: err.message });
-    }
-  }
 
   static async toggleVariant(req: Request, res: Response) {
     try {
