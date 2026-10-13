@@ -24,7 +24,7 @@ const OrderSuccessPage = () => {
                 <>
                     <FaCheckCircle className="text-green-500 text-7xl mx-auto mb-6 animate-bounce" />
                     <h2 className="text-4xl font-black uppercase italic">Đặt hàng thành công!</h2>
-                    <p className="mt-4 text-gray-600">Mã đơn hàng của bạn là: <strong>#{orderId || "N/A"}</strong></p>
+                    {/* <p className="mt-4 text-gray-600">Mã đơn hàng của bạn là: <strong>#{orderId || "N/A"}</strong></p> */}
                     <p className="italic text-sm text-gray-400 mt-2">Chúng tôi sẽ sớm liên hệ xác nhận đơn hàng.</p>
                 </>
             ) : (

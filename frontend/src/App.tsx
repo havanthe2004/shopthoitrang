@@ -36,10 +36,12 @@ import UserManagement from './admin/pages/UserManagement.tsx'
 import AdminProfile from './admin/pages/AdminProfile.tsx'
 import SystemConfig from './admin/pages/SystemConfig.tsx'
 import PostManagement from './admin/pages/PostManagement.tsx';
+import ChatManagement from './admin/pages/ChatManagement.tsx';
 // Import Actions & Types
 import { fetchCartServer } from './redux/slices/cartSlice';
 import type { RootState } from './redux/store';
 import AddProductStepper from './admin/pages/AddProductStepper.tsx';
+import ChatWidget from './components/chat/ChatWidget';
 
 // ==========================================
 // 1. TẠO CLIENT LAYOUT (DÀNH CHO KHÁCH HÀNG)
@@ -49,12 +51,12 @@ const ClientLayout = () => {
     <>
       <Header />
       <div
-        className="min-h-screen"
-        style={{ backgroundImage: "url('/background/background.jpg')" }}
+        className="min-h-screen bg-slate-50 text-slate-900"
       >
         {/* Nội dung các trang HomePage, LoginPage... sẽ được render vào Outlet này */}
         <Outlet />
       </div>
+      <ChatWidget />
       <Footer />
     </>
   );
@@ -124,6 +126,7 @@ function App() {
             <Route path="profile" element={<AdminProfile />} />
             <Route path="settings" element={<SystemConfig />} />
             <Route path="posts" element={<PostManagement />} />
+            <Route path="chat" element={<ChatManagement />} />
             {/* Thêm các trang sau này: category, product, user... */}
           </Route>
         </Route>

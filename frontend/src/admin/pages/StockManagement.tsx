@@ -1,7 +1,9 @@
 import React, { useEffect, useState, Fragment } from 'react';
 import { stockService } from '../services/adminstockService';
-import { Search, AlertTriangle, Package, Edit3, Save, X, Hash, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, AlertTriangle, Package, Edit3, Save, X, Hash } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Pagination from '../components/Pagination';
+
 
 const StockManagement = () => {
     const BASE_URL = import.meta.env.VITE_API_KEY;
@@ -234,46 +236,14 @@ const StockManagement = () => {
             </div>
 
 
-            <div className="p-5 flex items-center justify-between mt-4">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                    Trang {params.page} / {meta.totalPages}
-                </span>
 
-                <div className="flex items-center gap-1">
-                    <button
-                        className="p-2 text-slate-500 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 disabled:opacity-20 transition-all shadow-sm"
-                        disabled={params.page === 1}
-                        onClick={() => handlePageChange(params.page - 1)}
-                    >
-                        <ChevronLeft size={18} />
-                    </button>
+            {/* Phân trang */}
 
-                    {[...Array(meta.totalPages)].map((_, i) => {
-                        const page = i + 1;
-                        if (page !== 1 && page !== meta.totalPages && Math.abs(page - params.page) > 1) return null;
-                        return (
-                            <button
-                                key={page}
-                                onClick={() => handlePageChange(page)}
-                                className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${params.page === page
-                                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200'
-                                    : 'text-slate-500 hover:bg-white border border-transparent hover:border-slate-200'
-                                    }`}
-                            >
-                                {page}
-                            </button>
-                        );
-                    })}
+            <Pagination
+                currentPage={params.page}
+                totalPages={meta.totalPages}
+                onPageChange={handlePageChange} />
 
-                    <button
-                        className="p-2 text-slate-500 hover:bg-white rounded-xl border border-transparent hover:border-slate-200 disabled:opacity-20 transition-all shadow-sm"
-                        disabled={params.page === meta.totalPages}
-                        onClick={() => handlePageChange(params.page + 1)}
-                    >
-                        <ChevronRight size={18} />
-                    </button>
-                </div>
-            </div>
         </div>
     );
 };
