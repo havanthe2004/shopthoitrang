@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUrl';
 import { bannerService } from '../../services/bannerService';
+import { getWebsiteConfig } from '../../services/configServise';
 
 interface BannerData {
     bannerId: number;
@@ -42,35 +43,36 @@ const DEFAULT_BANNERS: BannerData[] = [
     }
 ];
 
-// Danh sách cam kết dịch vụ cao cấp
-const TRUST_ITEMS = [
-    {
-        icon: Truck,
-        title: "Giao hàng miễn phí",
-        desc: "Đơn hàng từ 499.000₫"
-    },
-    {
-        icon: RotateCcw,
-        title: "Đổi trả trong 30 ngày",
-        desc: "Thủ tục nhanh chóng, dễ dàng"
-    },
-    {
-        icon: ShieldCheck,
-        title: "Chính hãng 100%",
-        desc: "Cam kết chất lượng cao cấp"
-    },
-    {
-        icon: Headphones,
-        title: "Hỗ trợ 24/7",
-        desc: "Hotline tận tâm: 1900 6868"
-    }
-];
 
 const HomeBanner = () => {
     const [banners, setBanners] = useState<BannerData[]>([]);
     const [loading, setLoading] = useState(true);
     const [currentSlide, setCurrentSlide] = useState(0);
+    const [hotline, setHotline] = useState<string>("0796419162");
     const sliderRef = useRef<Slider | null>(null);
+
+    const trustItems = [
+        {
+            icon: Truck,
+            title: "Giao hàng miễn phí",
+            desc: "Đơn hàng từ 499.000₫"
+        },
+        {
+            icon: RotateCcw,
+            title: "Đổi trả trong 30 ngày",
+            desc: "Thủ tục nhanh chóng, dễ dàng"
+        },
+        {
+            icon: ShieldCheck,
+            title: "Chính hãng 100%",
+            desc: "Cam kết chất lượng cao cấp"
+        },
+        {
+            icon: Headphones,
+            title: "Hỗ trợ 24/7",
+            desc: `Hotline: ${hotline}`
+        }
+    ];
 
     const settings = {
         dots: false, // Sử dụng custom dots bên ngoài để styling tinh tế hơn
@@ -104,6 +106,12 @@ const HomeBanner = () => {
             }
         };
         fetchBanners();
+
+        getWebsiteConfig()
+            .then(data => {
+                if (data?.phone) setHotline(data.phone);
+            })
+            .catch(() => {});
     }, []);
 
     const displayBanners = banners.length > 0 ? banners : DEFAULT_BANNERS;
@@ -259,7 +267,7 @@ const HomeBanner = () => {
             <div className="relative z-10 bg-white border-b border-gray-100 shadow-xs">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6">
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 divide-y sm:divide-y-0 sm:divide-x divide-gray-100">
-                        {TRUST_ITEMS.map((item, idx) => {
+                        {trustItems.map((item, idx) => {
                             const IconComponent = item.icon;
                             return (
                                 <div

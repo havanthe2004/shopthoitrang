@@ -26,6 +26,9 @@ import { searchAPI } from '../../services/productService';
 
 interface IWebsiteConfig {
     siteName: string;
+    phone?: string;
+    email?: string;
+    address?: string;
 }
 
 const Header = () => {
@@ -72,6 +75,7 @@ const Header = () => {
     }, []);
 
     const siteName = config?.siteName || "FASHION STORE";
+    const hotline = config?.phone || "0796419162";
 
     // Lấy cây danh mục sản phẩm
     useEffect(() => {
@@ -150,9 +154,9 @@ const Header = () => {
                         <span>Miễn phí giao hàng cho đơn hàng từ <strong>499.000₫</strong> • Đổi trả 30 ngày</span>
                     </div>
                     <div className="hidden md:flex items-center gap-6 text-neutral-400 font-medium">
-                        <a href="tel:19006868" className="flex items-center gap-1.5 hover:text-white transition-colors">
+                        <a href={`tel:${hotline}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
                             <Phone className="w-3 h-3 text-red-500" />
-                            <span>Hotline: 1900 6868</span>
+                            <span>Hotline: {hotline}</span>
                         </a>
                         <span className="w-px h-3 bg-neutral-700" />
                         <Link to="/post" className="hover:text-white transition-colors">
@@ -180,12 +184,12 @@ const Header = () => {
                         </button>
 
                         {/* BRAND LOGO */}
-                        <Link to="/" className="flex items-center gap-3 group focus:outline-none">
-                            <div className="w-10 h-10 md:w-12 md:h-12 rounded-xl overflow-hidden border border-gray-200/80 shadow-sm bg-white p-0.5 group-hover:scale-105 group-hover:shadow-md transition-all duration-300">
+                        <Link to="/" className="flex items-center gap-3.5 group focus:outline-none shrink-0">
+                            <div className="w-14 h-14 md:w-16 md:h-16 lg:w-[72px] lg:h-[72px] rounded-full overflow-hidden border-2 border-gray-200/90 shadow-sm bg-white p-0.5 group-hover:scale-105 group-hover:shadow-md transition-all duration-300 shrink-0">
                                 <img
                                     src="/logo/logo.png"
                                     alt="Logo"
-                                    className="w-full h-full object-contain"
+                                    className="w-full h-full object-cover rounded-full"
                                     onError={(e) => {
                                         // Fallback nếu logo không tải được
                                         (e.target as HTMLElement).style.display = 'none';
@@ -196,19 +200,19 @@ const Header = () => {
                             <div className="flex flex-col">
                                 {siteName && typeof siteName === 'string' && siteName.includes(" ") ? (
                                     <div className="flex items-baseline gap-1.5">
-                                        <span className="text-xl md:text-2xl font-black tracking-tight text-neutral-900 uppercase group-hover:text-black transition-colors">
+                                        <span className="text-2xl md:text-3xl lg:text-[32px] font-black tracking-tight text-neutral-900 uppercase group-hover:text-black transition-colors leading-none">
                                             {siteName.split(" ")[0]}
                                         </span>
-                                        <span className="text-xl md:text-2xl font-extrabold tracking-tight text-red-600 uppercase">
+                                        <span className="text-2xl md:text-3xl lg:text-[32px] font-extrabold tracking-tight text-red-600 uppercase leading-none">
                                             {siteName.split(" ").slice(1).join(" ")}
                                         </span>
                                     </div>
                                 ) : (
-                                    <span className="text-xl md:text-2xl font-black tracking-tight text-neutral-900 uppercase group-hover:text-black transition-colors">
+                                    <span className="text-2xl md:text-3xl lg:text-[32px] font-black tracking-tight text-neutral-900 uppercase group-hover:text-black transition-colors leading-none">
                                         {siteName}
                                     </span>
                                 )}
-                                <span className="hidden sm:block text-[9px] font-bold text-gray-400 tracking-[0.25em] uppercase -mt-0.5">
+                                <span className="hidden sm:block text-[10px] md:text-xs font-bold text-gray-400 tracking-[0.25em] uppercase mt-1">
                                     Premium Store
                                 </span>
                             </div>
@@ -506,9 +510,11 @@ const Header = () => {
                     <div className="relative w-4/5 max-w-sm h-full bg-white shadow-2xl flex flex-col z-10 animate-in slide-in-from-left duration-300">
                         {/* Drawer Header */}
                         <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                                <img src="/logo/logo.png" alt="Logo" className="w-8 h-8 object-contain" />
-                                <span className="font-extrabold text-gray-900 tracking-tight text-base">
+                            <div className="flex items-center gap-3">
+                                <div className="w-11 h-11 rounded-xl overflow-hidden border border-gray-200 shadow-sm bg-white p-0.5 shrink-0">
+                                    <img src="/logo/logo.png" alt="Logo" className="w-full h-full object-contain" />
+                                </div>
+                                <span className="font-extrabold text-gray-900 tracking-tight text-base leading-tight">
                                     {siteName}
                                 </span>
                             </div>
@@ -580,6 +586,14 @@ const Header = () => {
                             >
                                 <span>Tin tức</span>
                             </Link>
+
+                            <a
+                                href={`tel:${hotline}`}
+                                className="flex items-center gap-2.5 p-3 rounded-xl font-bold text-sm text-red-600 hover:bg-red-50 transition-colors"
+                            >
+                                <Phone className="w-4 h-4" />
+                                <span>Hotline: {hotline}</span>
+                            </a>
                         </div>
 
                         {/* Drawer Footer (User info / Logout) */}

@@ -27,7 +27,7 @@ const Footer = () => {
 
     const siteName = config?.siteName || "FASHION STORE";
     const email = config?.email || "support@fashionstore.com";
-    const phone = config?.phone || "1900 6750";
+    const phone = config?.phone || "0796419162";
     const address = config?.address || "Đang cập nhật địa chỉ...";
  
 
@@ -86,7 +86,9 @@ const Footer = () => {
                         </div>
                         <div className="flex flex-col">
                             <span className="text-[10px] text-gray-500 uppercase font-bold tracking-widest">Hotline 24/7</span>
-                            <p className="text-lg font-black text-red-600 italic">{phone}</p>
+                            <a href={`tel:${phone}`} className="text-lg font-black text-red-600 italic hover:underline">
+                                {phone}
+                            </a>
                         </div>
                     </div>
                 </div>
