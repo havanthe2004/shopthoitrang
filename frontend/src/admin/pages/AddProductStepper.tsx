@@ -3,9 +3,9 @@ import { productService } from '../services/adminProductService';
 import { adminCategoryService } from '../services/adminCategoryService';
 import { useNavigate } from 'react-router-dom';
 import {
-  Upload, Plus, Trash2, ArrowRight, ArrowLeft,
-  CheckCircle2, Package, Palette, Layers, Sparkles, X, ChevronDown, Info
-} from 'lucide-react';
+   Plus, Trash2, ArrowRight, ArrowLeft,
+  CheckCircle2, Package, Palette, Layers, X, Info
+} from 'lucide-react';  
 
 const AddProductStepper = () => {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ const AddProductStepper = () => {
     fetchLevel2();
   }, []);
 
-  // --- 🔥 LOGIC VALIDATE TỪNG BƯỚC ---
+
   const validateStep = () => {
     if (step === 1) {
       if (!productData.name.trim()) { alert("Vui lòng nhập tên sản phẩm!"); return false; }
@@ -151,15 +151,15 @@ const AddProductStepper = () => {
         <div className="bg-white rounded-[40px] shadow-2xl border border-slate-100 overflow-hidden">
           <div className="p-10">
 
-            {step === 1 && (
+            {step === 1 && ( 
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex items-center gap-3 border-b pb-6 text-slate-800">
-                  <Sparkles size={24} className="text-indigo-600" />
+                  {/* <Sparkles size={24} className="text-indigo-600" /> */}
                   <h2 className="text-2xl font-black">Bước 1: Thông tin sản phẩm</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-medium">
                   <input type="text" placeholder="Tên sản phẩm *" className="w-full px-5 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500" value={productData.name} onChange={e => setProductData({ ...productData, name: e.target.value })} />
-                  <input type="text" placeholder="Slug (Đường dẫn)" className="w-full px-5 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500" value={productData.slug} onChange={e => setProductData({ ...productData, slug: e.target.value })} />
+                  <input type="text" placeholder="Slug " className="w-full px-5 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500" value={productData.slug} onChange={e => setProductData({ ...productData, slug: e.target.value })} />
                 </div>
                 <select className="w-full px-5 py-4 bg-slate-50 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold" value={productData.categoryId} onChange={e => setProductData({ ...productData, categoryId: e.target.value })}>
                   <option value="">-- Chọn danh mục * --</option>
@@ -174,7 +174,7 @@ const AddProductStepper = () => {
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="flex justify-between items-end border-b pb-6 text-slate-800">
                   <h2 className="text-2xl font-black">Bước 2: Màu sắc & Ảnh</h2>
-                  <button onClick={handleAddColor} className="text-indigo-600 font-bold text-xs uppercase bg-indigo-50 px-5 py-2.5 rounded-xl transition-all"><Plus size={16} /> Thêm màu</button>
+                  <button onClick={handleAddColor} className=" flex text-indigo-600 font-bold text-xs uppercase bg-indigo-50 px-5 py-2.5 rounded-xl transition-all"><Plus size={16} /> Thêm màu</button>
                 </div>
                 {colors.map((c, idx) => (
                   <div key={idx} className="p-8 border rounded-[32px] bg-slate-50/50 space-y-6 relative group">

@@ -28,8 +28,8 @@ const AdminManagement = () => {
             const res = await adminManagementService.getAll(params);
             setAdmins(res.data.items);
             setMeta(res.data.meta);
-        } catch (err) {
-            toast.error("Lỗi tải danh sách");
+        } catch (err: any) {
+            toast.error(err.response?.data?.message || "Lỗi tải danh sách");
         } finally { setLoading(false); }
     };
 
@@ -107,7 +107,7 @@ const AdminManagement = () => {
             toast.success("Đã cập nhật trạng thái");
             fetchAdmins();
         } catch (err: any) {
-            toast.error("Lỗi khi thay đổi trạng thái");
+            toast.error(err.response?.data?.message || "Lỗi khi thay đổi trạng thái");
         }
     };
 

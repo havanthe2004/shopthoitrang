@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import HomeBanner from '../components/home/HomeBanner';
 import { getCategoryTree } from '../services/categoryService';
 import CategorySection from '../components/product/CategorySection';
-import { getBestSellersAPI } from '../services/productService'; // Import API sản phẩm bán chạy
-import { postService } from '../services/postService'; // Import API tin tức
+import { getBestSellersAPI } from '../services/productService';
+import { postService } from '../services/postService';
 import HomeBestSeller from '../components/home/HomeBestSeller';
 import HomeLatestNews from '../components/home/HomeLatestNews';
+import { motion } from 'framer-motion';
 
 const HomePage = () => {
     const [categories, setCategories] = useState<any[]>([]);
@@ -16,7 +17,6 @@ const HomePage = () => {
     useEffect(() => {
         const fetchHomeData = async () => {
             try {
-                // Gọi tất cả dữ liệu cùng lúc để tối ưu hiệu năng
                 const [catData, prodData, postData] = await Promise.all([
                     getCategoryTree(),
                     getBestSellersAPI(),
@@ -25,8 +25,7 @@ const HomePage = () => {
 
                 setCategories(catData);
                 setBestSellers(prodData);
-                // Vì BE getLatestPosts trả về mảng trực tiếp [post1, post2, post3]
-                setLatestPosts(postData.data || postData); 
+                setLatestPosts(postData.data || postData);
             } catch (err) {
                 console.error("Lỗi tải dữ liệu trang chủ:", err);
             } finally {
@@ -37,30 +36,39 @@ const HomePage = () => {
         fetchHomeData();
     }, []);
 
-    if (loading) return null; // Bạn có thể thay bằng Loading Spinner nếu muốn
+    if (loading) return (
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-slate-300 border-t-slate-800 rounded-full animate-spin"></div>
+        </div>
+    );
 
     return (
-        <main className="min-h-screen ">
+        <motion.main
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.8 }}
+            className="min-h-screen bg-slate-50 text-slate-900 selection:bg-slate-900 selection:text-white overflow-hidden"
+        >
             {/* 1. Banner chính */}
             <HomeBanner />
 
-            {/* 2. Top Sản phẩm bán chạy (Hiện ngay sau Banner) */}
+            {/* 2. Top Sản phẩm bán chạy */}
             {bestSellers.length > 0 && (
                 <HomeBestSeller products={bestSellers} />
             )}
 
-            {/* 3. Danh sách sản phẩm theo danh mục (Áo, Quần...) */}
-            <div className="py-10">
+            {/* 3. Danh sách sản phẩm theo danh mục */}
+            <div className="py-20 bg-gradient-to-b from-slate-50 to-slate-100">
                 {categories.map((cat) => (
                     <CategorySection key={cat.categoryId} parentCategory={cat} />
                 ))}
             </div>
 
-            {/* 4. Tin tức mới nhất (Journal) */}
+            {/* 4. Tin tức mới nhất */}
             {latestPosts.length > 0 && (
                 <HomeLatestNews posts={latestPosts} />
             )}
-        </main>
+        </motion.main>
     );
 };
 

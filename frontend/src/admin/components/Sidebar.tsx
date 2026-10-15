@@ -4,7 +4,7 @@ import { adminAuthService } from '../services/adminAuthService';
 import {
     FaChartPie, FaList, FaBoxOpen, FaWarehouse,
     FaClipboardList, FaRegNewspaper, FaUsers,
-    FaUserTie, FaCog, FaUserCircle, FaSignOutAlt
+    FaUserTie, FaCog, FaUserCircle, FaSignOutAlt, FaComments
 } from 'react-icons/fa';
 
 const Sidebar = () => {
@@ -28,6 +28,7 @@ const Sidebar = () => {
         { title: 'Quản lý tin tức', path: '/admin/posts', icon: <FaRegNewspaper />, roles: ['admin', 'manager'] },
         { title: 'Quản lý người dùng', path: '/admin/users', icon: <FaUsers />, roles: ['admin', 'manager'] },
         { title: 'Quản lý nhân viên', path: '/admin/staffs', icon: <FaUserTie />, roles: ['admin', "manager"] },
+        { title: 'Tin nhắn', path: '/admin/chat', icon: <FaComments />, roles: ['admin', 'manager', 'staff'] },
     ];
 
     const settingItems = [

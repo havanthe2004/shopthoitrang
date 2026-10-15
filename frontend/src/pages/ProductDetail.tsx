@@ -163,14 +163,14 @@ const ProductDetail = () => {
                             {imageList.map((img, i) => (
                                 <div key={i} onClick={() => setMainImage(img)}
                                     className={`aspect-[3/4] w-16 md:w-full shrink-0 cursor-pointer overflow-hidden border ${mainImage === img ? 'border-black' : 'border-gray-100 opacity-60'}`}>
-                                    <img src={`${BASE_URL}/${img}`} className="w-full h-full object-cover" />
+                                    <img src={`${BASE_URL}/${img}`} className="w-full h-full object-contain" />
                                 </div>
                             ))}
                         </div>
 
                         <div className="flex-1 relative aspect-[3/4] bg-slate-50 overflow-hidden border border-slate-100">
                             <AnimatePresence mode="wait">
-                                <motion.img key={mainImage} initial={{ opacity: 0 }} animate={{ opacity: 1 }} src={`${BASE_URL}/${mainImage}`} className="w-full h-full object-cover" style={{ imageRendering: '-webkit-optimize-contrast' }} />
+                                <motion.img key={mainImage} initial={{ opacity: 0 }} animate={{ opacity: 1 }} src={`${BASE_URL}/${mainImage}`} className="w-full h-full object-contain" style={{ imageRendering: '-webkit-optimize-contrast' }} />
                             </AnimatePresence>
                         </div>
                     </div>
