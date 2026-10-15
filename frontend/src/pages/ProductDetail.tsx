@@ -497,8 +497,8 @@ const ProductDetail = () => {
                                 <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-100">
                                     <Truck className="w-4 h-4 text-slate-700 shrink-0 mt-0.5" />
                                     <div>
-                                        <p className="font-bold text-slate-800 text-[11px]">Freeship từ 499k</p>
-                                        <p className="text-[10px] text-slate-500">Giao nhanh toàn quốc</p>
+                                        <p className="font-bold text-slate-800 text-[11px]">Miễn phí giao hàng</p>
+                                        <p className="text-[10px] text-slate-500">Toàn quốc mọi đơn hàng</p>
                                     </div>
                                 </div>
                                 <div className="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50/70 border border-slate-100">

@@ -55,7 +55,7 @@ const HomeBanner = () => {
         {
             icon: Truck,
             title: "Giao hàng miễn phí",
-            desc: "Đơn hàng từ 499.000₫"
+            desc: "Miễn phí toàn quốc mọi đơn hàng"
         },
         {
             icon: RotateCcw,

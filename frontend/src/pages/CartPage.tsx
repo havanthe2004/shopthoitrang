@@ -32,7 +32,6 @@ import {
 import { getImageUrl } from '../utils/imageUrl';
 import { getWebsiteConfig } from '../services/configServise';
 
-const FREE_SHIPPING_THRESHOLD = 499000; // Mốc miễn phí giao hàng theo Header (499.000₫)
 
 const CartPage = () => {
     const { cartItems, loading } = useSelector((state: RootState) => state.cart);
@@ -214,12 +213,6 @@ const CartPage = () => {
         return new Intl.NumberFormat('vi-VN').format(amount) + '₫';
     };
 
-    // Tính phần trăm freeship
-    const freeShippingProgress = Math.min(
-        100,
-        Math.round((selectedTotal / FREE_SHIPPING_THRESHOLD) * 100)
-    );
-    const amountToFreeShipping = Math.max(0, FREE_SHIPPING_THRESHOLD - selectedTotal);
 
     // ==========================================
     // 1. TRƯỜNG HỢP CHƯA ĐĂNG NHẬP (GUEST VIEW)
@@ -576,36 +569,20 @@ const CartPage = () => {
                                     </span>
                                 </h2>
 
-                                {/* THANH TIẾN TRÌNH MIỄN PHÍ VẬN CHUYỂN (FREESHIP PROGRESS) */}
-                                <div className="mt-5 p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <Truck className="w-4 h-4 text-red-600" />
-                                        <p className="text-xs font-bold text-slate-800">
-                                            {freeShippingProgress >= 100 ? (
-                                                <span className="text-emerald-600 flex items-center gap-1 font-bold">
-                                                    <Check className="w-3.5 h-3.5" /> Bạn được Miễn phí giao hàng!
-                                                </span>
-                                            ) : (
-                                                <span>
-                                                    Mua thêm <strong className="text-red-600">{formatPrice(amountToFreeShipping)}</strong> để được Freeship
-                                                </span>
-                                            )}
+                                {/* ƯU ĐÃI MIỄN PHÍ VẬN CHUYỂN TOÀN QUỐC */}
+                                <div className="mt-5 p-4 rounded-2xl bg-emerald-50/80 border border-emerald-100 flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-xl bg-emerald-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                                        <Truck className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                        <p className="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
+                                            <span>Miễn phí giao hàng</span>
+                                            <Check className="w-3.5 h-3.5 text-emerald-600 stroke-[3]" />
+                                        </p>
+                                        <p className="text-[11px] text-emerald-700/90 mt-0.5">
+                                            Áp dụng miễn phí vận chuyển cho mọi đơn hàng toàn quốc
                                         </p>
                                     </div>
-
-                                    {/* Progress bar */}
-                                    <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full transition-all duration-500 rounded-full ${freeShippingProgress >= 100
-                                                ? 'bg-emerald-500'
-                                                : 'bg-gradient-to-r from-red-500 to-rose-600'
-                                                }`}
-                                            style={{ width: `${freeShippingProgress}%` }}
-                                        />
-                                    </div>
-                                    <p className="text-[10px] text-slate-400 mt-1.5 text-right font-medium">
-                                        Đơn từ 499.000₫ được miễn phí giao toàn quốc
-                                    </p>
                                 </div>
 
                                 {/* BẢNG TÍNH GIÁ TIỀN */}
@@ -619,15 +596,7 @@ const CartPage = () => {
 
                                     <div className="flex justify-between items-center text-slate-600">
                                         <span>Phí vận chuyển</span>
-                                        <span className="font-bold">
-                                            {selectedTotal === 0 ? (
-                                                <span className="text-slate-400">Chưa chọn</span>
-                                            ) : selectedTotal >= FREE_SHIPPING_THRESHOLD ? (
-                                                <span className="text-emerald-600 font-bold uppercase text-xs">Miễn phí</span>
-                                            ) : (
-                                                <span className="text-slate-700">Tính ở thanh toán</span>
-                                            )}
-                                        </span>
+                                        <span className="text-emerald-600 font-bold uppercase text-xs">Miễn phí</span>
                                     </div>
 
                                     <div className="flex justify-between items-center text-slate-600">

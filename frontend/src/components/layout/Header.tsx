@@ -151,7 +151,7 @@ const Header = () => {
                 <div className="max-w-7xl mx-auto flex items-center justify-between">
                     <div className="flex items-center gap-2 font-medium">
                         <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-                        <span>Miễn phí giao hàng cho đơn hàng từ <strong>499.000₫</strong> • Đổi trả 30 ngày</span>
+                        <span>Miễn phí giao hàng cho <strong>mọi đơn hàng toàn quốc</strong> • Đổi trả 30 ngày</span>
                     </div>
                     <div className="hidden md:flex items-center gap-6 text-neutral-400 font-medium">
                         <a href={`tel:${hotline}`} className="flex items-center gap-1.5 hover:text-white transition-colors">
