@@ -42,5 +42,7 @@ Thumbs.db
 coverage
 .next
 out
-
-uploads/.gitkeep
+# Uploads
+uploads/
+!uploads/.gitkeep
+!uploads/**/.gitkeep
