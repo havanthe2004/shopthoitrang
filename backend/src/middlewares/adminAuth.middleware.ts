@@ -19,21 +19,19 @@ export const verifyAdminToken = async (req: Request, res: Response, next: NextFu
 
         const decoded = jwt.verify(token, secret) as any;
 
-        // CẢI TIẾN 1: Kiểm tra decoded ngay lập tức trước khi truy vấn DB
-        // Đảm bảo tên field khớp với lúc bạn sign token (ở đây tôi dùng adminId)
+
         if (!decoded || !decoded.adminId || !decoded.role) {
             return res.status(403).json({ message: "Token quản trị không hợp lệ!" });
         }
 
         const adminRepo = AppDataSource.getRepository(Admin);
         
-        // CẢI TIẾN 2: Sử dụng đúng field adminId từ decoded
         const admin = await adminRepo.findOne({
             where: { adminId: decoded.adminId },
             select: {
                 adminId: true,
                 isActive: true,
-                role: true // Nên lấy role từ DB để đảm bảo tính thời gian thực
+                role: true
             }
         });
 
@@ -41,7 +39,7 @@ export const verifyAdminToken = async (req: Request, res: Response, next: NextFu
             return res.status(401).json({ message: "Người dùng không tồn tại!" });
         }
 
-        // CẢI TIẾN 3: Kiểm tra trạng thái hoạt động
+       
         if (!admin.isActive) {
             return res.status(403).json({
                 message: "Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Admin!",
@@ -49,7 +47,7 @@ export const verifyAdminToken = async (req: Request, res: Response, next: NextFu
             });
         }
 
-        // CẢI TIẾN 4: Gán admin lấy từ DB vào req thay vì chỉ lấy từ decoded (Token cũ có thể sai Role)
+
         (req as any).admin = admin;
 
         next();

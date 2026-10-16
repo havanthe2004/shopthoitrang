@@ -5,36 +5,36 @@ import { AdminLog } from "../models/AdminLog";
 import bcrypt from "bcryptjs";
 
 export class AdminManagementController {
-  
+
     private static async saveLog(adminId: number, action: string) {
         const logRepo = AppDataSource.getRepository(AdminLog);
         await logRepo.save(logRepo.create({ admin: { adminId }, action }));
     }
 
-    
+
     static async getAdmins(req: Request, res: Response) {
         try {
             const page = parseInt(req.query.page as string) || 1;
             const limit = parseInt(req.query.limit as string) || 10;
             const search = (req.query.search as string) || "";
             const roleFilter = req.query.role as string;
-            const statusFilter = req.query.status as string; 
+            const statusFilter = req.query.status as string;
 
             const adminRepo = AppDataSource.getRepository(Admin);
             const query = adminRepo.createQueryBuilder("admin")
                 .select(["admin.adminId", "admin.username", "admin.role", "admin.phone", "admin.isActive", "admin.avatar"]);
 
-          
+
             if (search) {
                 query.andWhere("(admin.username LIKE :search OR admin.phone LIKE :search)", { search: `%${search}%` });
             }
 
-          
+
             if (roleFilter) {
                 query.andWhere("admin.role = :role", { role: roleFilter });
             }
 
-            
+
             if (statusFilter) {
                 const isActive = statusFilter === 'active';
                 query.andWhere("admin.isActive = :isActive", { isActive });
@@ -59,16 +59,19 @@ export class AdminManagementController {
         }
     }
 
-   
+
     static async createAdmin(req: Request, res: Response) {
         try {
             const { username, password, role, phone } = req.body;
             const performerId = (req as any).admin.adminId;
+            const performerRole = (req as any).admin.role;
             const adminRepo = AppDataSource.getRepository(Admin);
 
             const existing = await adminRepo.findOneBy({ username });
             if (existing) return res.status(400).json({ message: "Username đã tồn tại" });
-
+            if ((performerRole === "manager" || performerRole === "staff") && role === "admin") {
+                return res.status(403).json({ message: "Quản lý không thể tạo tài khoản ADMIN" });
+            }
             const hashedPassword = await bcrypt.hash(password, 10);
             const newAdmin = adminRepo.create({
                 username,
@@ -87,18 +90,20 @@ export class AdminManagementController {
         }
     }
 
-   
+
     static async updateAdmin(req: Request, res: Response) {
         try {
             const { id } = req.params;
             const { role, phone, isActive } = req.body;
             const performerId = (req as any).admin.adminId;
+            const performerRole = (req as any).admin.role;
             const adminRepo = AppDataSource.getRepository(Admin);
-
             const admin = await adminRepo.findOneBy({ adminId: Number(id) });
             if (!admin) return res.status(404).json({ message: "Không tìm thấy nhân viên" });
 
-           
+            if (performerRole === "manager" || performerRole ==="staff") {
+                return res.status(403).json({ message: "Chỉ có ADMIN mới có quyền sửa!" });
+            }
             let changes = [];
             if (role && role !== admin.role) {
                 changes.push(`Role: ${admin.role} -> ${role}`);
@@ -121,13 +126,13 @@ export class AdminManagementController {
     static async toggleStatus(req: Request, res: Response) {
         try {
             const { id } = req.params;
-            const performer = (req as any).admin; 
+            const performer = (req as any).admin;
             const adminRepo = AppDataSource.getRepository(Admin);
 
             const targetAdmin = await adminRepo.findOneBy({ adminId: Number(id) });
             if (!targetAdmin) return res.status(404).json({ message: "Không tìm thấy" });
 
-            
+
             if (targetAdmin.adminId === performer.adminId) {
                 return res.status(403).json({ message: "Bạn không thể tự vô hiệu hoá chính mình" });
             }

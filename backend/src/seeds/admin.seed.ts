@@ -12,15 +12,15 @@ export const seedAdmin = async () => {
             console.log(" Chưa có tài khoản Admin. Đang khởi tạo tài khoản mặc định...");
 
 
-            const hashedPassword = await bcrypt.hash("123456", 10);
+            const hashedPassword = await bcrypt.hash("@Admin123", 10);
 
             const defaultAdmin = adminRepo.create({
                 username: "admin",
                 password: hashedPassword,
-                role: "admin", 
-                phone: "0123456789",
+                role: "admin",
+                phone: "0796419162",
                 isActive: true,
-                avatar: "" 
+                avatar: ""
             });
 
             await adminRepo.save(defaultAdmin);

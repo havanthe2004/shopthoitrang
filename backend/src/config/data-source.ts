@@ -17,10 +17,11 @@ import { ProductColor } from "../models/ProductColor";
 import { ProductVariant } from "../models/ProductVariant";
 import { RefreshToken } from "../models/RefreshToken";
 import { User } from "../models/User";
-import { Voucher } from "../models/Voucher";
 import { WebsiteConfig } from "../models/WebsiteConfig";
 import { AdminRefreshToken } from "../models/AdminRefreshToken";
 import { Otp } from "../models/Otp";
+import { Conversation } from "../models/Conversation";
+import { Message } from "../models/Message";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -29,12 +30,13 @@ export const AppDataSource = new DataSource({
     type: "mysql",
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT),
-    username: process.env.DB_USERNAME, 
+    username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
     synchronize: true,
     logging: false,
     entities: [Product, Address, Cart, CartItem, Category, Order, Admin, AdminLog, Banner, OrderItem,
-        Post, ProductImage, ProductVariant, ProductColor, RefreshToken, User, Voucher, WebsiteConfig, AdminRefreshToken, Otp
+        Post, ProductImage, ProductVariant, ProductColor, RefreshToken, User, WebsiteConfig, AdminRefreshToken, Otp,
+        Conversation, Message
     ],
 });

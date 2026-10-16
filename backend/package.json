@@ -13,6 +13,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -25,6 +26,7 @@
     "nodemailer": "^8.0.1",
     "qs": "^6.15.0",
     "reflect-metadata": "^0.2.2",
+    "socket.io": "^4.8.3",
     "typeorm": "^0.3.28"
   },
   "devDependencies": {
@@ -38,6 +40,7 @@
     "@types/node": "^25.2.0",
     "@types/nodemailer": "^7.0.9",
     "@types/qs": "^6.15.0",
+    "@types/socket.io": "^3.0.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.9.3"
   }

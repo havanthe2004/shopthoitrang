@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import path from 'path';
+import http from 'http';
+import { Server } from 'socket.io';
 import { seedAdmin } from "./seeds/admin.seed";
 import productRoutes from "./routes/product.routes";
 import { AppDataSource } from "./config/data-source";
@@ -11,6 +13,8 @@ import cartRoutes from "./routes/cart.routes";
 import orderRoutes from "./routes/order.routes";
 import bannerRoutes from "./routes/banner.routes"
 import postRotes from "./routes/post.routes"
+import chatRoutes from "./routes/chat.routes";
+import { initializeSocket } from "./socket/chat.socket";
 
 
 // import của admin
@@ -28,6 +32,12 @@ import adminPostRoutes from './routes/adminPost.routes'
 
 import cors from 'cors';
 const app = express();
+const httpServer = http.createServer(app);
+const io = new Server(httpServer, {
+    cors: { origin: "*" }
+});
+initializeSocket(io);
+
 app.use(express.json());
 app.use("/uploads", express.static(path.join(process.cwd(), "uploads")));
 
@@ -44,6 +54,7 @@ app.use("/api/cart", cartRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/banners",bannerRoutes );
 app.use("/api/posts",postRotes );
+app.use("/api/chat", chatRoutes);
 
 //admin
 app.use('/api/admin/auth', adminAuthRoutes);
@@ -65,7 +76,7 @@ AppDataSource.initialize()
     .then(async () => {
         console.log("✅ Kết nối databse thành công!");
         await seedAdmin();
-        app.listen(process.env.PORT, () => {
+        httpServer.listen(process.env.PORT, () => {
             console.log(` Server đang chạy ở ${process.env.PORT} `);
         });
     })
