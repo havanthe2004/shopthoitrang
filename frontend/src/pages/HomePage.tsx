@@ -58,7 +58,7 @@ const HomePage = () => {
             )}
 
             {/* 3. Danh sách sản phẩm theo danh mục */}
-            <div className="py-20 bg-gradient-to-b from-slate-50 to-slate-100">
+            <div className="py-6 sm:py-10 bg-white">
                 {categories.map((cat) => (
                     <CategorySection key={cat.categoryId} parentCategory={cat} />
                 ))}

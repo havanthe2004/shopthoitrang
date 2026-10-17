@@ -167,7 +167,7 @@ const Header = () => {
             </div>
 
             {/* 2. MAIN HEADER (Logo, Search, User, Cart) */}
-            <div className={`bg-white/95 backdrop-blur-md transition-all duration-300 border-b border-gray-100 ${
+            <div className={`relative z-40 bg-white/95 backdrop-blur-md transition-all duration-300 border-b border-gray-100 ${
                 scrolled ? 'shadow-md py-2.5' : 'py-3.5'
             }`}>
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between gap-4">
@@ -220,7 +220,7 @@ const Header = () => {
                     </div>
 
                     {/* SEARCH BAR (DESKTOP) */}
-                    <div className="hidden md:block flex-1 max-w-xl mx-4 lg:mx-8 relative" ref={searchRef}>
+                    <div className="hidden md:block flex-1 max-w-xl mx-4 lg:mx-8 relative z-50" ref={searchRef}>
                         <form onSubmit={handleSearchSubmit} className="relative">
                             <div className="relative flex items-center">
                                 <Search className="absolute left-4 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -427,12 +427,53 @@ const Header = () => {
                                 </button>
                             )}
                         </form>
+                        {/* MOBILE SUGGESTIONS DROPDOWN */}
+                        {showSuggestions && (
+                            <div className="mt-2 bg-white border border-gray-100 shadow-xl rounded-xl overflow-hidden max-h-[280px] overflow-y-auto divide-y divide-gray-50">
+                                {isSearching ? (
+                                    <div className="p-4 text-center text-gray-500 text-xs flex items-center justify-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin text-red-500" />
+                                        <span>Đang tìm kiếm...</span>
+                                    </div>
+                                ) : suggestions.length > 0 ? (
+                                    suggestions.map((p) => (
+                                        <div
+                                            key={p.productId}
+                                            onClick={() => {
+                                                navigate(`/product/${p.slug}`);
+                                                setShowSuggestions(false);
+                                                setIsMobileSearchOpen(false);
+                                                setSearchKeyword('');
+                                            }}
+                                            className="flex items-center gap-3 p-2.5 hover:bg-red-50/60 cursor-pointer transition-colors"
+                                        >
+                                            <img
+                                                src={p.colors?.[0]?.images?.[0]?.url ? getImageUrl(p.colors[0].images[0].url) : '/placeholder.jpg'}
+                                                className="w-10 h-10 object-cover rounded-lg border border-gray-100 shrink-0"
+                                                alt={p.name}
+                                            />
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-xs font-semibold text-gray-900 truncate">{p.name}</h4>
+                                                <span className="text-xs font-bold text-red-600">
+                                                    {new Intl.NumberFormat('vi-VN').format(p.variants?.[0]?.price || 0)}₫
+                                                </span>
+                                            </div>
+                                            <ChevronRight className="w-4 h-4 text-gray-300" />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-4 text-center text-xs text-gray-400">
+                                        Không tìm thấy sản phẩm
+                                    </div>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>
 
             {/* 3. NAVIGATION BAR (DESKTOP) */}
-            <nav className="hidden md:block bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+            <nav className="relative z-20 hidden md:block bg-white border-b border-gray-100 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
                 <div className="max-w-7xl mx-auto px-6">
                     <ul className="flex items-center justify-center gap-8 lg:gap-10 text-[13px] font-bold tracking-wider uppercase text-gray-800">
                         <li>
