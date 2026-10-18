@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { adminUserService } from '../services/adminUserService';
 import { 
-    Search, User, UserX, UserCheck, Eye, ChevronLeft, 
-    ChevronRight, X, MapPin, Mail, Phone, Calendar, Hash, ShieldAlert
+    Search, User, UserX, UserCheck, Eye, 
+    X, MapPin, Mail, Phone, Calendar, ShieldAlert
 } from 'lucide-react';
 import { toast } from 'react-toastify';
+import Pagination from '../components/Pagination';
 
 const UserManagement = () => {
     const BASE_URL = import.meta.env.VITE_API_KEY ;
@@ -157,27 +158,13 @@ const UserManagement = () => {
                 </table>
             </div>
 
-            {/* Pagination lồng số trang (Giống Stock/Order) */}
-            <div className="p-5 flex items-center justify-between mt-4">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Trang {params.page} / {meta.totalPages}</span>
-                <div className="flex items-center gap-1">
-                    <button className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent" disabled={params.page === 1} onClick={() => handlePageChange(params.page - 1)}>
-                        <ChevronLeft size={18} />
-                    </button>
-                    {[...Array(meta.totalPages)].map((_, i) => {
-                        const page = i + 1;
-                        if (page !== 1 && page !== meta.totalPages && Math.abs(page - params.page) > 1) return null;
-                        return (
-                            <button key={page} onClick={() => handlePageChange(page)} className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${params.page === page ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-600' : 'text-slate-500 hover:bg-white border border-slate-200'}`}>
-                                {page}
-                            </button>
-                        );
-                    })}
-                    <button className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent" disabled={params.page === meta.totalPages} onClick={() => handlePageChange(params.page + 1)}>
-                        <ChevronRight size={18} />
-                    </button>
-                </div>
-            </div>
+            {/* Phân trang đồng nhất */}
+            <Pagination
+                currentPage={params.page}
+                totalPages={meta.totalPages}
+                onPageChange={handlePageChange}
+                itemName="khách hàng"
+            />
 
             {/* MODAL CHI TIẾT NGƯỜI DÙNG */}
             {isDetailOpen && selectedUser && (

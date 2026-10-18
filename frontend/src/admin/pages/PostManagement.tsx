@@ -3,8 +3,9 @@ import { adminPostService } from '../services/adminPostService';
 import { toast } from 'react-toastify';
 import {
     Search, FileText, Edit3, Trash2, Save, X,
-    Image as ImageIcon, Calendar, ChevronLeft, ChevronRight, Plus
+    Image as ImageIcon, Calendar, Plus
 } from 'lucide-react';
+import Pagination from '../components/Pagination';
 
 const PostManagement = () => {
     const BASE_URL = import.meta.env.VITE_API_KEY;
@@ -182,38 +183,13 @@ const PostManagement = () => {
                 </table>
             </div>
 
-            {/* Pagination Section */}
-            <div className="p-5 flex items-center justify-between mt-4">
-                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Trang {params.page} / {meta.totalPages}</span>
-                <div className="flex items-center gap-1">
-                    <button
-                        className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
-                        disabled={params.page === 1}
-                        onClick={() => setParams({ ...params, page: params.page - 1 })}
-                    >
-                        <ChevronLeft size={18} />
-                    </button>
-                    {[...Array(meta.totalPages)].map((_, i) => {
-                        const page = i + 1;
-                        return (
-                            <button
-                                key={page}
-                                onClick={() => setParams({ ...params, page })}
-                                className={`w-9 h-9 rounded-xl text-xs font-black transition-all ${params.page === page ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 border-indigo-600' : 'text-slate-500 hover:bg-white border border-slate-200'}`}
-                            >
-                                {page}
-                            </button>
-                        );
-                    })}
-                    <button
-                        className="p-2 text-slate-500 hover:bg-white rounded-xl disabled:opacity-20 transition-all shadow-sm border border-transparent"
-                        disabled={params.page === meta.totalPages}
-                        onClick={() => setParams({ ...params, page: params.page + 1 })}
-                    >
-                        <ChevronRight size={18} />
-                    </button>
-                </div>
-            </div>
+            {/* Phân trang đồng nhất */}
+            <Pagination
+                currentPage={params.page}
+                totalPages={meta.totalPages}
+                onPageChange={(page) => setParams({ ...params, page })}
+                itemName="bài viết"
+            />
 
             {/* Modal Viết bài / Sửa bài */}
             {isModalOpen && (

@@ -172,6 +172,7 @@ const OrderManagement = () => {
                 currentPage={params.page}
                 totalPages={meta.totalPages}
                 onPageChange={handlePageChange}
+                itemName="đơn hàng"
             />
 
             {/* MODAL CHI TIẾT */}

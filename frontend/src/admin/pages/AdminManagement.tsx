@@ -231,22 +231,13 @@ const AdminManagement = () => {
                         ))}
                     </tbody>
                 </table>
-                <div className="flex justify-between items-center px-6 py-4 border-t border-slate-100 bg-white">
-
-                    {/* Thông tin */}
-                    <div className="text-sm text-slate-500 font-medium">
-                        Trang <span className="font-bold text-slate-700">{params.page}</span> / {meta.totalPages}
-                    </div>
-
-                    {/* Nút phân trang */}
-
-                    <Pagination
-                        currentPage={params.page}
-                        totalPages={meta.totalPages}
-                        onPageChange={handlePageChange}
-                    />
-                   
-                </div>
+                {/* Phân trang đồng nhất */}
+                <Pagination
+                    currentPage={params.page}
+                    totalPages={meta.totalPages}
+                    onPageChange={handlePageChange}
+                    itemName="nhân sự"
+                />
             </div>
 
             {/* Modal Sửa/Thêm */}

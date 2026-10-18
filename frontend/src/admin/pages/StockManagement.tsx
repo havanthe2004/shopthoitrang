@@ -242,7 +242,9 @@ const StockManagement = () => {
             <Pagination
                 currentPage={params.page}
                 totalPages={meta.totalPages}
-                onPageChange={handlePageChange} />
+                onPageChange={handlePageChange}
+                itemName="mục tồn kho"
+            />
 
         </div>
     );

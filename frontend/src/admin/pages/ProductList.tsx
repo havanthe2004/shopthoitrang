@@ -233,7 +233,9 @@ const ProductList = () => {
           <Pagination
             currentPage={meta.currentPage}
             totalPages={meta.totalPages}
-            onPageChange={(newPage) => setParams({ ...params, page: newPage })} />
+            onPageChange={(newPage) => setParams({ ...params, page: newPage })}
+            itemName="sản phẩm"
+          />
         </div>
       </div>
     </div >
