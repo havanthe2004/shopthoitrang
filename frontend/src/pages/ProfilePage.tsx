@@ -158,17 +158,13 @@ const ProfilePage = () => {
                                     <h3 className="text-sm font-black text-gray-900 truncate">
                                         {displayUser?.name || "Khách hàng"}
                                     </h3>
-                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-red-50 text-red-600 border border-red-100">
-                                        <Sparkles className="w-2.5 h-2.5" />
-                                        VIP
-                                    </span>
                                 </div>
                                 <p className="text-xs text-gray-400 truncate mt-0.5">
                                     {displayUser?.email}
                                 </p>
-                                <p className="text-[11px] font-semibold text-emerald-600 mt-1">
+                                {/* <p className="text-[11px] font-semibold text-emerald-600 mt-1">
                                     ● Tài khoản đã kích hoạt
-                                </p>
+                                </p> */}
                             </div>
                         </div>
 
@@ -182,27 +178,24 @@ const ProfilePage = () => {
                                             key={item.id}
                                             type="button"
                                             onClick={() => setActiveTab(item.id as any)}
-                                            className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all duration-200 text-left group ${
-                                                isActive
-                                                    ? 'bg-neutral-900 text-white shadow-md shadow-neutral-900/10'
-                                                    : 'bg-white text-gray-700 hover:bg-red-50/60 hover:text-red-600'
-                                            }`}
+                                            className={`w-full flex items-center justify-between p-3.5 rounded-2xl transition-all duration-200 text-left group ${isActive
+                                                ? 'bg-neutral-900 text-white shadow-md shadow-neutral-900/10'
+                                                : 'bg-white text-gray-700 hover:bg-red-50/60 hover:text-red-600'
+                                                }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-xl transition-colors ${
-                                                    isActive
-                                                        ? 'bg-white/15 text-white'
-                                                        : 'bg-gray-100 text-gray-500 group-hover:bg-red-100 group-hover:text-red-600'
-                                                }`}>
+                                                <div className={`p-2 rounded-xl transition-colors ${isActive
+                                                    ? 'bg-white/15 text-white'
+                                                    : 'bg-gray-100 text-gray-500 group-hover:bg-red-100 group-hover:text-red-600'
+                                                    }`}>
                                                     {item.icon}
                                                 </div>
                                                 <div>
                                                     <p className="text-xs md:text-sm font-bold tracking-tight">
                                                         {item.label}
                                                     </p>
-                                                    <p className={`text-[11px] font-medium transition-colors ${
-                                                        isActive ? 'text-neutral-400' : 'text-gray-400 group-hover:text-red-400'
-                                                    }`}>
+                                                    <p className={`text-[11px] font-medium transition-colors ${isActive ? 'text-neutral-400' : 'text-gray-400 group-hover:text-red-400'
+                                                        }`}>
                                                         {item.desc}
                                                     </p>
                                                 </div>
@@ -210,15 +203,13 @@ const ProfilePage = () => {
 
                                             <div className="flex items-center gap-2">
                                                 {item.badge !== undefined && (
-                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                                        isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
-                                                    }`}>
+                                                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isActive ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600'
+                                                        }`}>
                                                         {item.badge}
                                                     </span>
                                                 )}
-                                                <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${
-                                                    isActive ? 'text-white translate-x-0.5' : 'text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5'
-                                                }`} />
+                                                <ChevronRight className={`w-4 h-4 transition-transform duration-200 ${isActive ? 'text-white translate-x-0.5' : 'text-gray-300 group-hover:text-red-500 group-hover:translate-x-0.5'
+                                                    }`} />
                                             </div>
                                         </button>
                                     );
