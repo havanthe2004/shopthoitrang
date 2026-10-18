@@ -5,8 +5,8 @@ import Header from '../components/Header';
 
 const AdminLayout = () => {
     return (
-        <div className="flex min-h-screen bg-cover bg-center bg-fixed bg-no-repeat"
-            style={{ backgroundImage: "url('/public/'background/background.jpg)" }}
+        <div className="flex min-h-screen bg-cover bg-center bg-fixed bg-no-repeat bg-slate-100"
+            style={{ backgroundImage: "url('/background/background.jpg')" }}
         >
             {/* Sidebar Cố định bên trái */}
             <Sidebar />
