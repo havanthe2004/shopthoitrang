@@ -67,7 +67,6 @@ export class AdminAuthController {
                 adminInfo: {
                     adminId: admin.adminId,
                     username: admin.username,
-                    role: admin.role,
                     avatar: admin.avatar,
                 }
             });

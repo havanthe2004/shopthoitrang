@@ -3,6 +3,8 @@ import { AppDataSource } from "../config/data-source";
 import { Admin } from "../models/Admin";
 import { User } from "../models/User";
 import { Order } from "../models/Order";
+import { ProductColor } from "../models/ProductColor";
+import { In } from "typeorm";
 
 export class AdminDashboardController {
     static getDashboardData = async (req: Request, res: Response) => {
@@ -72,8 +74,10 @@ export class AdminDashboardController {
                 .innerJoin("order.items", "item")
                 .innerJoin("item.variant", "variant")
                 .innerJoin("variant.product", "product")
+                .leftJoin("product.category", "category")
                 .select("product.productId", "productId")
                 .addSelect("product.name", "productName")
+                .addSelect("category.name", "categoryName")
                 .addSelect("SUM(item.quantity)", "totalSold")
                 .addSelect("SUM(item.price * item.quantity)", "totalRevenue")
                 .where("order.status = :status", { status: "completed" });
@@ -91,9 +95,23 @@ export class AdminDashboardController {
             const topProducts = await topQuery
                 .groupBy("product.productId")
                 .addGroupBy("product.name")
+                .addGroupBy("category.name")
                 .orderBy("totalSold", "DESC")
-                .limit(5)
+                .limit(6)
                 .getRawMany();
+
+            if (topProducts && topProducts.length > 0) {
+                const productIds = topProducts.map(p => Number(p.productId));
+                const colorRepo = AppDataSource.getRepository(ProductColor);
+                const colors = await colorRepo.find({
+                    where: { product: { productId: In(productIds) } },
+                    relations: ['images', 'product']
+                });
+                for (const p of topProducts) {
+                    const foundColor = colors.find(c => c.product?.productId === Number(p.productId) && c.images && c.images.length > 0);
+                    p.imageUrl = foundColor?.images[0]?.url || null;
+                }
+            }
 
             return res.status(200).json({
                 success: true,

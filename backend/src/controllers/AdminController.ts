@@ -69,7 +69,10 @@ export class AdminManagementController {
 
             const existing = await adminRepo.findOneBy({ username });
             if (existing) return res.status(400).json({ message: "Username đã tồn tại" });
-            if ((performerRole === "manager" || performerRole === "staff") && role === "admin") {
+            if (performerRole === "staff") {
+                return res.status(403).json({ message: "Nhân viên không có quyền tạo tài khoản!" });
+            }
+            if (performerRole === "manager" && role === "admin") {
                 return res.status(403).json({ message: "Quản lý không thể tạo tài khoản ADMIN" });
             }
             const hashedPassword = await bcrypt.hash(password, 10);
@@ -133,6 +136,9 @@ export class AdminManagementController {
             if (!targetAdmin) return res.status(404).json({ message: "Không tìm thấy" });
 
 
+            if (performer.role === "staff") {
+                return res.status(403).json({ message: "Nhân viên không có quyền thay đổi trạng thái!" });
+            }
             if (targetAdmin.adminId === performer.adminId) {
                 return res.status(403).json({ message: "Bạn không thể tự vô hiệu hoá chính mình" });
             }

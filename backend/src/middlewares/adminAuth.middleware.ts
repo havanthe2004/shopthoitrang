@@ -56,3 +56,16 @@ export const verifyAdminToken = async (req: Request, res: Response, next: NextFu
         return res.status(401).json({ message: "Phiên đăng nhập quản trị hết hạn!" });
     }
 };
+
+export const requireRoles = (...allowedRoles: string[]) => {
+    return (req: Request, res: Response, next: NextFunction) => {
+        const admin = (req as any).admin;
+        if (!admin || !admin.role) {
+            return res.status(403).json({ message: "Không có quyền truy cập!" });
+        }
+        if (!allowedRoles.includes(admin.role)) {
+            return res.status(403).json({ message: "Bạn không có quyền thực hiện hành động này!" });
+        }
+        next();
+    };
+};

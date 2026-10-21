@@ -1,20 +1,20 @@
 import { Router } from "express";
 import { SystemConfigController } from "../controllers/SystemConfigController";
-import { verifyAdminToken } from "../middlewares/adminAuth.middleware";
+import { verifyAdminToken, requireRoles } from "../middlewares/adminAuth.middleware";
 import { uploadBanner } from "../config/uploaders";
 
 const router = Router();
-//logs
-router.get("/logs", verifyAdminToken, SystemConfigController.getLogAdmin
-);
-// Website Config
+// Website Config - public GET for storefront
 router.get("/website", SystemConfigController.getWebsiteConfig);
-router.put("/website", verifyAdminToken, SystemConfigController.updateWebsiteConfig);
+
+// All other system configuration routes require 'admin' role
+router.get("/logs", verifyAdminToken, requireRoles("admin"), SystemConfigController.getLogAdmin);
+router.put("/website", verifyAdminToken, requireRoles("admin"), SystemConfigController.updateWebsiteConfig);
 
 // Banners
-router.get("/banners", verifyAdminToken, SystemConfigController.getBanners);
-router.post("/banners", verifyAdminToken, uploadBanner.single("banner"), SystemConfigController.addBanner);
-router.delete("/banners/:id", verifyAdminToken, SystemConfigController.deleteBanner);
-router.patch("/banners/:id/toggle", verifyAdminToken, SystemConfigController.toggleBannerStatus);
+router.get("/banners", verifyAdminToken, requireRoles("admin"), SystemConfigController.getBanners);
+router.post("/banners", verifyAdminToken, requireRoles("admin"), uploadBanner.single("banner"), SystemConfigController.addBanner);
+router.delete("/banners/:id", verifyAdminToken, requireRoles("admin"), SystemConfigController.deleteBanner);
+router.patch("/banners/:id/toggle", verifyAdminToken, requireRoles("admin"), SystemConfigController.toggleBannerStatus);
 
 export default router;
