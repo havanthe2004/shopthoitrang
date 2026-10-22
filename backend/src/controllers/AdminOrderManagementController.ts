@@ -2,8 +2,19 @@ import { Request, Response } from "express";
 import { AppDataSource } from "../config/data-source";
 import { Order } from "../models/Order";
 import { AdminLog } from "../models/AdminLog";
+import { notifyOrderStatusChanged } from "../socket/chat.socket";
 
 export class OrderManagementController {
+    static async getPendingOrdersCount(req: Request, res: Response) {
+        try {
+            const orderRepo = AppDataSource.getRepository(Order);
+            const count = await orderRepo.count({ where: { status: "pending" } });
+            return res.json({ count });
+        } catch (error) {
+            return res.status(500).json({ count: 0 });
+        }
+    }
+
     private static ORDER_FLOW: { [key: string]: string[] } = {
         pending: ["approved", "cancelled"], // Chờ xác thực -> Xác thực hoặc Hủy
         approved: ["shipping"],             // Xác thực -> Vận chuyển
@@ -96,6 +107,12 @@ export class OrderManagementController {
 
             await orderRepo.save(order);
             await OrderManagementController.saveLog(adminId, `Đơn #${id}: Trạng thái ${oldStatus} -> ${newStatus}`);
+
+            notifyOrderStatusChanged({
+                orderId: Number(id),
+                status: newStatus,
+                oldStatus
+            });
 
             return res.json({ message: "Cập nhật đơn hàng thành công", order });
         } catch (error) { return res.status(500).json({ message: "Lỗi server" }); }

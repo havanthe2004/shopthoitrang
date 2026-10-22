@@ -83,12 +83,74 @@ export class ChatController {
 
                 conversation = new Conversation();
                 conversation.user = user;
+                conversation.chatMode = "ai";
+                await conversationRepo.save(conversation);
+            } else if (!conversation.chatMode) {
+                conversation.chatMode = "ai";
                 await conversationRepo.save(conversation);
             }
 
             res.json(conversation);
         } catch (error) {
             console.error("Lỗi getOrCreateUserConversation:", error);
+            res.status(500).json({ message: "Lỗi server" });
+        }
+    }
+
+    // Cập nhật chế độ chat (ai / staff)
+    static async switchChatMode(req: Request, res: Response) {
+        try {
+            const conversationId = Number(req.params.conversationId);
+            const { chatMode } = req.body;
+            if (!["ai", "staff"].includes(chatMode)) {
+                return res.status(400).json({ message: "Chế độ chat không hợp lệ (ai hoặc staff)" });
+            }
+
+            const conversationRepo = AppDataSource.getRepository(Conversation);
+            const conversation = await conversationRepo.findOneBy({ id: conversationId });
+            if (!conversation) return res.status(404).json({ message: "Không tìm thấy hội thoại" });
+
+            conversation.chatMode = chatMode;
+            await conversationRepo.save(conversation);
+
+            return res.json({ success: true, chatMode: conversation.chatMode });
+        } catch (error) {
+            console.error("Lỗi switchChatMode:", error);
+            res.status(500).json({ message: "Lỗi server" });
+        }
+    }
+
+    // Đánh dấu đã đọc tin nhắn
+    static async markAsRead(req: Request, res: Response) {
+        try {
+            const conversationId = Number(req.params.conversationId);
+            const { readerType } = req.body; // 'admin' | 'user'
+
+            const conversationRepo = AppDataSource.getRepository(Conversation);
+            const messageRepo = AppDataSource.getRepository(Message);
+
+            const conversation = await conversationRepo.findOneBy({ id: conversationId });
+            if (!conversation) return res.status(404).json({ message: "Không tìm thấy hội thoại" });
+
+            if (readerType === "admin") {
+                conversation.unreadAdminCount = 0;
+                await conversationRepo.save(conversation);
+                await messageRepo.update(
+                    { conversation: { id: conversationId }, senderType: "user", isRead: false },
+                    { isRead: true }
+                );
+            } else {
+                conversation.unreadUserCount = 0;
+                await conversationRepo.save(conversation);
+                await messageRepo.update(
+                    { conversation: { id: conversationId }, senderType: "admin", isRead: false },
+                    { isRead: true }
+                );
+            }
+
+            return res.json({ success: true });
+        } catch (error) {
+            console.error("Lỗi markAsRead:", error);
             res.status(500).json({ message: "Lỗi server" });
         }
     }

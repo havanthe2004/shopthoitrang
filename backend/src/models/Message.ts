@@ -23,6 +23,22 @@ export class Message {
     @Column({ type: "text" })
     content!: string;
 
+    @Column({
+        type: "varchar",
+        length: 20,
+        default: "text"
+    })
+    messageType!: "text" | "product";
+
+    @Column({ type: "json", nullable: true })
+    productData?: {
+        productId: number;
+        name: string;
+        price: number | string;
+        image: string;
+        slug: string;
+    } | null;
+
     @Column({ default: false })
     isRead!: boolean;
 

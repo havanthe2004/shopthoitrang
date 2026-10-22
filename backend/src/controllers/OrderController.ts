@@ -8,6 +8,7 @@ import { vnpayConfig } from "../config/vnpay.config";
 import crypto from "crypto";
 import qs from "qs";
 import { format } from "date-fns";
+import { notifyNewOrder, notifyOrderStatusChanged } from "../socket/chat.socket";
 
 export class OrderController {
 
@@ -116,6 +117,16 @@ export class OrderController {
                     );
 
                     await queryRunner.commitTransaction();
+
+                    // Bắn socket thông báo đơn hàng mới cho quản trị viên
+                    notifyNewOrder({
+                        orderId: savedOrder.orderId,
+                        receiverName: savedOrder.receiverName,
+                        phone: savedOrder.phone,
+                        totalPrice: savedOrder.totalPrice,
+                        paymentMethod: savedOrder.paymentMethod,
+                        createdAt: savedOrder.createdAt
+                    });
 
                     return res.status(201).json({
                         message: "Đặt hàng thành công",
@@ -414,6 +425,16 @@ export class OrderController {
 
             await queryRunner.commitTransaction();
 
+            // Bắn socket thông báo đơn hàng mới (VNPAY) cho quản trị viên
+            notifyNewOrder({
+                orderId: order.orderId,
+                receiverName: order.receiverName,
+                phone: order.phone,
+                totalPrice: order.totalPrice,
+                paymentMethod: order.paymentMethod,
+                createdAt: order.createdAt
+            });
+
             return res.json({ RspCode: "00", Message: "Success" });
 
         } catch (error) {
@@ -527,6 +548,13 @@ export class OrderController {
 
 
             await queryRunner.commitTransaction();
+
+            // Cập nhật trạng thái đơn hàng thời gian thực cho Admin
+            notifyOrderStatusChanged({
+                orderId: order.orderId,
+                status: "cancelled",
+                oldStatus: "pending"
+            });
 
             return res.json({
                 success: true,

@@ -13,6 +13,19 @@ export class Conversation {
     @Column({ type: "text", nullable: true })
     lastMessage!: string;
 
+    @Column({
+        type: "varchar",
+        length: 20,
+        default: "ai"
+    })
+    chatMode!: "ai" | "staff";
+
+    @Column({ default: 0 })
+    unreadAdminCount!: number;
+
+    @Column({ default: 0 })
+    unreadUserCount!: number;
+
     @CreateDateColumn()
     createdAt!: Date;
 

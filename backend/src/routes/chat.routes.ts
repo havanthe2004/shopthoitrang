@@ -14,4 +14,10 @@ router.get("/conversations/:conversationId/messages", ChatController.getMessages
 // [User] Lấy hoặc tạo cuộc hội thoại của user hiện tại
 router.get("/my-conversation", verifyToken, ChatController.getOrCreateUserConversation);
 
+// [User & Admin] Chuyển đổi chế độ chat (ai / staff)
+router.patch("/conversations/:conversationId/mode", ChatController.switchChatMode);
+
+// [User & Admin] Đánh dấu đã đọc tin nhắn
+router.patch("/conversations/:conversationId/read", ChatController.markAsRead);
+
 export default router;
