@@ -4,6 +4,7 @@ import { toast } from 'react-toastify';
 import { adminAuthService } from '../services/adminAuthService';
 import { useDispatch } from 'react-redux';
 import { adminLoginSuccess } from '../../redux/slices/adminAuthSlice';
+import { decodeAdminToken } from '../utils/adminTokenUtils';
 
 const AdminLoginPage = () => {
     const [username, setUsername] = useState('');
@@ -17,6 +18,9 @@ const AdminLoginPage = () => {
         setLoading(true);
         try {
             const res = await adminAuthService.adminLoginAPI({ username, password });
+            const tokenPayload = decodeAdminToken(res.accessToken);
+            const role = tokenPayload?.role || 'staff';
+
             dispatch(adminLoginSuccess({
                 admin: res.adminInfo,
                 token: res.accessToken,
@@ -24,7 +28,11 @@ const AdminLoginPage = () => {
             }));
 
             toast.success("Đăng nhập quản trị thành công!");
-            navigate('/admin/dashboard'); 
+            if (role === 'staff') {
+                navigate('/admin/products');
+            } else {
+                navigate('/admin/dashboard');
+            } 
         } catch (error: any) {
             toast.error(error.response?.data?.message);
         } finally {

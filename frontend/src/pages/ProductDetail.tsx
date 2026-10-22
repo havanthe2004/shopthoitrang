@@ -60,10 +60,10 @@ const ProductDetail = () => {
                 }
 
                 // Tải sản phẩm liên quan theo danh mục
-                if (data.category?.slug) {
+                if ((data as any).category?.slug) {
                     try {
                         const relatedRes = await getProductsAPI({
-                            category: data.category.slug,
+                            category: (data as any).category.slug,
                             limit: 6
                         });
                         const filtered = (relatedRes.data || []).filter(
@@ -88,14 +88,14 @@ const ProductDetail = () => {
     }, [slug, navigate]);
 
     // Danh sách ảnh từ tất cả màu sắc
-    const imageList = useMemo(() => {
+    const imageList = useMemo<string[]>(() => {
         if (!product?.colors) return [];
 
         const imgs = product.colors.flatMap((c: any) =>
             c.images?.map((i: any) => i.url) || []
         );
 
-        return Array.from(new Set(imgs));
+        return Array.from(new Set<string>(imgs));
     }, [product]);
 
     const uniqueColors = useMemo(() => {
@@ -140,6 +140,58 @@ const ProductDetail = () => {
         }
     };
 
+    // Tự động điều chỉnh số lượng nếu variant thay đổi và số lượng vượt quá tồn kho
+    useEffect(() => {
+        if (currentVariant && currentVariant.stock > 0 && quantity > currentVariant.stock) {
+            setQuantity(currentVariant.stock);
+        }
+    }, [currentVariant]);
+
+    const handleDecreaseQuantity = () => {
+        setQuantity(prev => Math.max(1, (prev || 1) - 1));
+    };
+
+    const handleIncreaseQuantity = () => {
+        const maxStock = currentVariant ? currentVariant.stock : undefined;
+        setQuantity(prev => {
+            const next = (prev || 0) + 1;
+            if (maxStock !== undefined && next > maxStock) {
+                toast.warning(`Chỉ còn ${maxStock} sản phẩm trong kho`);
+                return maxStock;
+            }
+            return next;
+        });
+    };
+
+    const handleQuantityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const rawVal = e.target.value.replace(/\D/g, '');
+        if (rawVal === '') {
+            setQuantity(0);
+            return;
+        }
+
+        const num = parseInt(rawVal, 10);
+        if (isNaN(num)) return;
+
+        const maxStock = currentVariant ? currentVariant.stock : undefined;
+        if (maxStock !== undefined && num > maxStock) {
+            setQuantity(maxStock);
+            toast.warning(`Chỉ còn ${maxStock} sản phẩm trong kho`);
+        } else if (num < 1) {
+            setQuantity(1);
+        } else {
+            setQuantity(num);
+        }
+    };
+
+    const handleQuantityBlur = () => {
+        if (!quantity || quantity < 1) {
+            setQuantity(1);
+        } else if (currentVariant && currentVariant.stock > 0 && quantity > currentVariant.stock) {
+            setQuantity(currentVariant.stock);
+        }
+    };
+
     const handleAddToCart = async () => {
         if (!currentUser) {
             return toast.info("Chào bạn! Hãy đăng nhập để có thể thêm hàng vào giỏ nhé.");
@@ -153,7 +205,12 @@ const ProductDetail = () => {
             return toast.error("Lựa chọn này hiện đang hết hàng.");
         }
 
-        if (quantity > currentVariant.stock) {
+        const finalQuantity = quantity < 1 ? 1 : quantity;
+        if (quantity < 1) {
+            setQuantity(1);
+        }
+
+        if (finalQuantity > currentVariant.stock) {
             return toast.error(`Chỉ còn ${currentVariant.stock} sản phẩm trong kho`);
         }
 
@@ -165,14 +222,14 @@ const ProductDetail = () => {
             image: mainImage,
             color: selectedColor,
             size: selectedSize,
-            quantity: quantity
+            quantity: finalQuantity
         };
 
         try {
             setAddingToCart(true);
             await dispatch(addToCartServer({
                 productVariantId: currentVariant.productVariantId,
-                quantity,
+                quantity: finalQuantity,
                 itemData
             }) as any).unwrap();
 
@@ -447,24 +504,42 @@ const ProductDetail = () => {
                             {/* Quantity & Total Price */}
                             <div className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 flex items-center justify-between">
                                 <div>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Số lượng</p>
-                                    <div className="flex items-center border border-slate-200 bg-white rounded-xl overflow-hidden h-10 shadow-sm">
+                                    <div className="flex items-center gap-2 mb-1.5">
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Số lượng</p>
+                                        {currentVariant && currentVariant.stock > 0 && (
+                                            <span className="text-[10px] text-slate-400 font-medium">
+                                                (Kho: <span className="font-semibold text-slate-600">{currentVariant.stock}</span>)
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div className="flex items-center border border-slate-200 bg-white rounded-xl overflow-hidden h-10 shadow-sm focus-within:border-slate-400 focus-within:ring-2 focus-within:ring-slate-900/5 transition-all">
                                         <button
                                             type="button"
-                                            disabled={quantity <= 1}
-                                            onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                                            className="px-3 h-full hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-600 disabled:opacity-40 cursor-pointer"
+                                            disabled={quantity <= 1 || Boolean(isOutOfStock)}
+                                            onClick={handleDecreaseQuantity}
+                                            className="w-9 h-full hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                            aria-label="Giảm số lượng"
                                         >
                                             <Minus className="w-3.5 h-3.5" />
                                         </button>
-                                        <span className="w-10 text-center font-bold text-slate-800 text-sm">
-                                            {quantity}
-                                        </span>
+                                        <input
+                                            type="text"
+                                            inputMode="numeric"
+                                            pattern="[0-9]*"
+                                            value={quantity === 0 ? '' : quantity}
+                                            onChange={handleQuantityChange}
+                                            onBlur={handleQuantityBlur}
+                                            disabled={Boolean(isOutOfStock)}
+                                            placeholder="1"
+                                            className="w-12 sm:w-14 text-center font-bold text-slate-800 text-sm h-full border-x border-slate-100 focus:outline-none focus:bg-slate-50/50 disabled:bg-slate-100/50 disabled:text-slate-400 transition-colors"
+                                            aria-label="Nhập trực tiếp số lượng"
+                                        />
                                         <button
                                             type="button"
-                                            disabled={Boolean(currentVariant && quantity >= currentVariant.stock)}
-                                            onClick={() => setQuantity(q => q + 1)}
-                                            className="px-3 h-full hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-600 disabled:opacity-40 cursor-pointer"
+                                            disabled={Boolean(currentVariant && quantity >= currentVariant.stock) || Boolean(isOutOfStock)}
+                                            onClick={handleIncreaseQuantity}
+                                            className="w-9 h-full hover:bg-slate-100 transition-colors flex items-center justify-center text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                                            aria-label="Tăng số lượng"
                                         >
                                             <Plus className="w-3.5 h-3.5" />
                                         </button>
@@ -474,7 +549,7 @@ const ProductDetail = () => {
                                 <div className="text-right">
                                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tạm tính</p>
                                     <p className="text-xl sm:text-2xl font-black text-slate-900">
-                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceDisplay * quantity)}
+                                        {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(priceDisplay * (quantity > 0 ? quantity : 1))}
                                     </p>
                                 </div>
                             </div>

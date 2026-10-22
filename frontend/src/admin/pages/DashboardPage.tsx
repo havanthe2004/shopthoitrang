@@ -199,15 +199,6 @@ const DashboardPage: React.FC = () => {
 
                 <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                     <div className="space-y-2">
-                        {/* <div className="flex flex-wrap items-center gap-2.5">
-                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-white/10 text-red-400 border border-white/10 backdrop-blur-xs">
-                                <Sparkles size={13} className="text-amber-400" />
-                                Bảng Điều Khiển Quản Trị
-                            </span>
-                            <span className="text-xs text-neutral-400 font-medium">
-                                ● Cập nhật theo thời gian thực
-                            </span>
-                        </div> */}
 
                         <h2 className="text-2xl lg:text-3xl font-black tracking-tight text-white">
                             Tổng quan hoạt động kinh doanh
@@ -395,8 +386,8 @@ const DashboardPage: React.FC = () => {
                                 type="button"
                                 onClick={() => setChartType('area')}
                                 className={`p-1.5 rounded-lg text-xs font-bold transition-all ${chartType === 'area'
-                                        ? 'bg-white text-red-600 shadow-xs'
-                                        : 'text-gray-500 hover:text-black'
+                                    ? 'bg-white text-red-600 shadow-xs'
+                                    : 'text-gray-500 hover:text-black'
                                     }`}
                                 title="Biểu đồ vùng (Area)"
                             >
@@ -406,8 +397,8 @@ const DashboardPage: React.FC = () => {
                                 type="button"
                                 onClick={() => setChartType('bar')}
                                 className={`p-1.5 rounded-lg text-xs font-bold transition-all ${chartType === 'bar'
-                                        ? 'bg-white text-red-600 shadow-xs'
-                                        : 'text-gray-500 hover:text-black'
+                                    ? 'bg-white text-red-600 shadow-xs'
+                                    : 'text-gray-500 hover:text-black'
                                     }`}
                                 title="Biểu đồ cột (Bar)"
                             >
@@ -561,8 +552,8 @@ const DashboardPage: React.FC = () => {
                                     key={tab.key}
                                     onClick={() => setTopFilter(tab.key)}
                                     className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${topFilter === tab.key
-                                            ? 'bg-white text-gray-900 shadow-xs'
-                                            : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
+                                        ? 'bg-white text-gray-900 shadow-xs'
+                                        : 'text-gray-500 hover:text-gray-900 hover:bg-white/50'
                                         }`}
                                 >
                                     {tab.label}

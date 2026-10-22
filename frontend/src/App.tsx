@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Outlet } from 'react-router-dom'; // Thêm Outlet
+import { BrowserRouter as Router, Routes, Route, Outlet, Navigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -62,6 +62,12 @@ const ClientLayout = () => {
   );
 };
 
+const AdminIndexRedirect = () => {
+  const { currentAdmin } = useSelector((state: RootState) => state.adminAuth);
+  const target = currentAdmin?.role === 'staff' ? '/admin/products' : '/admin/dashboard';
+  return <Navigate to={target} replace />;
+};
+
 
 
 // ==========================================
@@ -114,20 +120,30 @@ function App() {
 
         <Route element={<AdminProtectedRoute />}>
           <Route path="/admin" element={<AdminLayout />}>
-            <Route path="dashboard" element={<DashboardPage />} />
-            <Route path="categories" element={<CategoryPage />} />
+            <Route index element={<AdminIndexRedirect />} />
+
+            {/* Các trang dành cho admin & manager */}
+            <Route element={<AdminProtectedRoute allowedRoles={['admin', 'manager']} />}>
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="categories" element={<CategoryPage />} />
+              <Route path="staffs" element={<AdminManagement />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="posts" element={<PostManagement />} />
+            </Route>
+
+            {/* Các trang chỉ dành riêng cho admin */}
+            <Route element={<AdminProtectedRoute allowedRoles={['admin']} />}>
+              <Route path="settings" element={<SystemConfig />} />
+            </Route>
+
+            {/* Các trang dùng chung cho mọi quyền (admin, manager, staff) */}
             <Route path="products" element={<AdminProductPage />} />
             <Route path="products/add" element={<AddProductStepper />} />
             <Route path="products/edit/:id" element={<EditProduct />} />
-            <Route path="staffs" element={<AdminManagement />} />
             <Route path="inventory" element={<StockManagement />} />
             <Route path="orders" element={<OrderManagement />} />
-            <Route path="users" element={<UserManagement />} />
             <Route path="profile" element={<AdminProfile />} />
-            <Route path="settings" element={<SystemConfig />} />
-            <Route path="posts" element={<PostManagement />} />
             <Route path="chat" element={<ChatManagement />} />
-            {/* Thêm các trang sau này: category, product, user... */}
           </Route>
         </Route>
 

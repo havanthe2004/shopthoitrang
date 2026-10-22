@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { adminOrderService } from '../services/adminOrderService';
 import {
     Search,
@@ -139,11 +139,25 @@ const OrderManagement = () => {
         }
     };
 
+    const fetchOrdersRef = useRef(fetchOrders);
+    fetchOrdersRef.current = fetchOrders;
+
     useEffect(() => {
         const timer = setTimeout(() => fetchOrders(), 350);
         return () => clearTimeout(timer);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params.page, params.limit, params.status, params.search]);
+
+    // Lắng nghe sự kiện socket thời gian thực khi có đơn hàng mới hoặc đổi trạng thái đơn
+    useEffect(() => {
+        const handleOrderReload = () => {
+            fetchOrdersRef.current();
+        };
+        window.addEventListener('admin_reload_orders', handleOrderReload);
+        return () => {
+            window.removeEventListener('admin_reload_orders', handleOrderReload);
+        };
+    }, []);
 
     // ================= SUMMARY KPIS =================
     const stats = useMemo(() => {

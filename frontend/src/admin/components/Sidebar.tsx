@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useMemo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import type { RootState } from '../../redux/store';
+import { adminLogout } from '../../redux/slices/adminAuthSlice';
 import { adminAuthService } from '../services/adminAuthService';
+import { decodeAdminToken } from '../utils/adminTokenUtils';
 import {
     FaChartPie, FaList, FaBoxOpen, FaWarehouse,
     FaClipboardList, FaRegNewspaper, FaUsers,
@@ -9,14 +13,17 @@ import {
 
 const Sidebar = () => {
     const navigate = useNavigate();
-    const [currentRole, setCurrentRole] = useState<string>('staff');
-    useEffect(() => {
-        const adminInfoStr = localStorage.getItem('adminInfo');
-        if (adminInfoStr) {
-            const adminInfo = JSON.parse(adminInfoStr);
-            setCurrentRole(adminInfo.role);
-        }
-    }, []);
+    const dispatch = useDispatch();
+    const { currentAdmin, adminToken } = useSelector((state: RootState) => state.adminAuth);
+    const { pendingOrdersCount, unreadChatCount } = useSelector((state: RootState) => state.adminNotification);
+
+    // Quyền được giải mã trực tiếp từ token hợp lệ, tuyệt đối không lấy từ localStorage
+    const currentRole = useMemo(() => {
+        if (currentAdmin?.role) return currentAdmin.role;
+        const token = adminToken || (typeof window !== 'undefined' ? localStorage.getItem('adminAccessToken') : null);
+        const payload = decodeAdminToken(token);
+        return payload?.role || 'staff';
+    }, [currentAdmin?.role, adminToken]);
 
     // Cấu hình Menu và Phân quyền
     const menuItems = [
@@ -56,11 +63,7 @@ const Sidebar = () => {
                 console.error("Lỗi khi đăng xuất backend:", error);
                 // Dù lỗi mạng hay lỗi gì thì vẫn cứ tiếp tục xóa local để cho user thoát ra
             } finally {
-                // Xóa sạch dữ liệu trong Local Storage
-                localStorage.removeItem('adminAccessToken');
-                localStorage.removeItem('adminRefreshToken');
-                localStorage.removeItem('adminInfo');
-
+                dispatch(adminLogout());
                 // Chuyển hướng về trang đăng nhập
                 navigate('/admin/login');
             }
@@ -86,7 +89,19 @@ const Sidebar = () => {
                                 `}
                             >
                                 <span className="text-lg">{item.icon}</span>
-                                {item.title}
+                                <span>{item.title}</span>
+
+                                {item.path === '/admin/orders' && pendingOrdersCount > 0 && (
+                                    <span className="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-black leading-none text-white bg-red-600 rounded-full shadow-sm shadow-red-500/50 animate-pulse">
+                                        {pendingOrdersCount > 99 ? '99+' : pendingOrdersCount}
+                                    </span>
+                                )}
+
+                                {item.path === '/admin/chat' && unreadChatCount > 0 && (
+                                    <span className="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-black leading-none text-white bg-emerald-600 rounded-full shadow-sm shadow-emerald-500/50 animate-pulse">
+                                        {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                                    </span>
+                                )}
                             </NavLink>
                         </li>
                     ))}

@@ -4,6 +4,10 @@ export const adminOrderService = {
     getAll: (params: { page: number, limit: number, status?: string, search?: string }) => {
         return adminApi.get("/admin/orders", { params });
     },
+
+    getPendingCount: () => {
+        return adminApi.get("/admin/orders/pending-count");
+    },
     
 
     updateStatus: (id: number, newStatus: string) => {

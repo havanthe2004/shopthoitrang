@@ -143,6 +143,7 @@ const Header: React.FC = () => {
     const dispatch = useDispatch();
 
     const { currentAdmin } = useSelector((state: RootState) => state.adminAuth);
+    const { pendingOrdersCount, unreadChatCount } = useSelector((state: RootState) => state.adminNotification);
     const userRole = currentAdmin?.role || 'staff';
 
     // States
@@ -392,6 +393,21 @@ const Header: React.FC = () => {
                     <ExternalLink size={12} className="text-gray-400 group-hover:text-red-500 ml-0.5" />
                 </a>
 
+                {/* Quick Orders Button */}
+                <button
+                    type="button"
+                    onClick={() => navigate('/admin/orders')}
+                    className="relative p-2.5 text-gray-600 hover:text-red-600 hover:bg-white rounded-xl border border-transparent hover:border-gray-200/80 transition-all shadow-xs"
+                    title="Xử lý đơn hàng"
+                >
+                    <ClipboardList size={18} />
+                    {pendingOrdersCount > 0 && (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] font-black leading-[18px] text-center text-white bg-red-600 rounded-full ring-2 ring-white shadow-xs animate-bounce">
+                            {pendingOrdersCount > 99 ? '99+' : pendingOrdersCount}
+                        </span>
+                    )}
+                </button>
+
                 {/* Quick Chat Button */}
                 <button
                     type="button"
@@ -400,7 +416,13 @@ const Header: React.FC = () => {
                     title="Tin nhắn khách hàng"
                 >
                     <MessageSquare size={18} />
-                    <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white animate-pulse" />
+                    {unreadChatCount > 0 ? (
+                        <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 text-[10px] font-black leading-[18px] text-center text-white bg-emerald-500 rounded-full ring-2 ring-white shadow-xs animate-pulse">
+                            {unreadChatCount > 99 ? '99+' : unreadChatCount}
+                        </span>
+                    ) : (
+                        <span className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white" />
+                    )}
                 </button>
 
                 {/* Divider */}
