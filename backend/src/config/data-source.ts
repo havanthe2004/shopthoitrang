@@ -22,6 +22,7 @@ import { AdminRefreshToken } from "../models/AdminRefreshToken";
 import { Otp } from "../models/Otp";
 import { Conversation } from "../models/Conversation";
 import { Message } from "../models/Message";
+import { PaymentTransaction } from "../models/PaymentTransaction";
 
 import dotenv from "dotenv";
 dotenv.config();
@@ -37,6 +38,6 @@ export const AppDataSource = new DataSource({
     logging: false,
     entities: [Product, Address, Cart, CartItem, Category, Order, Admin, AdminLog, Banner, OrderItem,
         Post, ProductImage, ProductVariant, ProductColor, RefreshToken, User, WebsiteConfig, AdminRefreshToken, Otp,
-        Conversation, Message
+        Conversation, Message, PaymentTransaction
     ],
 });

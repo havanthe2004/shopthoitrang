@@ -27,7 +27,7 @@ export class AiChatService {
             const products = await productRepo.find({
                 where: { isActive: true },
                 relations: ["variants", "variants.color", "category"],
-                take: 20 
+                take: 20
             });
 
             let productInfo = "Danh sách sản phẩm cửa hàng đang có:\n";
@@ -36,7 +36,7 @@ export class AiChatService {
                 // Liệt kê các biến thể (màu, size, giá, tồn kho)
                 if (p.variants && p.variants.length > 0) {
                     p.variants.forEach((v: any) => {
-                        productInfo += `  + Màu ${v.color?.colorName || 'Mặc định'}, Size ${v.size}: Giá ${v.price} VNĐ (Tồn kho: ${v.stock > 0 ? v.stock : 'Hết hàng'})\n`;
+                        productInfo += `  + Màu ${v.color?.color || 'Mặc định'}, Size ${v.size}: Giá ${v.price} VNĐ (Tồn kho: ${v.stock > 0 ? v.stock : 'Hết hàng'})\n`;
                     });
                 } else {
                     productInfo += `  + Hiện chưa có thông tin chi tiết.\n`;
@@ -61,7 +61,7 @@ export class AiChatService {
             context += `Khách hàng: ${userMessage}\nCửa hàng:`;
 
             // Gọi API Gemini
-            const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
+            const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
             const result = await model.generateContent(context);
             const response = await result.response;
             const text = response.text();
@@ -71,7 +71,7 @@ export class AiChatService {
             console.error("\n=== LỖI KHI GỌI AI ===");
             console.error(error?.message || error);
             console.error("======================\n");
-            
+
             if (error?.message?.includes("API key not valid")) {
                 return "Lỗi: API Key không hợp lệ. Vui lòng kiểm tra lại.";
             }

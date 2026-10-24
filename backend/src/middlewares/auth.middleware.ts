@@ -40,7 +40,10 @@ export const verifyToken = async (req: Request, res: Response, next: NextFunctio
         }
 
 
-        (req as any).user = decoded;
+        (req as any).user = {
+            ...decoded,
+            userId: decoded.id
+        };
 
         next();
     } catch (err) {
